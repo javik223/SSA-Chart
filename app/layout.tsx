@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Toaster } from "@/components/ui/sonner";
+import { ChartInitializer } from "@/components/ChartInitializer";
 import "./globals.css";
 
 const canvaSans = localFont({
@@ -54,7 +56,9 @@ export default function RootLayout({
       <body
         className={`${canvaSans.variable} font-sans antialiased`}
       >
+        <ChartInitializer />
         {children}
+        <Toaster />
       </body>
     </html>
   );

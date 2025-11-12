@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -14,10 +14,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { parseFile } from '@/utils/fileParser';
+import { useToast } from '@/hooks/use-toast';
 
 export function DataSidebar() {
-  const { availableColumns, columnMapping, setColumnMapping, autoSetColumns } =
-    useChartStore();
+  const {
+    availableColumns,
+    columnMapping,
+    setColumnMapping,
+    autoSetColumns,
+    replaceData,
+    mergeData,
+  } = useChartStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadMode, setUploadMode] = useState<'replace' | 'merge'>('replace');
+  const { toast } = useToast();
 
   // Track which fields are expanded
   const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>(
@@ -67,9 +78,68 @@ export function DataSidebar() {
     return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
   };
 
+  const handleUploadClick = (mode: 'replace' | 'merge') => {
+    setUploadMode(mode);
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const result = await parseFile(file);
+
+      if (result.success && result.data.length > 0) {
+        if (uploadMode === 'replace') {
+          replaceData(result.data);
+          toast({
+            title: 'Data uploaded successfully',
+            description: `Replaced with ${result.data.length} rows from ${file.name}`,
+          });
+        } else {
+          mergeData(result.data);
+          toast({
+            title: 'Data merged successfully',
+            description: `Added ${result.data.length - 1} rows from ${
+              file.name
+            }`,
+          });
+        }
+      } else {
+        toast({
+          title: 'Upload failed',
+          description: result.error || 'Failed to parse file',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description:
+          error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+    }
+
+    // Reset file input
+    event.target.value = '';
+  };
+
   return (
     <div className='h-full overflow-y-auto border-l bg-white p-6'>
       <div className='space-y-4'>
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='.csv,.xlsx,.xls,.tsv,.txt,.json,.geojson'
+          onChange={handleFileChange}
+          className='hidden'
+        />
+
         {/* Header */}
         <div className='flex justify-between'>
           <h2 className='text-lg font-semibold text-zinc-900'>Data</h2>
@@ -83,17 +153,23 @@ export function DataSidebar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
-                <DropdownMenuItem className='flex flex-col items-start gap-1'>
-                  <h3 className='text-sm'>Upload data file</h3>
-                  <small className='text-slate-500'>
+                <DropdownMenuItem
+                  className='flex flex-col items-start gap-1 cursor-pointer'
+                  onClick={() => handleUploadClick('replace')}
+                >
+                  <h3 className='text-sm font-medium'>Upload data file</h3>
+                  <small className='text-slate-500 font-normal'>
                     Replace data with uploaded file <br />
                     (Excel, CSV, TSV, JSON, GeoJSON)
                   </small>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className='flex flex-col items-start gap-1'>
-                  <h3 className='text-sm'>Upload data and merge</h3>
-                  <small className='text-slate-500'>
+                <DropdownMenuItem
+                  className='flex flex-col items-start gap-1 cursor-pointer'
+                  onClick={() => handleUploadClick('merge')}
+                >
+                  <h3 className='text-sm font-medium'>Upload data and merge</h3>
+                  <small className='text-slate-500 font-normal'>
                     Merge current sheet with the uploaded file <br />
                     (Excel, CSV, TSV, JSON, GeoJSON)
                   </small>

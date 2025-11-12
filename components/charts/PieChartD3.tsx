@@ -1,0 +1,330 @@
+'use client';
+
+import { useEffect, useRef } from 'react';
+import * as d3 from 'd3';
+
+interface PieChartD3Props {
+  data: Array<Record<string, string | number>>;
+  labelKey: string;
+  valueKeys: string[];
+  innerRadius?: number; // For donut charts, set this to > 0
+  width?: number;
+  height?: number;
+  legendShow?: boolean;
+  legendPosition?: 'top' | 'right' | 'bottom' | 'left';
+  legendAlignment?: 'start' | 'center' | 'end';
+  legendFontSize?: number;
+  legendShowValues?: boolean;
+}
+
+const COLORS = [
+  '#8884d8',
+  '#82ca9d',
+  '#ffc658',
+  '#ff8042',
+  '#0088fe',
+  '#00c49f',
+  '#ffbb28',
+  '#ff6b9d',
+  '#c084fc',
+  '#fb923c',
+];
+
+export function PieChartD3({
+  data,
+  labelKey,
+  valueKeys,
+  innerRadius = 0,
+  width: propWidth = 800,
+  height: propHeight = 600,
+  legendShow = true,
+  legendPosition = 'right',
+  legendFontSize = 12,
+  legendShowValues = false,
+}: PieChartD3Props) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || data.length === 0) return;
+
+    // Clear previous chart
+    d3.select(svgRef.current).selectAll('*').remove();
+
+    // Use prop dimensions for calculations
+    const width = propWidth;
+    const height = propHeight;
+
+    // Adjust margins based on legend position
+    const baseMargin = { top: 40, right: 40, bottom: 40, left: 40 };
+    const legendSpace = legendShow ? 150 : 0;
+    const margin = {
+      top: baseMargin.top + (legendPosition === 'top' ? legendSpace : 0),
+      right: baseMargin.right + (legendPosition === 'right' ? legendSpace : 0),
+      bottom: baseMargin.bottom + (legendPosition === 'bottom' ? legendSpace : 0),
+      left: baseMargin.left + (legendPosition === 'left' ? legendSpace : 0),
+    };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    // Determine radius
+    const radius = Math.min(innerWidth, innerHeight) / 2;
+    const outerRadius = radius;
+    const actualInnerRadius = innerRadius * radius;
+
+    // Create SVG with viewBox for responsiveness
+    const svg = d3
+      .select(svgRef.current)
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
+
+    const g = svg
+      .append('g')
+      .attr(
+        'transform',
+        `translate(${margin.left + innerWidth / 2},${margin.top + innerHeight / 2})`
+      );
+
+    // Use first value key for pie chart (pie charts typically show one value series)
+    const valueKey = valueKeys[0];
+
+    // Prepare data for pie
+    const pieData = data.map((d) => ({
+      label: String(d[labelKey]),
+      value: Number(d[valueKey]) || 0,
+    }));
+
+    // Calculate total for percentages
+    const total = d3.sum(pieData, (d) => d.value);
+
+    // Create pie generator
+    const pie = d3
+      .pie<{ label: string; value: number }>()
+      .value((d) => d.value)
+      .sort(null);
+
+    // Create arc generator
+    const arc = d3
+      .arc<d3.PieArcDatum<{ label: string; value: number }>>()
+      .innerRadius(actualInnerRadius)
+      .outerRadius(outerRadius);
+
+    // Create hover arc (slightly larger)
+    const hoverArc = d3
+      .arc<d3.PieArcDatum<{ label: string; value: number }>>()
+      .innerRadius(actualInnerRadius)
+      .outerRadius(outerRadius + 10);
+
+    // Create arcs
+    const arcs = g
+      .selectAll('.arc')
+      .data(pie(pieData))
+      .enter()
+      .append('g')
+      .attr('class', 'arc');
+
+    // Add paths with animation
+    arcs
+      .append('path')
+      .attr('d', arc)
+      .attr('fill', (d, i) => COLORS[i % COLORS.length])
+      .attr('stroke', 'white')
+      .attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseenter', function (event, d) {
+        // Highlight slice
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('d', hoverArc as any);
+
+        // Show tooltip
+        if (tooltipRef.current) {
+          const percentage = ((d.data.value / total) * 100).toFixed(1);
+          tooltipRef.current.innerHTML = `
+            <div class="font-semibold">${d.data.label}</div>
+            <div class="text-sm">${d.data.value.toLocaleString()}</div>
+            <div class="text-xs text-zinc-500">${percentage}%</div>
+          `;
+          tooltipRef.current.style.display = 'block';
+          tooltipRef.current.style.left = event.pageX + 10 + 'px';
+          tooltipRef.current.style.top = event.pageY - 10 + 'px';
+        }
+      })
+      .on('mousemove', function (event) {
+        if (tooltipRef.current) {
+          tooltipRef.current.style.left = event.pageX + 10 + 'px';
+          tooltipRef.current.style.top = event.pageY - 10 + 'px';
+        }
+      })
+      .on('mouseleave', function () {
+        // Reset slice
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('d', arc as any);
+
+        // Hide tooltip
+        if (tooltipRef.current) {
+          tooltipRef.current.style.display = 'none';
+        }
+      })
+      // Animate entry
+      .transition()
+      .duration(800)
+      .attrTween('d', function (d) {
+        const interpolate = d3.interpolate({ startAngle: 0, endAngle: 0 }, d);
+        return function (t) {
+          return arc(interpolate(t)) || '';
+        };
+      });
+
+    // Add labels to slices (only if slice is large enough)
+    arcs
+      .append('text')
+      .attr('transform', (d) => {
+        const pos = arc.centroid(d);
+        return `translate(${pos})`;
+      })
+      .attr('text-anchor', 'middle')
+      .attr('dy', '0.35em')
+      .style('font-size', '11px')
+      .style('font-weight', '600')
+      .style('fill', 'white')
+      .style('pointer-events', 'none')
+      .text((d) => {
+        const percentage = ((d.data.value / total) * 100);
+        // Only show label if slice is > 5%
+        return percentage > 5 ? `${percentage.toFixed(0)}%` : '';
+      })
+      .style('opacity', 0)
+      .transition()
+      .delay(800)
+      .duration(400)
+      .style('opacity', 1);
+
+    // Legend
+    if (legendShow) {
+      // Calculate legend position based on legendPosition prop
+      let legendX = 0;
+      let legendY = 0;
+      let legendOrientation: 'vertical' | 'horizontal' = 'vertical';
+
+      if (legendPosition === 'right') {
+        legendX = width - margin.right + 20;
+        legendY = margin.top;
+        legendOrientation = 'vertical';
+      } else if (legendPosition === 'left') {
+        legendX = 20;
+        legendY = margin.top;
+        legendOrientation = 'vertical';
+      } else if (legendPosition === 'top') {
+        legendX = margin.left;
+        legendY = 20;
+        legendOrientation = 'horizontal';
+      } else if (legendPosition === 'bottom') {
+        legendX = margin.left;
+        legendY = height - margin.bottom + 60;
+        legendOrientation = 'horizontal';
+      }
+
+      const legend = svg
+        .append('g')
+        .attr('transform', `translate(${legendX}, ${legendY})`);
+
+      if (legendOrientation === 'vertical') {
+        // Vertical layout
+        const legendItems = legend
+          .selectAll('.legend-item')
+          .data(pieData)
+          .enter()
+          .append('g')
+          .attr('class', 'legend-item')
+          .attr('transform', (d, i) => `translate(0, ${i * 25})`);
+
+        legendItems
+          .append('rect')
+          .attr('width', 15)
+          .attr('height', 15)
+          .attr('fill', (d, i) => COLORS[i % COLORS.length]);
+
+        legendItems
+          .append('text')
+          .attr('x', 20)
+          .attr('y', 12)
+          .text((d) => {
+            const percentage = ((d.value / total) * 100).toFixed(1);
+            if (legendShowValues) {
+              return `${d.label} (${d.value.toLocaleString()}, ${percentage}%)`;
+            }
+            return `${d.label} (${percentage}%)`;
+          })
+          .style('font-size', `${legendFontSize}px`)
+          .attr('text-anchor', 'start');
+      } else {
+        // Horizontal layout
+        let cumulativeX = 0;
+        pieData.forEach((d, i) => {
+          const legendItem = legend
+            .append('g')
+            .attr('transform', `translate(${cumulativeX}, 0)`);
+
+          legendItem
+            .append('rect')
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('fill', COLORS[i % COLORS.length]);
+
+          const percentage = ((d.value / total) * 100).toFixed(1);
+          const label = legendShowValues
+            ? `${d.label} (${d.value.toLocaleString()}, ${percentage}%)`
+            : `${d.label} (${percentage}%)`;
+
+          legendItem
+            .append('text')
+            .attr('x', 20)
+            .attr('y', 12)
+            .text(label)
+            .style('font-size', `${legendFontSize}px`)
+            .attr('text-anchor', 'start');
+
+          // Calculate width for next item
+          cumulativeX += 15 + 5 + label.length * legendFontSize * 0.6 + 20;
+        });
+      }
+    }
+
+    // Center text for donut charts
+    if (actualInnerRadius > 0) {
+      const centerGroup = g.append('g').attr('class', 'center-text');
+
+      centerGroup
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '-0.5em')
+        .style('font-size', '24px')
+        .style('font-weight', 'bold')
+        .style('fill', '#333')
+        .text(total.toLocaleString());
+
+      centerGroup
+        .append('text')
+        .attr('text-anchor', 'middle')
+        .attr('dy', '1.2em')
+        .style('font-size', '14px')
+        .style('fill', '#666')
+        .text('Total');
+    }
+  }, [data, labelKey, valueKeys, innerRadius, propWidth, propHeight, legendShow, legendPosition, legendFontSize, legendShowValues]);
+
+  return (
+    <div className='relative w-full h-full'>
+      <svg ref={svgRef} className='w-full h-full' />
+      <div
+        ref={tooltipRef}
+        className='absolute hidden bg-white border border-zinc-200 rounded-lg shadow-lg p-3 pointer-events-none z-10'
+        style={{ display: 'none' }}
+      />
+    </div>
+  );
+}

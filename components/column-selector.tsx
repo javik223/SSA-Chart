@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, X } from "lucide-react";
+import { ChevronDown, X, Check } from "lucide-react";
 
 interface ColumnSelectorProps {
   availableColumns: string[];
@@ -96,9 +96,14 @@ export function ColumnSelector({
               <DropdownMenuItem
                 key={index}
                 onClick={() => handleSingleSelect(index)}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-2"
               >
-                <span>{column}</span>
+                <div className="flex items-center gap-2 flex-1">
+                  {selectedColumns === index && (
+                    <Check className="h-3 w-3 text-zinc-900" />
+                  )}
+                  <span>{column}</span>
+                </div>
                 <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
               </DropdownMenuItem>
             ))
@@ -162,9 +167,14 @@ export function ColumnSelector({
               <DropdownMenuItem
                 key={index}
                 onClick={() => handleSingleSelect(index)}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-2"
               >
-                <span>{column}</span>
+                <div className="flex items-center gap-2 flex-1">
+                  {selectedColumns === index && (
+                    <Check className="h-3 w-3 text-zinc-900" />
+                  )}
+                  <span>{column}</span>
+                </div>
                 <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
               </DropdownMenuItem>
             ))
