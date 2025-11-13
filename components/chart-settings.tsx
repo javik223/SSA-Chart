@@ -44,6 +44,7 @@ import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { getChartsByCategory } from '@/lib/chartRegistry';
 import { getStatusLabel } from '@/lib/chartRegistrations';
+import { HeaderSettingsSection } from '@/components/HeaderSettingsSection';
 
 export function ChartSettings() {
   const {
@@ -67,8 +68,6 @@ export function ChartSettings() {
     setColorblindMode,
     darkModePreview,
     setDarkModePreview,
-    chartTitle,
-    setChartTitle,
     legendShow,
     setLegendShow,
     legendPosition,
@@ -89,8 +88,6 @@ export function ChartSettings() {
     setLegendPaddingBottom,
     legendPaddingLeft,
     setLegendPaddingLeft,
-    chartDescription,
-    setChartDescription,
     chartFooter,
     setChartFooter,
     layoutMainFont,
@@ -500,36 +497,7 @@ export function ChartSettings() {
                   </AccordionTrigger>
                   <AccordionContent>
                     {section.value === 'header' ? (
-                      <div className='space-y-4 pb-4'>
-                        {/* Chart Title */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Title
-                          </Label>
-                          <Input
-                            type='text'
-                            value={chartTitle}
-                            onChange={(e) => setChartTitle(e.target.value)}
-                            className='h-8 text-xs'
-                            placeholder='Enter chart title'
-                          />
-                        </div>
-
-                        {/* Chart Description */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Description
-                          </Label>
-                          <textarea
-                            value={chartDescription}
-                            onChange={(e) =>
-                              setChartDescription(e.target.value)
-                            }
-                            className='w-full h-20 px-3 py-2 text-xs border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
-                            placeholder='Enter chart description'
-                          />
-                        </div>
-                      </div>
+                      <HeaderSettingsSection />
                     ) : section.value === 'footer' ? (
                       <div className='space-y-4 pb-4'>
                         {/* Chart Footer */}

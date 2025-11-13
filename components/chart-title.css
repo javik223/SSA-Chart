@@ -1,0 +1,18 @@
+/* Chart Title Responsive Font Sizing */
+
+.chart-title {
+  font-size: var(--title-font-size-mobile);
+  transition: all 0.1s ease-out;
+}
+
+@media (min-width: 768px) {
+  .chart-title {
+    font-size: var(--title-font-size-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-title {
+    font-size: var(--title-font-size-desktop);
+  }
+}

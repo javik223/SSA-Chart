@@ -22,26 +22,44 @@ export function ChartCanvas() {
   const layoutTextColor = useChartStore((state) => state.layoutTextColor);
 
   // Background
-  const layoutBackgroundColorEnabled = useChartStore((state) => state.layoutBackgroundColorEnabled);
-  const layoutBackgroundImageEnabled = useChartStore((state) => state.layoutBackgroundImageEnabled);
-  const layoutBackgroundColor = useChartStore((state) => state.layoutBackgroundColor);
-  const layoutBackgroundImageUrl = useChartStore((state) => state.layoutBackgroundImageUrl);
-  const layoutBackgroundImageSize = useChartStore((state) => state.layoutBackgroundImageSize);
-  const layoutBackgroundImagePosition = useChartStore((state) => state.layoutBackgroundImagePosition);
+  const layoutBackgroundColorEnabled = useChartStore(
+    (state) => state.layoutBackgroundColorEnabled
+  );
+  const layoutBackgroundImageEnabled = useChartStore(
+    (state) => state.layoutBackgroundImageEnabled
+  );
+  const layoutBackgroundColor = useChartStore(
+    (state) => state.layoutBackgroundColor
+  );
+  const layoutBackgroundImageUrl = useChartStore(
+    (state) => state.layoutBackgroundImageUrl
+  );
+  const layoutBackgroundImageSize = useChartStore(
+    (state) => state.layoutBackgroundImageSize
+  );
+  const layoutBackgroundImagePosition = useChartStore(
+    (state) => state.layoutBackgroundImagePosition
+  );
 
   // Spacing
-  const layoutSpaceBetweenSections = useChartStore((state) => state.layoutSpaceBetweenSections);
+  const layoutSpaceBetweenSections = useChartStore(
+    (state) => state.layoutSpaceBetweenSections
+  );
   const layoutMarginTop = useChartStore((state) => state.layoutMarginTop);
   const layoutMarginRight = useChartStore((state) => state.layoutMarginRight);
   const layoutMarginBottom = useChartStore((state) => state.layoutMarginBottom);
   const layoutMarginLeft = useChartStore((state) => state.layoutMarginLeft);
   const layoutPaddingTop = useChartStore((state) => state.layoutPaddingTop);
   const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
-  const layoutPaddingBottom = useChartStore((state) => state.layoutPaddingBottom);
+  const layoutPaddingBottom = useChartStore(
+    (state) => state.layoutPaddingBottom
+  );
   const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
 
   // Borders
-  const layoutBorderEnabled = useChartStore((state) => state.layoutBorderEnabled);
+  const layoutBorderEnabled = useChartStore(
+    (state) => state.layoutBorderEnabled
+  );
   const layoutBorderTop = useChartStore((state) => state.layoutBorderTop);
   const layoutBorderRight = useChartStore((state) => state.layoutBorderRight);
   const layoutBorderBottom = useChartStore((state) => state.layoutBorderBottom);
@@ -52,7 +70,9 @@ export function ChartCanvas() {
   const layoutBorderRadius = useChartStore((state) => state.layoutBorderRadius);
 
   // Read Direction
-  const layoutReadDirection = useChartStore((state) => state.layoutReadDirection);
+  const layoutReadDirection = useChartStore(
+    (state) => state.layoutReadDirection
+  );
 
   // Layout Order
   const layoutOrder = useChartStore((state) => state.layoutOrder);
@@ -288,6 +308,8 @@ export function ChartCanvas() {
           marginRight: `${layoutMarginRight}px`,
           marginBottom: `${layoutMarginBottom}px`,
           marginLeft: `${layoutMarginLeft}px`,
+          paddingTop: `${layoutPaddingTop}px`,
+          paddingBottom: `${layoutPaddingBottom}px`,
           borderTop: getBorderStyle('Top'),
           borderRight: getBorderStyle('Right'),
           borderBottom: getBorderStyle('Bottom'),

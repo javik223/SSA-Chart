@@ -7,7 +7,10 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { ChartConfig, ChartData, ChartType } from '@/types';
 import { DataTable } from '@/types';
 import { cleanData } from '@/utils/dataUtils';
-import { inferAllColumnTypes, type ColumnTypeInfo } from '@/utils/dataTypeUtils';
+import {
+  inferAllColumnTypes,
+  type ColumnTypeInfo,
+} from '@/utils/dataTypeUtils';
 
 interface ColumnMapping {
   labels: number | null; // Column index for labels/time
@@ -75,8 +78,20 @@ interface ChartStore {
   previewDevice: 'mobile' | 'tablet' | 'desktop';
   setPreviewDevice: (device: 'mobile' | 'tablet' | 'desktop') => void;
 
-  colorblindMode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia';
-  setColorblindMode: (mode: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia') => void;
+  colorblindMode:
+    | 'none'
+    | 'protanopia'
+    | 'deuteranopia'
+    | 'tritanopia'
+    | 'achromatopsia';
+  setColorblindMode: (
+    mode:
+      | 'none'
+      | 'protanopia'
+      | 'deuteranopia'
+      | 'tritanopia'
+      | 'achromatopsia'
+  ) => void;
 
   darkModePreview: 'light' | 'dark';
   setDarkModePreview: (mode: 'light' | 'dark') => void;
@@ -87,6 +102,158 @@ interface ChartStore {
 
   chartDescription: string;
   setChartDescription: (description: string) => void;
+
+  // Header settings
+  headerAlignment: 'left' | 'center' | 'right';
+  setHeaderAlignment: (alignment: 'left' | 'center' | 'right') => void;
+
+  // Title settings
+  titleStyleEnabled: boolean;
+  setTitleStyleEnabled: (enabled: boolean) => void;
+
+  titleFont: string;
+  setTitleFont: (font: string) => void;
+
+  titleFontSize: number; // Size multiplier (0.1 to 10.0) applied to base size
+  setTitleFontSize: (size: number) => void;
+
+  titleBaseFontSizeMobile: number; // Base font size in px for mobile (<768px)
+  setTitleBaseFontSizeMobile: (size: number) => void;
+
+  titleBaseFontSizeTablet: number; // Base font size in px for tablet (768px-1024px)
+  setTitleBaseFontSizeTablet: (size: number) => void;
+
+  titleBaseFontSizeDesktop: number; // Base font size in px for desktop (>1024px)
+  setTitleBaseFontSizeDesktop: (size: number) => void;
+
+  titleFontWeight: 'bold' | 'regular' | 'medium';
+  setTitleFontWeight: (weight: 'bold' | 'regular' | 'medium') => void;
+
+  titleColor: string;
+  setTitleColor: (color: string) => void;
+
+  titleLineHeight: number;
+  setTitleLineHeight: (lineHeight: number) => void;
+
+  titleSpaceAbove: 'slim' | 'medium' | 'large' | 'none';
+  setTitleSpaceAbove: (space: 'slim' | 'medium' | 'large' | 'none') => void;
+
+  // Subtitle settings
+  chartSubtitle: string;
+  setChartSubtitle: (subtitle: string) => void;
+
+  subtitleStyleEnabled: boolean;
+  setSubtitleStyleEnabled: (enabled: boolean) => void;
+
+  subtitleFont: string;
+  setSubtitleFont: (font: string) => void;
+
+  subtitleFontSize: number; // Size multiplier (0.1 to 10.0) applied to base size
+  setSubtitleFontSize: (size: number) => void;
+
+  subtitleBaseFontSizeMobile: number; // Base font size in px for mobile (<768px)
+  setSubtitleBaseFontSizeMobile: (size: number) => void;
+
+  subtitleBaseFontSizeTablet: number; // Base font size in px for tablet (768px-1024px)
+  setSubtitleBaseFontSizeTablet: (size: number) => void;
+
+  subtitleBaseFontSizeDesktop: number; // Base font size in px for desktop (>1024px)
+  setSubtitleBaseFontSizeDesktop: (size: number) => void;
+
+  subtitleFontWeight: 'bold' | 'regular' | 'medium';
+  setSubtitleFontWeight: (weight: 'bold' | 'regular' | 'medium') => void;
+
+  subtitleColor: string;
+  setSubtitleColor: (color: string) => void;
+
+  subtitleLineHeight: number;
+  setSubtitleLineHeight: (lineHeight: number) => void;
+
+  subtitleSpaceAbove: 'slim' | 'medium' | 'large' | 'none';
+  setSubtitleSpaceAbove: (space: 'slim' | 'medium' | 'large' | 'none') => void;
+
+  // Header text settings
+  headerText: string;
+  setHeaderText: (text: string) => void;
+
+  headerTextStyleEnabled: boolean;
+  setHeaderTextStyleEnabled: (enabled: boolean) => void;
+
+  headerTextFont: string;
+  setHeaderTextFont: (font: string) => void;
+
+  headerTextFontSize: number; // Size multiplier (0.1 to 10.0) applied to base size
+  setHeaderTextFontSize: (size: number) => void;
+
+  headerTextBaseFontSizeMobile: number; // Base font size in px for mobile (<768px)
+  setHeaderTextBaseFontSizeMobile: (size: number) => void;
+
+  headerTextBaseFontSizeTablet: number; // Base font size in px for tablet (768px-1024px)
+  setHeaderTextBaseFontSizeTablet: (size: number) => void;
+
+  headerTextBaseFontSizeDesktop: number; // Base font size in px for desktop (>1024px)
+  setHeaderTextBaseFontSizeDesktop: (size: number) => void;
+
+  headerTextFontWeight: 'bold' | 'regular' | 'medium';
+  setHeaderTextFontWeight: (weight: 'bold' | 'regular' | 'medium') => void;
+
+  headerTextColor: string;
+  setHeaderTextColor: (color: string) => void;
+
+  headerTextLineHeight: number;
+  setHeaderTextLineHeight: (lineHeight: number) => void;
+
+  headerTextSpaceAbove: 'slim' | 'medium' | 'large' | 'none';
+  setHeaderTextSpaceAbove: (
+    space: 'slim' | 'medium' | 'large' | 'none'
+  ) => void;
+
+  // Header border settings
+  headerBorder: 'none' | 'top' | 'bottom' | 'top-bottom';
+  setHeaderBorder: (border: 'none' | 'top' | 'bottom' | 'top-bottom') => void;
+
+  headerBorderStyle: 'solid' | 'dashed' | 'dotted';
+  setHeaderBorderStyle: (style: 'solid' | 'dashed' | 'dotted') => void;
+
+  headerBorderSpace: number;
+  setHeaderBorderSpace: (space: number) => void;
+
+  headerBorderWidth: number;
+  setHeaderBorderWidth: (width: number) => void;
+
+  headerBorderColor: string;
+  setHeaderBorderColor: (color: string) => void;
+
+  // Header logo/image settings
+  headerLogoEnabled: boolean;
+  setHeaderLogoEnabled: (enabled: boolean) => void;
+
+  headerLogoImageUrl: string;
+  setHeaderLogoImageUrl: (url: string) => void;
+
+  headerLogoImageLink: string;
+  setHeaderLogoImageLink: (link: string) => void;
+
+  headerLogoHeight: number;
+  setHeaderLogoHeight: (height: number) => void;
+
+  headerLogoAlign: 'header' | 'main-container';
+  setHeaderLogoAlign: (align: 'header' | 'main-container') => void;
+
+  headerLogoPosition: 'top' | 'left' | 'right';
+  setHeaderLogoPosition: (position: 'top' | 'left' | 'right') => void;
+
+  headerLogoPositionTop: number;
+  setHeaderLogoPositionTop: (top: number) => void;
+
+  headerLogoPositionRight: number;
+  setHeaderLogoPositionRight: (right: number) => void;
+
+  headerLogoPositionBottom: number;
+  setHeaderLogoPositionBottom: (bottom: number) => void;
+
+  headerLogoPositionLeft: number;
+  setHeaderLogoPositionLeft: (left: number) => void;
 
   chartFooter: string;
   setChartFooter: (footer: string) => void;
@@ -111,16 +278,40 @@ interface ChartStore {
   setLayoutBackgroundImageUrl: (url: string) => void;
 
   layoutBackgroundImageSize: 'fill' | 'fit' | 'original' | 'stretch';
-  setLayoutBackgroundImageSize: (size: 'fill' | 'fit' | 'original' | 'stretch') => void;
+  setLayoutBackgroundImageSize: (
+    size: 'fill' | 'fit' | 'original' | 'stretch'
+  ) => void;
 
-  layoutBackgroundImagePosition: 'top-left' | 'top-right' | 'top-center' | 'center' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
-  setLayoutBackgroundImagePosition: (position: 'top-left' | 'top-right' | 'top-center' | 'center' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-right' | 'bottom-center') => void;
+  layoutBackgroundImagePosition:
+    | 'top-left'
+    | 'top-right'
+    | 'top-center'
+    | 'center'
+    | 'center-left'
+    | 'center-right'
+    | 'bottom-left'
+    | 'bottom-right'
+    | 'bottom-center';
+  setLayoutBackgroundImagePosition: (
+    position:
+      | 'top-left'
+      | 'top-right'
+      | 'top-center'
+      | 'center'
+      | 'center-left'
+      | 'center-right'
+      | 'bottom-left'
+      | 'bottom-right'
+      | 'bottom-center'
+  ) => void;
 
   layoutOrder: string;
   setLayoutOrder: (order: string) => void;
 
   layoutSpaceBetweenSections: 'none' | 'tight' | 'loose' | 'large';
-  setLayoutSpaceBetweenSections: (space: 'none' | 'tight' | 'loose' | 'large') => void;
+  setLayoutSpaceBetweenSections: (
+    space: 'none' | 'tight' | 'loose' | 'large'
+  ) => void;
 
   layoutMarginTop: number;
   setLayoutMarginTop: (margin: number) => void;
@@ -233,362 +424,115 @@ interface ChartStore {
 export const useChartStore = create<ChartStore>()(
   persist(
     (set, get) => ({
-  // Initial data state
-  dataTable: null,
-  setDataTable: (data) => set({ dataTable: data }),
-
-  // Initial spreadsheet data
-  data: (() => {
-    const initialData = [
-      ['Role', 'Media', 'Finance', 'Health', 'Education'],
-      ['Analyst', '25', '21', '18', '9'],
-      ['Journalist', '12', '9', '7', '10'],
-      ['Marketing', '4', '3', '6', '3'],
-      ['Sales', '3', '5', '2', '1'],
-    ];
-    return initialData;
-  })(),
-  setData: (data) => {
-    // Clean data to remove empty rows and columns
-    const cleanedData = cleanData(data);
-    set({ data: cleanedData });
-
-    // Extract column names from first row
-    if (cleanedData.length > 0 && cleanedData[0]) {
-      const columnNames = cleanedData[0].map((col: any) => String(col || ''));
-      set({ availableColumns: columnNames });
-
-      // Infer column types
-      const types = inferAllColumnTypes(cleanedData);
-      set({ columnTypes: types });
-
-      // Update column mapping if columns were deleted
-      const { columnMapping } = get();
-      const maxIndex = columnNames.length - 1;
-
-      // Filter out column indices that no longer exist
-      const newMapping = {
-        labels: columnMapping.labels !== null && columnMapping.labels <= maxIndex
-          ? columnMapping.labels
-          : null,
-        values: columnMapping.values.filter(idx => idx <= maxIndex),
-        chartsGrid: columnMapping.chartsGrid !== null && columnMapping.chartsGrid <= maxIndex
-          ? columnMapping.chartsGrid
-          : null,
-        rowFilter: columnMapping.rowFilter !== null && columnMapping.rowFilter <= maxIndex
-          ? columnMapping.rowFilter
-          : null,
-        customPopups: columnMapping.customPopups !== null && columnMapping.customPopups <= maxIndex
-          ? columnMapping.customPopups
-          : null,
-      };
-
-      set({ columnMapping: newMapping });
-    } else {
-      set({ availableColumns: [] });
-      set({ columnTypes: [] });
-    }
-  },
-  replaceData: (newData) => {
-    // Clean data to remove empty rows and columns
-    const cleanedData = cleanData(newData);
-    set({ data: cleanedData });
-
-    // Extract column names from first row
-    if (cleanedData.length > 0) {
-      const columnNames = cleanedData[0].map((col: any) => String(col));
-      set({ availableColumns: columnNames });
-
-      // Infer column types
-      const types = inferAllColumnTypes(cleanedData);
-      set({ columnTypes: types });
-
-      // Auto-set columns for new data
-      get().autoSetColumns();
-    }
-  },
-  mergeData: (newData) => {
-    const { data } = get();
-    // Remove header from new data if it exists
-    const dataToMerge = newData.length > 1 ? newData.slice(1) : newData;
-    // Append new rows to existing data
-    const mergedData = [...data, ...dataToMerge];
-    // Clean merged data
-    const cleanedData = cleanData(mergedData);
-    set({ data: cleanedData });
-  },
-  addRows: (count: number) => {
-    const { data } = get();
-    // Determine the number of columns from the first row
-    const columnCount = data.length > 0 && data[0] ? data[0].length : 5;
-
-    // Create empty rows
-    const newRows = Array.from({ length: count }, () =>
-      Array.from({ length: columnCount }, () => '')
-    );
-
-    // Append to existing data
-    const updatedData = [...data, ...newRows];
-    set({ data: updatedData });
-  },
-
-  // Initial column mapping
-  columnMapping: {
-    labels: null,
-    values: [],
-    chartsGrid: null,
-    rowFilter: null,
-    customPopups: null,
-  },
-  setColumnMapping: (mapping) =>
-    set((state) => ({
-      columnMapping: { ...state.columnMapping, ...mapping },
-    })),
-
-  // Auto-set columns based on data
-  autoSetColumns: () => {
-    const { availableColumns } = get();
-    if (availableColumns.length > 0) {
-      const labels = 0; // First column as labels
-      const values = availableColumns.slice(1).map((_, i) => i + 1); // Rest as values
-      set({
-        columnMapping: {
-          labels,
-          values,
-          chartsGrid: null,
-          rowFilter: null,
-          customPopups: null,
-        },
-      });
-    }
-  },
-
-  // Available columns
-  availableColumns: ['Role', 'Media', 'Finance', 'Health', 'Education'],
-  setAvailableColumns: (columns) => set({ availableColumns: columns }),
-
-  // Column types - initialize with inferred types for initial data
-  columnTypes: (() => {
-    const initialData = [
-      ['Role', 'Media', 'Finance', 'Health', 'Education'],
-      ['Analyst', '25', '21', '18', '9'],
-      ['Journalist', '12', '9', '7', '10'],
-      ['Marketing', '4', '3', '6', '3'],
-      ['Sales', '3', '5', '2', '1'],
-    ];
-    return inferAllColumnTypes(initialData);
-  })(),
-  setColumnTypes: (types) => set({ columnTypes: types }),
-
-  // Initial chart state
-  chartType: 'bar',
-  setChartType: (type) => set({ chartType: type }),
-
-  chartConfig: {
-    type: 'bar',
-    responsive: true,
-    animation: {
-      enabled: true,
-      duration: 300,
-      easing: 'ease-in-out',
-    },
-    legend: {
-      show: true,
-      position: 'top',
-    },
-    theme: 'light',
-  },
-  setChartConfig: (config) =>
-    set((state) => ({
-      chartConfig: { ...state.chartConfig, ...config },
-    })),
-
-  chartData: null,
-  setChartData: (data) => set({ chartData: data }),
-
-  // Chart settings
-  theme: 'none',
-  setTheme: (theme) => set({ theme }),
-
-  gridMode: 'single',
-  setGridMode: (mode) => set({ gridMode: mode }),
-
-  heightMode: 'auto',
-  setHeightMode: (mode) => set({ heightMode: mode }),
-
-  aggregationMode: 'sum',
-  setAggregationMode: (mode) => set({ aggregationMode: mode }),
-
-  // Preview settings
-  previewWidth: 1920,
-  setPreviewWidth: (width) => set({ previewWidth: width }),
-
-  previewHeight: 1080,
-  setPreviewHeight: (height) => set({ previewHeight: height }),
-
-  previewDevice: 'desktop',
-  setPreviewDevice: (device) => set({ previewDevice: device }),
-
-  colorblindMode: 'none',
-  setColorblindMode: (mode) => set({ colorblindMode: mode }),
-
-  darkModePreview: 'light',
-  setDarkModePreview: (mode) => set({ darkModePreview: mode }),
-
-  // Chart metadata
-  chartTitle: '',
-  setChartTitle: (title) => set({ chartTitle: title }),
-
-  chartDescription: '',
-  setChartDescription: (description) => set({ chartDescription: description }),
-
-  chartFooter: '',
-  setChartFooter: (footer) => set({ chartFooter: footer }),
-
-  // Layout settings
-  layoutMainFont: 'Inter',
-  setLayoutMainFont: (font) => set({ layoutMainFont: font }),
-
-  layoutTextColor: '#000000',
-  setLayoutTextColor: (color) => set({ layoutTextColor: color }),
-
-  layoutBackgroundColorEnabled: true,
-  setLayoutBackgroundColorEnabled: (enabled) => set({ layoutBackgroundColorEnabled: enabled }),
-
-  layoutBackgroundImageEnabled: false,
-  setLayoutBackgroundImageEnabled: (enabled) => set({ layoutBackgroundImageEnabled: enabled }),
-
-  layoutBackgroundColor: '#ffffff',
-  setLayoutBackgroundColor: (color) => set({ layoutBackgroundColor: color }),
-
-  layoutBackgroundImageUrl: '',
-  setLayoutBackgroundImageUrl: (url) => set({ layoutBackgroundImageUrl: url }),
-
-  layoutBackgroundImageSize: 'fill',
-  setLayoutBackgroundImageSize: (size) => set({ layoutBackgroundImageSize: size }),
-
-  layoutBackgroundImagePosition: 'center',
-  setLayoutBackgroundImagePosition: (position) => set({ layoutBackgroundImagePosition: position }),
-
-  layoutOrder: 'header-controls-legend-primary-graphic-footer',
-  setLayoutOrder: (order) => set({ layoutOrder: order }),
-
-  layoutSpaceBetweenSections: 'loose',
-  setLayoutSpaceBetweenSections: (space) => set({ layoutSpaceBetweenSections: space }),
-
-  layoutMarginTop: 0,
-  setLayoutMarginTop: (margin) => set({ layoutMarginTop: margin }),
-
-  layoutMarginRight: 0,
-  setLayoutMarginRight: (margin) => set({ layoutMarginRight: margin }),
-
-  layoutMarginBottom: 0,
-  setLayoutMarginBottom: (margin) => set({ layoutMarginBottom: margin }),
-
-  layoutMarginLeft: 0,
-  setLayoutMarginLeft: (margin) => set({ layoutMarginLeft: margin }),
-
-  layoutPaddingTop: 24,
-  setLayoutPaddingTop: (padding) => set({ layoutPaddingTop: padding }),
-
-  layoutPaddingRight: 24,
-  setLayoutPaddingRight: (padding) => set({ layoutPaddingRight: padding }),
-
-  layoutPaddingBottom: 24,
-  setLayoutPaddingBottom: (padding) => set({ layoutPaddingBottom: padding }),
-
-  layoutPaddingLeft: 24,
-  setLayoutPaddingLeft: (padding) => set({ layoutPaddingLeft: padding }),
-
-  layoutBorderEnabled: false,
-  setLayoutBorderEnabled: (enabled) => set({ layoutBorderEnabled: enabled }),
-
-  layoutBorderTop: true,
-  setLayoutBorderTop: (enabled) => set({ layoutBorderTop: enabled }),
-
-  layoutBorderRight: true,
-  setLayoutBorderRight: (enabled) => set({ layoutBorderRight: enabled }),
-
-  layoutBorderBottom: true,
-  setLayoutBorderBottom: (enabled) => set({ layoutBorderBottom: enabled }),
-
-  layoutBorderLeft: true,
-  setLayoutBorderLeft: (enabled) => set({ layoutBorderLeft: enabled }),
-
-  layoutBorderStyle: 'solid',
-  setLayoutBorderStyle: (style) => set({ layoutBorderStyle: style }),
-
-  layoutBorderColor: '#e4e4e7',
-  setLayoutBorderColor: (color) => set({ layoutBorderColor: color }),
-
-  layoutBorderWidth: 1,
-  setLayoutBorderWidth: (width) => set({ layoutBorderWidth: width }),
-
-  layoutBorderRadius: 0,
-  setLayoutBorderRadius: (radius) => set({ layoutBorderRadius: radius }),
-
-  layoutReadDirection: 'ltr',
-  setLayoutReadDirection: (direction) => set({ layoutReadDirection: direction }),
-
-  // Legend settings
-  legendShow: true,
-  setLegendShow: (show) => set({ legendShow: show }),
-
-  legendPosition: 'right',
-  setLegendPosition: (position) => set({ legendPosition: position }),
-
-  legendAlignment: 'start',
-  setLegendAlignment: (alignment) => set({ legendAlignment: alignment }),
-
-  legendFontSize: 1.0, // Default 1.0 = 1rem
-  setLegendFontSize: (size) => set({ legendFontSize: size }),
-
-  legendBaseFontSizeMobile: 12, // 12px base for mobile
-  setLegendBaseFontSizeMobile: (size) => set({ legendBaseFontSizeMobile: size }),
-
-  legendBaseFontSizeTablet: 14, // 14px base for tablet
-  setLegendBaseFontSizeTablet: (size) => set({ legendBaseFontSizeTablet: size }),
-
-  legendBaseFontSizeDesktop: 16, // 16px base for desktop
-  setLegendBaseFontSizeDesktop: (size) => set({ legendBaseFontSizeDesktop: size }),
-
-  legendShowValues: false,
-  setLegendShowValues: (show) => set({ legendShowValues: show }),
-
-  legendGap: 20,
-  setLegendGap: (gap) => set({ legendGap: gap }),
-
-  legendPaddingTop: 0,
-  setLegendPaddingTop: (padding) => set({ legendPaddingTop: padding }),
-
-  legendPaddingRight: 0,
-  setLegendPaddingRight: (padding) => set({ legendPaddingRight: padding }),
-
-  legendPaddingBottom: 0,
-  setLegendPaddingBottom: (padding) => set({ legendPaddingBottom: padding }),
-
-  legendPaddingLeft: 0,
-  setLegendPaddingLeft: (padding) => set({ legendPaddingLeft: padding }),
-
-  // Initial UI state
-  isDataPanelOpen: true,
-  toggleDataPanel: () =>
-    set((state) => ({ isDataPanelOpen: !state.isDataPanelOpen })),
-
-  isConfigPanelOpen: true,
-  toggleConfigPanel: () =>
-    set((state) => ({ isConfigPanelOpen: !state.isConfigPanelOpen })),
-
-  isExporting: false,
-  setIsExporting: (value) => set({ isExporting: value }),
-
-  // Reset action
-  resetChart: () =>
-    set({
+      // Initial data state
       dataTable: null,
-      chartData: null,
-      data: [['', '', '', '', '']],
-      availableColumns: [],
+      setDataTable: (data) => set({ dataTable: data }),
+
+      // Initial spreadsheet data
+      data: (() => {
+        const initialData = [
+          ['Role', 'Media', 'Finance', 'Health', 'Education'],
+          ['Analyst', '25', '21', '18', '9'],
+          ['Journalist', '12', '9', '7', '10'],
+          ['Marketing', '4', '3', '6', '3'],
+          ['Sales', '3', '5', '2', '1'],
+        ];
+        return initialData;
+      })(),
+      setData: (data) => {
+        // Clean data to remove empty rows and columns
+        const cleanedData = cleanData(data);
+        set({ data: cleanedData });
+
+        // Extract column names from first row
+        if (cleanedData.length > 0 && cleanedData[0]) {
+          const columnNames = cleanedData[0].map((col: any) =>
+            String(col || '')
+          );
+          set({ availableColumns: columnNames });
+
+          // Infer column types
+          const types = inferAllColumnTypes(cleanedData);
+          set({ columnTypes: types });
+
+          // Update column mapping if columns were deleted
+          const { columnMapping } = get();
+          const maxIndex = columnNames.length - 1;
+
+          // Filter out column indices that no longer exist
+          const newMapping = {
+            labels:
+              columnMapping.labels !== null && columnMapping.labels <= maxIndex
+                ? columnMapping.labels
+                : null,
+            values: columnMapping.values.filter((idx) => idx <= maxIndex),
+            chartsGrid:
+              columnMapping.chartsGrid !== null &&
+              columnMapping.chartsGrid <= maxIndex
+                ? columnMapping.chartsGrid
+                : null,
+            rowFilter:
+              columnMapping.rowFilter !== null &&
+              columnMapping.rowFilter <= maxIndex
+                ? columnMapping.rowFilter
+                : null,
+            customPopups:
+              columnMapping.customPopups !== null &&
+              columnMapping.customPopups <= maxIndex
+                ? columnMapping.customPopups
+                : null,
+          };
+
+          set({ columnMapping: newMapping });
+        } else {
+          set({ availableColumns: [] });
+          set({ columnTypes: [] });
+        }
+      },
+      replaceData: (newData) => {
+        // Clean data to remove empty rows and columns
+        const cleanedData = cleanData(newData);
+        set({ data: cleanedData });
+
+        // Extract column names from first row
+        if (cleanedData.length > 0) {
+          const columnNames = cleanedData[0].map((col: any) => String(col));
+          set({ availableColumns: columnNames });
+
+          // Infer column types
+          const types = inferAllColumnTypes(cleanedData);
+          set({ columnTypes: types });
+
+          // Auto-set columns for new data
+          get().autoSetColumns();
+        }
+      },
+      mergeData: (newData) => {
+        const { data } = get();
+        // Remove header from new data if it exists
+        const dataToMerge = newData.length > 1 ? newData.slice(1) : newData;
+        // Append new rows to existing data
+        const mergedData = [...data, ...dataToMerge];
+        // Clean merged data
+        const cleanedData = cleanData(mergedData);
+        set({ data: cleanedData });
+      },
+      addRows: (count: number) => {
+        const { data } = get();
+        // Determine the number of columns from the first row
+        const columnCount = data.length > 0 && data[0] ? data[0].length : 5;
+
+        // Create empty rows
+        const newRows = Array.from({ length: count }, () =>
+          Array.from({ length: columnCount }, () => '')
+        );
+
+        // Append to existing data
+        const updatedData = [...data, ...newRows];
+        set({ data: updatedData });
+      },
+
+      // Initial column mapping
       columnMapping: {
         labels: null,
         values: [],
@@ -596,7 +540,50 @@ export const useChartStore = create<ChartStore>()(
         rowFilter: null,
         customPopups: null,
       },
+      setColumnMapping: (mapping) =>
+        set((state) => ({
+          columnMapping: { ...state.columnMapping, ...mapping },
+        })),
+
+      // Auto-set columns based on data
+      autoSetColumns: () => {
+        const { availableColumns } = get();
+        if (availableColumns.length > 0) {
+          const labels = 0; // First column as labels
+          const values = availableColumns.slice(1).map((_, i) => i + 1); // Rest as values
+          set({
+            columnMapping: {
+              labels,
+              values,
+              chartsGrid: null,
+              rowFilter: null,
+              customPopups: null,
+            },
+          });
+        }
+      },
+
+      // Available columns
+      availableColumns: ['Role', 'Media', 'Finance', 'Health', 'Education'],
+      setAvailableColumns: (columns) => set({ availableColumns: columns }),
+
+      // Column types - initialize with inferred types for initial data
+      columnTypes: (() => {
+        const initialData = [
+          ['Role', 'Media', 'Finance', 'Health', 'Education'],
+          ['Analyst', '25', '21', '18', '9'],
+          ['Journalist', '12', '9', '7', '10'],
+          ['Marketing', '4', '3', '6', '3'],
+          ['Sales', '3', '5', '2', '1'],
+        ];
+        return inferAllColumnTypes(initialData);
+      })(),
+      setColumnTypes: (types) => set({ columnTypes: types }),
+
+      // Initial chart state
       chartType: 'bar',
+      setChartType: (type) => set({ chartType: type }),
+
       chartConfig: {
         type: 'bar',
         responsive: true,
@@ -611,11 +598,398 @@ export const useChartStore = create<ChartStore>()(
         },
         theme: 'light',
       },
-    }),
+      setChartConfig: (config) =>
+        set((state) => ({
+          chartConfig: { ...state.chartConfig, ...config },
+        })),
+
+      chartData: null,
+      setChartData: (data) => set({ chartData: data }),
+
+      // Chart settings
+      theme: 'none',
+      setTheme: (theme) => set({ theme }),
+
+      gridMode: 'single',
+      setGridMode: (mode) => set({ gridMode: mode }),
+
+      heightMode: 'auto',
+      setHeightMode: (mode) => set({ heightMode: mode }),
+
+      aggregationMode: 'sum',
+      setAggregationMode: (mode) => set({ aggregationMode: mode }),
+
+      // Preview settings
+      previewWidth: 1920,
+      setPreviewWidth: (width) => set({ previewWidth: width }),
+
+      previewHeight: 1080,
+      setPreviewHeight: (height) => set({ previewHeight: height }),
+
+      previewDevice: 'desktop',
+      setPreviewDevice: (device) => set({ previewDevice: device }),
+
+      colorblindMode: 'none',
+      setColorblindMode: (mode) => set({ colorblindMode: mode }),
+
+      darkModePreview: 'light',
+      setDarkModePreview: (mode) => set({ darkModePreview: mode }),
+
+      // Chart metadata
+      chartTitle: '',
+      setChartTitle: (title) => set({ chartTitle: title }),
+
+      chartDescription: '',
+      setChartDescription: (description) =>
+        set({ chartDescription: description }),
+
+      // Header settings
+      headerAlignment: 'left',
+      setHeaderAlignment: (alignment) => set({ headerAlignment: alignment }),
+
+      // Title settings
+      titleStyleEnabled: false,
+      setTitleStyleEnabled: (enabled) => set({ titleStyleEnabled: enabled }),
+
+      titleFont: 'Same as parent',
+      setTitleFont: (font) => set({ titleFont: font }),
+
+      titleFontSize: 1.0,
+      setTitleFontSize: (size) => set({ titleFontSize: size }),
+
+      titleBaseFontSizeMobile: 24,
+      setTitleBaseFontSizeMobile: (size) => set({ titleBaseFontSizeMobile: size }),
+
+      titleBaseFontSizeTablet: 28,
+      setTitleBaseFontSizeTablet: (size) => set({ titleBaseFontSizeTablet: size }),
+
+      titleBaseFontSizeDesktop: 32,
+      setTitleBaseFontSizeDesktop: (size) => set({ titleBaseFontSizeDesktop: size }),
+
+      titleFontWeight: 'bold',
+      setTitleFontWeight: (weight) => set({ titleFontWeight: weight }),
+
+      titleColor: '#000000',
+      setTitleColor: (color) => set({ titleColor: color }),
+
+      titleLineHeight: 1.2,
+      setTitleLineHeight: (lineHeight) => set({ titleLineHeight: lineHeight }),
+
+      titleSpaceAbove: 'none',
+      setTitleSpaceAbove: (space) => set({ titleSpaceAbove: space }),
+
+      // Subtitle settings
+      chartSubtitle: '',
+      setChartSubtitle: (subtitle) => set({ chartSubtitle: subtitle }),
+
+      subtitleStyleEnabled: false,
+      setSubtitleStyleEnabled: (enabled) =>
+        set({ subtitleStyleEnabled: enabled }),
+
+      subtitleFont: 'Same as parent',
+      setSubtitleFont: (font) => set({ subtitleFont: font }),
+
+      subtitleFontSize: 1.0,
+      setSubtitleFontSize: (size) => set({ subtitleFontSize: size }),
+
+      subtitleBaseFontSizeMobile: 18,
+      setSubtitleBaseFontSizeMobile: (size) => set({ subtitleBaseFontSizeMobile: size }),
+
+      subtitleBaseFontSizeTablet: 20,
+      setSubtitleBaseFontSizeTablet: (size) => set({ subtitleBaseFontSizeTablet: size }),
+
+      subtitleBaseFontSizeDesktop: 22,
+      setSubtitleBaseFontSizeDesktop: (size) => set({ subtitleBaseFontSizeDesktop: size }),
+
+      subtitleFontWeight: 'regular',
+      setSubtitleFontWeight: (weight) => set({ subtitleFontWeight: weight }),
+
+      subtitleColor: '#000000',
+      setSubtitleColor: (color) => set({ subtitleColor: color }),
+
+      subtitleLineHeight: 1.3,
+      setSubtitleLineHeight: (lineHeight) =>
+        set({ subtitleLineHeight: lineHeight }),
+
+      subtitleSpaceAbove: 'slim',
+      setSubtitleSpaceAbove: (space) => set({ subtitleSpaceAbove: space }),
+
+      // Header text settings
+      headerText: '',
+      setHeaderText: (text) => set({ headerText: text }),
+
+      headerTextStyleEnabled: false,
+      setHeaderTextStyleEnabled: (enabled) =>
+        set({ headerTextStyleEnabled: enabled }),
+
+      headerTextFont: 'Same as parent',
+      setHeaderTextFont: (font) => set({ headerTextFont: font }),
+
+      headerTextFontSize: 1.0,
+      setHeaderTextFontSize: (size) => set({ headerTextFontSize: size }),
+
+      headerTextBaseFontSizeMobile: 14,
+      setHeaderTextBaseFontSizeMobile: (size) => set({ headerTextBaseFontSizeMobile: size }),
+
+      headerTextBaseFontSizeTablet: 15,
+      setHeaderTextBaseFontSizeTablet: (size) => set({ headerTextBaseFontSizeTablet: size }),
+
+      headerTextBaseFontSizeDesktop: 16,
+      setHeaderTextBaseFontSizeDesktop: (size) => set({ headerTextBaseFontSizeDesktop: size }),
+
+      headerTextFontWeight: 'regular',
+      setHeaderTextFontWeight: (weight) =>
+        set({ headerTextFontWeight: weight }),
+
+      headerTextColor: '#000000',
+      setHeaderTextColor: (color) => set({ headerTextColor: color }),
+
+      headerTextLineHeight: 1.5,
+      setHeaderTextLineHeight: (lineHeight) =>
+        set({ headerTextLineHeight: lineHeight }),
+
+      headerTextSpaceAbove: 'slim',
+      setHeaderTextSpaceAbove: (space) => set({ headerTextSpaceAbove: space }),
+
+      // Header border settings
+      headerBorder: 'none',
+      setHeaderBorder: (border) => set({ headerBorder: border }),
+
+      headerBorderStyle: 'solid',
+      setHeaderBorderStyle: (style) => set({ headerBorderStyle: style }),
+
+      headerBorderSpace: 10,
+      setHeaderBorderSpace: (space) => set({ headerBorderSpace: space }),
+
+      headerBorderWidth: 1,
+      setHeaderBorderWidth: (width) => set({ headerBorderWidth: width }),
+
+      headerBorderColor: '#e5e7eb',
+      setHeaderBorderColor: (color) => set({ headerBorderColor: color }),
+
+      // Header logo/image settings
+      headerLogoEnabled: false,
+      setHeaderLogoEnabled: (enabled) => set({ headerLogoEnabled: enabled }),
+
+      headerLogoImageUrl: '',
+      setHeaderLogoImageUrl: (url) => set({ headerLogoImageUrl: url }),
+
+      headerLogoImageLink: '',
+      setHeaderLogoImageLink: (link) => set({ headerLogoImageLink: link }),
+
+      headerLogoHeight: 50,
+      setHeaderLogoHeight: (height) => set({ headerLogoHeight: height }),
+
+      headerLogoAlign: 'header',
+      setHeaderLogoAlign: (align) => set({ headerLogoAlign: align }),
+
+      headerLogoPosition: 'top',
+      setHeaderLogoPosition: (position) =>
+        set({ headerLogoPosition: position }),
+
+      headerLogoPositionTop: 0,
+      setHeaderLogoPositionTop: (top) => set({ headerLogoPositionTop: top }),
+
+      headerLogoPositionRight: 0,
+      setHeaderLogoPositionRight: (right) =>
+        set({ headerLogoPositionRight: right }),
+
+      headerLogoPositionBottom: 0,
+      setHeaderLogoPositionBottom: (bottom) =>
+        set({ headerLogoPositionBottom: bottom }),
+
+      headerLogoPositionLeft: 0,
+      setHeaderLogoPositionLeft: (left) =>
+        set({ headerLogoPositionLeft: left }),
+
+      chartFooter: '',
+      setChartFooter: (footer) => set({ chartFooter: footer }),
+
+      // Layout settings
+      layoutMainFont: 'Inter',
+      setLayoutMainFont: (font) => set({ layoutMainFont: font }),
+
+      layoutTextColor: '#000000',
+      setLayoutTextColor: (color) => set({ layoutTextColor: color }),
+
+      layoutBackgroundColorEnabled: true,
+      setLayoutBackgroundColorEnabled: (enabled) =>
+        set({ layoutBackgroundColorEnabled: enabled }),
+
+      layoutBackgroundImageEnabled: false,
+      setLayoutBackgroundImageEnabled: (enabled) =>
+        set({ layoutBackgroundImageEnabled: enabled }),
+
+      layoutBackgroundColor: '#ffffff',
+      setLayoutBackgroundColor: (color) =>
+        set({ layoutBackgroundColor: color }),
+
+      layoutBackgroundImageUrl: '',
+      setLayoutBackgroundImageUrl: (url) =>
+        set({ layoutBackgroundImageUrl: url }),
+
+      layoutBackgroundImageSize: 'fill',
+      setLayoutBackgroundImageSize: (size) =>
+        set({ layoutBackgroundImageSize: size }),
+
+      layoutBackgroundImagePosition: 'center',
+      setLayoutBackgroundImagePosition: (position) =>
+        set({ layoutBackgroundImagePosition: position }),
+
+      layoutOrder: 'header-controls-legend-primary-graphic-footer',
+      setLayoutOrder: (order) => set({ layoutOrder: order }),
+
+      layoutSpaceBetweenSections: 'loose',
+      setLayoutSpaceBetweenSections: (space) =>
+        set({ layoutSpaceBetweenSections: space }),
+
+      layoutMarginTop: 0,
+      setLayoutMarginTop: (margin) => set({ layoutMarginTop: margin }),
+
+      layoutMarginRight: 0,
+      setLayoutMarginRight: (margin) => set({ layoutMarginRight: margin }),
+
+      layoutMarginBottom: 0,
+      setLayoutMarginBottom: (margin) => set({ layoutMarginBottom: margin }),
+
+      layoutMarginLeft: 0,
+      setLayoutMarginLeft: (margin) => set({ layoutMarginLeft: margin }),
+
+      layoutPaddingTop: 24,
+      setLayoutPaddingTop: (padding) => set({ layoutPaddingTop: padding }),
+
+      layoutPaddingRight: 24,
+      setLayoutPaddingRight: (padding) => set({ layoutPaddingRight: padding }),
+
+      layoutPaddingBottom: 24,
+      setLayoutPaddingBottom: (padding) =>
+        set({ layoutPaddingBottom: padding }),
+
+      layoutPaddingLeft: 24,
+      setLayoutPaddingLeft: (padding) => set({ layoutPaddingLeft: padding }),
+
+      layoutBorderEnabled: false,
+      setLayoutBorderEnabled: (enabled) =>
+        set({ layoutBorderEnabled: enabled }),
+
+      layoutBorderTop: true,
+      setLayoutBorderTop: (enabled) => set({ layoutBorderTop: enabled }),
+
+      layoutBorderRight: true,
+      setLayoutBorderRight: (enabled) => set({ layoutBorderRight: enabled }),
+
+      layoutBorderBottom: true,
+      setLayoutBorderBottom: (enabled) => set({ layoutBorderBottom: enabled }),
+
+      layoutBorderLeft: true,
+      setLayoutBorderLeft: (enabled) => set({ layoutBorderLeft: enabled }),
+
+      layoutBorderStyle: 'solid',
+      setLayoutBorderStyle: (style) => set({ layoutBorderStyle: style }),
+
+      layoutBorderColor: '#e4e4e7',
+      setLayoutBorderColor: (color) => set({ layoutBorderColor: color }),
+
+      layoutBorderWidth: 1,
+      setLayoutBorderWidth: (width) => set({ layoutBorderWidth: width }),
+
+      layoutBorderRadius: 0,
+      setLayoutBorderRadius: (radius) => set({ layoutBorderRadius: radius }),
+
+      layoutReadDirection: 'ltr',
+      setLayoutReadDirection: (direction) =>
+        set({ layoutReadDirection: direction }),
+
+      // Legend settings
+      legendShow: true,
+      setLegendShow: (show) => set({ legendShow: show }),
+
+      legendPosition: 'right',
+      setLegendPosition: (position) => set({ legendPosition: position }),
+
+      legendAlignment: 'start',
+      setLegendAlignment: (alignment) => set({ legendAlignment: alignment }),
+
+      legendFontSize: 1.0, // Default 1.0 = 1rem
+      setLegendFontSize: (size) => set({ legendFontSize: size }),
+
+      legendBaseFontSizeMobile: 12, // 12px base for mobile
+      setLegendBaseFontSizeMobile: (size) =>
+        set({ legendBaseFontSizeMobile: size }),
+
+      legendBaseFontSizeTablet: 14, // 14px base for tablet
+      setLegendBaseFontSizeTablet: (size) =>
+        set({ legendBaseFontSizeTablet: size }),
+
+      legendBaseFontSizeDesktop: 16, // 16px base for desktop
+      setLegendBaseFontSizeDesktop: (size) =>
+        set({ legendBaseFontSizeDesktop: size }),
+
+      legendShowValues: false,
+      setLegendShowValues: (show) => set({ legendShowValues: show }),
+
+      legendGap: 20,
+      setLegendGap: (gap) => set({ legendGap: gap }),
+
+      legendPaddingTop: 0,
+      setLegendPaddingTop: (padding) => set({ legendPaddingTop: padding }),
+
+      legendPaddingRight: 0,
+      setLegendPaddingRight: (padding) => set({ legendPaddingRight: padding }),
+
+      legendPaddingBottom: 0,
+      setLegendPaddingBottom: (padding) =>
+        set({ legendPaddingBottom: padding }),
+
+      legendPaddingLeft: 0,
+      setLegendPaddingLeft: (padding) => set({ legendPaddingLeft: padding }),
+
+      // Initial UI state
+      isDataPanelOpen: true,
+      toggleDataPanel: () =>
+        set((state) => ({ isDataPanelOpen: !state.isDataPanelOpen })),
+
+      isConfigPanelOpen: true,
+      toggleConfigPanel: () =>
+        set((state) => ({ isConfigPanelOpen: !state.isConfigPanelOpen })),
+
+      isExporting: false,
+      setIsExporting: (value) => set({ isExporting: value }),
+
+      // Reset action
+      resetChart: () =>
+        set({
+          dataTable: null,
+          chartData: null,
+          data: [['', '', '', '', '']],
+          availableColumns: [],
+          columnMapping: {
+            labels: null,
+            values: [],
+            chartsGrid: null,
+            rowFilter: null,
+            customPopups: null,
+          },
+          chartType: 'bar',
+          chartConfig: {
+            type: 'bar',
+            responsive: true,
+            animation: {
+              enabled: true,
+              duration: 300,
+              easing: 'ease-in-out',
+            },
+            legend: {
+              show: true,
+              position: 'top',
+            },
+            theme: 'light',
+          },
+        }),
     }),
     {
       name: 'claude-charts-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({
         data: state.data,
         columnMapping: state.columnMapping,
@@ -634,6 +1008,54 @@ export const useChartStore = create<ChartStore>()(
         darkModePreview: state.darkModePreview,
         chartTitle: state.chartTitle,
         chartDescription: state.chartDescription,
+        headerAlignment: state.headerAlignment,
+        titleStyleEnabled: state.titleStyleEnabled,
+        titleFont: state.titleFont,
+        titleFontSize: state.titleFontSize,
+        titleBaseFontSizeMobile: state.titleBaseFontSizeMobile,
+        titleBaseFontSizeTablet: state.titleBaseFontSizeTablet,
+        titleBaseFontSizeDesktop: state.titleBaseFontSizeDesktop,
+        titleFontWeight: state.titleFontWeight,
+        titleColor: state.titleColor,
+        titleLineHeight: state.titleLineHeight,
+        titleSpaceAbove: state.titleSpaceAbove,
+        chartSubtitle: state.chartSubtitle,
+        subtitleStyleEnabled: state.subtitleStyleEnabled,
+        subtitleFont: state.subtitleFont,
+        subtitleFontSize: state.subtitleFontSize,
+        subtitleBaseFontSizeMobile: state.subtitleBaseFontSizeMobile,
+        subtitleBaseFontSizeTablet: state.subtitleBaseFontSizeTablet,
+        subtitleBaseFontSizeDesktop: state.subtitleBaseFontSizeDesktop,
+        subtitleFontWeight: state.subtitleFontWeight,
+        subtitleColor: state.subtitleColor,
+        subtitleLineHeight: state.subtitleLineHeight,
+        subtitleSpaceAbove: state.subtitleSpaceAbove,
+        headerText: state.headerText,
+        headerTextStyleEnabled: state.headerTextStyleEnabled,
+        headerTextFont: state.headerTextFont,
+        headerTextFontSize: state.headerTextFontSize,
+        headerTextBaseFontSizeMobile: state.headerTextBaseFontSizeMobile,
+        headerTextBaseFontSizeTablet: state.headerTextBaseFontSizeTablet,
+        headerTextBaseFontSizeDesktop: state.headerTextBaseFontSizeDesktop,
+        headerTextFontWeight: state.headerTextFontWeight,
+        headerTextColor: state.headerTextColor,
+        headerTextLineHeight: state.headerTextLineHeight,
+        headerTextSpaceAbove: state.headerTextSpaceAbove,
+        headerBorder: state.headerBorder,
+        headerBorderStyle: state.headerBorderStyle,
+        headerBorderSpace: state.headerBorderSpace,
+        headerBorderWidth: state.headerBorderWidth,
+        headerBorderColor: state.headerBorderColor,
+        headerLogoEnabled: state.headerLogoEnabled,
+        headerLogoImageUrl: state.headerLogoImageUrl,
+        headerLogoImageLink: state.headerLogoImageLink,
+        headerLogoHeight: state.headerLogoHeight,
+        headerLogoAlign: state.headerLogoAlign,
+        headerLogoPosition: state.headerLogoPosition,
+        headerLogoPositionTop: state.headerLogoPositionTop,
+        headerLogoPositionRight: state.headerLogoPositionRight,
+        headerLogoPositionBottom: state.headerLogoPositionBottom,
+        headerLogoPositionLeft: state.headerLogoPositionLeft,
         chartFooter: state.chartFooter,
         layoutMainFont: state.layoutMainFont,
         layoutTextColor: state.layoutTextColor,

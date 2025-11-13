@@ -1,0 +1,18 @@
+/* Chart Header Text Responsive Font Sizing */
+
+.chart-header-text {
+  font-size: var(--header-text-font-size-mobile);
+  transition: all 0.1s ease-out;
+}
+
+@media (min-width: 768px) {
+  .chart-header-text {
+    font-size: var(--header-text-font-size-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-header-text {
+    font-size: var(--header-text-font-size-desktop);
+  }
+}

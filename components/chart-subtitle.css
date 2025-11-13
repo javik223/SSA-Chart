@@ -1,0 +1,18 @@
+/* Chart Subtitle Responsive Font Sizing */
+
+.chart-subtitle {
+  font-size: var(--subtitle-font-size-mobile);
+  transition: all 0.1s ease-out;
+}
+
+@media (min-width: 768px) {
+  .chart-subtitle {
+    font-size: var(--subtitle-font-size-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-subtitle {
+    font-size: var(--subtitle-font-size-desktop);
+  }
+}

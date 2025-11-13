@@ -9,7 +9,6 @@ export const ChartFooter = memo(function ChartFooter() {
   const setChartFooter = useChartStore((state) => state.setChartFooter);
   const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
   const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
-  const layoutPaddingBottom = useChartStore((state) => state.layoutPaddingBottom);
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState('');
@@ -70,7 +69,6 @@ export const ChartFooter = memo(function ChartFooter() {
         paddingLeft: `${layoutPaddingLeft}px`,
         paddingRight: `${layoutPaddingRight}px`,
         paddingTop: '16px',
-        paddingBottom: `${layoutPaddingBottom}px`,
       }}
     >
       {isEditing ? (

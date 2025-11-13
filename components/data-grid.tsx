@@ -189,77 +189,91 @@ export function DataGrid({
     }
   };
 
+  const handleCells = (row: number, col: number) => {
+    const cellProperties: Partial<Handsontable.CellProperties> = {};
+
+    // Build className array for better management
+    const classNames: string[] = [];
+
+    // Style header row (row 0)
+    if (row === 0) {
+      classNames.push('htMiddle', 'font-semibold');
+      cellProperties.readOnly = false; // Allow editing headers
+    }
+
+    // Apply cell styling for column mapping (skip header row)
+    if (row > 0) {
+      if (col === columnMapping.labels) {
+        classNames.push('bg-pink-100');
+      } else if (columnMapping.values.includes(col)) {
+        classNames.push('bg-purple-100');
+      }
+    }
+
+    // Check for search highlights
+    const isSearchResult = searchResults.some(
+      (result) => result.row === row && result.col === col
+    );
+    if (isSearchResult) {
+      classNames.push('bg-yellow-200');
+    }
+
+    // Set the final className
+    if (classNames.length > 0) {
+      cellProperties.className = classNames.join(' ');
+    }
+
+    return cellProperties;
+  };
+
   return (
-    <HotTable
-      ref={hotRef}
-      themeName='ht-theme-main'
-      className='w-full h-full'
-      data={data}
-      rowHeaders={true}
-      colHeaders={colHeaderFunction}
-      height='100%'
-      width='100%'
-      contextMenu={true}
-      minSpareRows={0}
-      stretchH='all'
-      licenseKey='non-commercial-and-evaluation'
-      manualColumnResize={true}
-      manualRowResize={true}
-      manualColumnMove={true}
-      manualRowMove={true}
-      dropdownMenu={true}
-      filters={true}
-      multiColumnSorting={true}
-      textEllipsis={true}
-      wordWrap={true}
-      fixedRowsTop={1}
-      // fixedColumnsStart={1}
-      manualColumnFreeze={true}
-      hiddenRows={true}
-      pagination={{
-        pageSize: 100,
-      }}
-      beforeColumnSort={() => {
-        // Disable sorting to prevent header row from being sorted
-        return false;
-      }}
-      cells={(row, col) => {
-        const cellProperties: Partial<Handsontable.CellProperties> = {};
-
-        // Build className array for better management
-        const classNames: string[] = [];
-
-        // Style header row (row 0)
-        if (row === 0) {
-          classNames.push('htMiddle', 'font-semibold');
-          cellProperties.readOnly = false; // Allow editing headers
-        }
-
-        // Apply cell styling for column mapping (skip header row)
-        if (row > 0) {
-          if (col === columnMapping.labels) {
-            classNames.push('bg-pink-100');
-          } else if (columnMapping.values.includes(col)) {
-            classNames.push('bg-purple-100');
-          }
-        }
-
-        // Check for search highlights
-        const isSearchResult = searchResults.some(
-          (result) => result.row === row && result.col === col
-        );
-        if (isSearchResult) {
-          classNames.push('bg-yellow-200');
-        }
-
-        // Set the final className
-        if (classNames.length > 0) {
-          cellProperties.className = classNames.join(' ');
-        }
-
-        return cellProperties;
-      }}
-      afterChange={handleDataChange}
-    />
+    <div className='w-full h-full overflow-hidden'>
+      <HotTable
+        ref={hotRef}
+        themeName='ht-theme-main'
+        className='w-full h-full'
+        colWidths={120}
+        rowHeights={28}
+        autoRowSize={false}
+        collapsibleColumns={true}
+        navigableHeaders={true}
+        autoColumnSize={false}
+        data={data}
+        rowHeaders={true}
+        autoWrapRow={true}
+        autoWrapCol={true}
+        colHeaders={colHeaderFunction}
+        height='100%'
+        width='100%'
+        contextMenu={true}
+        minSpareRows={0}
+        stretchH='all'
+        licenseKey='non-commercial-and-evaluation'
+        manualColumnResize={true}
+        manualRowResize={true}
+        manualColumnMove={true}
+        manualRowMove={true}
+        dropdownMenu={true}
+        filters={true}
+        multiColumnSorting={true}
+        textEllipsis={true}
+        wordWrap={true}
+        viewportRowRenderingOffset={100}
+        // fixedRowsTop={1}
+        // fixedColumnsStart={1}
+        manualColumnFreeze={true}
+        hiddenRows={false}
+        trimRows={true}
+        pagination={{
+          pageSize: 100,
+        }}
+        beforeColumnSort={() => {
+          // Disable sorting to prevent header row from being sorted
+          return false;
+        }}
+        cells={handleCells}
+        afterChange={handleDataChange}
+      />
+    </div>
   );
 }

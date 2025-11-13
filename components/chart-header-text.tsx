@@ -3,31 +3,39 @@
 import { useState, useRef, useEffect, memo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
 import { cn } from '@/lib/utils';
-import './chart-title.css';
+import './chart-header-text.css';
 
-export const ChartTitle = memo(function ChartTitle() {
-  const chartTitle = useChartStore((state) => state.chartTitle);
-  const setChartTitle = useChartStore((state) => state.setChartTitle);
+export const ChartHeaderText = memo(function ChartHeaderText() {
+  const headerText = useChartStore((state) => state.headerText);
+  const setHeaderText = useChartStore((state) => state.setHeaderText);
   const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
   const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
 
-  // Title style settings
-  const titleStyleEnabled = useChartStore((state) => state.titleStyleEnabled);
-  const titleFont = useChartStore((state) => state.titleFont);
-  const titleFontSize = useChartStore((state) => state.titleFontSize);
-  const titleBaseFontSizeMobile = useChartStore(
-    (state) => state.titleBaseFontSizeMobile
+  // Header text style settings
+  const headerTextStyleEnabled = useChartStore(
+    (state) => state.headerTextStyleEnabled
   );
-  const titleBaseFontSizeTablet = useChartStore(
-    (state) => state.titleBaseFontSizeTablet
+  const headerTextFont = useChartStore((state) => state.headerTextFont);
+  const headerTextFontSize = useChartStore((state) => state.headerTextFontSize);
+  const headerTextBaseFontSizeMobile = useChartStore(
+    (state) => state.headerTextBaseFontSizeMobile
   );
-  const titleBaseFontSizeDesktop = useChartStore(
-    (state) => state.titleBaseFontSizeDesktop
+  const headerTextBaseFontSizeTablet = useChartStore(
+    (state) => state.headerTextBaseFontSizeTablet
   );
-  const titleFontWeight = useChartStore((state) => state.titleFontWeight);
-  const titleColor = useChartStore((state) => state.titleColor);
-  const titleLineHeight = useChartStore((state) => state.titleLineHeight);
-  const titleSpaceAbove = useChartStore((state) => state.titleSpaceAbove);
+  const headerTextBaseFontSizeDesktop = useChartStore(
+    (state) => state.headerTextBaseFontSizeDesktop
+  );
+  const headerTextFontWeight = useChartStore(
+    (state) => state.headerTextFontWeight
+  );
+  const headerTextColor = useChartStore((state) => state.headerTextColor);
+  const headerTextLineHeight = useChartStore(
+    (state) => state.headerTextLineHeight
+  );
+  const headerTextSpaceAbove = useChartStore(
+    (state) => state.headerTextSpaceAbove
+  );
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState('');
@@ -35,11 +43,11 @@ export const ChartTitle = memo(function ChartTitle() {
 
   const handleDoubleClick = () => {
     setIsEditing(true);
-    setTempValue(chartTitle);
+    setTempValue(headerText);
   };
 
   const saveEdit = () => {
-    setChartTitle(tempValue);
+    setHeaderText(tempValue);
     setIsEditing(false);
     setTempValue('');
   };
@@ -80,16 +88,19 @@ export const ChartTitle = memo(function ChartTitle() {
     }
   }, [tempValue, isEditing]);
 
-  if (!chartTitle && !isEditing) return null;
+  if (!headerText && !isEditing) return null;
 
   // Calculate responsive font sizes
-  const calculatedFontSizeMobile = titleBaseFontSizeMobile * titleFontSize;
-  const calculatedFontSizeTablet = titleBaseFontSizeTablet * titleFontSize;
-  const calculatedFontSizeDesktop = titleBaseFontSizeDesktop * titleFontSize;
+  const calculatedFontSizeMobile =
+    headerTextBaseFontSizeMobile * headerTextFontSize;
+  const calculatedFontSizeTablet =
+    headerTextBaseFontSizeTablet * headerTextFontSize;
+  const calculatedFontSizeDesktop =
+    headerTextBaseFontSizeDesktop * headerTextFontSize;
 
   // Calculate space above
   const getSpaceAbove = () => {
-    switch (titleSpaceAbove) {
+    switch (headerTextSpaceAbove) {
       case 'slim':
         return '4px';
       case 'medium':
@@ -105,7 +116,7 @@ export const ChartTitle = memo(function ChartTitle() {
 
   // Get font weight class
   const getFontWeightClass = () => {
-    switch (titleFontWeight) {
+    switch (headerTextFontWeight) {
       case 'bold':
         return 'font-bold';
       case 'medium':
@@ -113,22 +124,25 @@ export const ChartTitle = memo(function ChartTitle() {
       case 'regular':
         return 'font-normal';
       default:
-        return 'font-bold';
+        return 'font-normal';
     }
   };
 
   // Build custom styles
-  const customStyles: React.CSSProperties = titleStyleEnabled
+  const customStyles: React.CSSProperties = headerTextStyleEnabled
     ? ({
-        fontFamily: titleFont !== 'Same as parent' ? titleFont : undefined,
-        '--title-font-size-mobile': `${calculatedFontSizeMobile}px`,
-        '--title-font-size-tablet': `${calculatedFontSizeTablet}px`,
-        '--title-font-size-desktop': `${calculatedFontSizeDesktop}px`,
-        color: titleColor,
-        lineHeight: titleLineHeight,
+        fontFamily:
+          headerTextFont !== 'Same as parent' ? headerTextFont : undefined,
+        '--header-text-font-size-mobile': `${calculatedFontSizeMobile}px`,
+        '--header-text-font-size-tablet': `${calculatedFontSizeTablet}px`,
+        '--header-text-font-size-desktop': `${calculatedFontSizeDesktop}px`,
+        color: headerTextColor,
+        lineHeight: headerTextLineHeight,
         paddingTop: getSpaceAbove(),
       } as React.CSSProperties)
-    : {};
+    : {
+        paddingTop: getSpaceAbove(),
+      };
 
   return (
     <div
@@ -146,28 +160,28 @@ export const ChartTitle = memo(function ChartTitle() {
           onBlur={saveEdit}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full text-2xl font-bold text-zinc-900',
+            'w-full text-sm text-zinc-600',
             'border-2 border-blue-500 rounded px-2 py-1',
             'focus:outline-none resize-none overflow-hidden'
           )}
-          placeholder='Enter chart title (Cmd/Ctrl+Enter to save)'
-          style={{ minHeight: '3rem', ...customStyles }}
+          placeholder='Enter header text (Cmd/Ctrl+Enter to save)'
+          style={{ minHeight: '2rem', ...customStyles }}
         />
       ) : (
-        <h2
+        <p
           className={cn(
-            titleStyleEnabled ? 'chart-title' : 'text-2xl md:text-3xl',
-            titleStyleEnabled ? getFontWeightClass() : 'font-bold',
-            titleStyleEnabled ? '' : 'text-zinc-900',
+            headerTextStyleEnabled ? 'chart-header-text' : 'text-xs md:text-sm',
+            headerTextStyleEnabled ? getFontWeightClass() : '',
+            headerTextStyleEnabled ? '' : 'text-zinc-600',
             'cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-            'transition-colors whitespace-pre-wrap tracking-tighter'
+            'transition-colors whitespace-pre-wrap'
           )}
           style={customStyles}
           onDoubleClick={handleDoubleClick}
           title='Double-click to edit'
         >
-          {chartTitle}
-        </h2>
+          {headerText}
+        </p>
       )}
     </div>
   );
