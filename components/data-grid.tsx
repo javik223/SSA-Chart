@@ -213,10 +213,12 @@ export function DataGrid({
       textEllipsis={true}
       wordWrap={true}
       fixedRowsTop={1}
-      fixedColumnsStart={1}
+      // fixedColumnsStart={1}
       manualColumnFreeze={true}
       hiddenRows={true}
-      pagination={true}
+      pagination={{
+        pageSize: 100,
+      }}
       beforeColumnSort={() => {
         // Disable sorting to prevent header row from being sorted
         return false;

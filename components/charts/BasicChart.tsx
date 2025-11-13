@@ -1,24 +1,19 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
 import { getChart } from '@/lib/chartRegistry';
 import { ChartTransition } from './ChartTransition';
 
-export function BasicChart() {
+export const BasicChart = memo(function BasicChart() {
   // Use selective subscription to only re-render when chart-related data changes
-  // This prevents re-renders when title, description, or footer change
+  // This prevents re-renders when title, description, footer, or legend settings change
   const data = useChartStore((state) => state.data);
   const columnMapping = useChartStore((state) => state.columnMapping);
   const chartType = useChartStore((state) => state.chartType);
   const aggregationMode = useChartStore((state) => state.aggregationMode);
   const previewWidth = useChartStore((state) => state.previewWidth);
   const previewHeight = useChartStore((state) => state.previewHeight);
-  const legendShow = useChartStore((state) => state.legendShow);
-  const legendPosition = useChartStore((state) => state.legendPosition);
-  const legendAlignment = useChartStore((state) => state.legendAlignment);
-  const legendFontSize = useChartStore((state) => state.legendFontSize);
-  const legendShowValues = useChartStore((state) => state.legendShowValues);
 
   // Transform data for chart
   const chartData = useMemo(() => {
@@ -117,11 +112,8 @@ export function BasicChart() {
     valueKeys,
     width: previewWidth,
     height: previewHeight,
-    legendShow,
-    legendPosition,
-    legendAlignment,
-    legendFontSize,
-    legendShowValues,
+    // Disable embedded legend since we now use a standalone legend component
+    legendShow: false,
   };
 
   // Get chart registration from registry
@@ -160,4 +152,4 @@ export function BasicChart() {
       </div>
     </ChartTransition>
   );
-}
+});

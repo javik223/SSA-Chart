@@ -1,9 +1,10 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Download, Settings, Share2, BarChart3 } from 'lucide-react';
+import { Settings, Share2 } from 'lucide-react';
+import { ExportDropdown } from '@/components/export-dropdown';
 
-export function ChartHeader() {
+export function PageHeader() {
   return (
     <header className='border-b bg-white px-4 py-4 md:px-6'>
       <div className='flex items-center justify-between'>
@@ -25,9 +26,7 @@ export function ChartHeader() {
           <Button variant='outline' size='icon' className='hidden sm:flex'>
             <Share2 />
           </Button>
-          <Button size='icon'>
-            <Download />
-          </Button>
+          <ExportDropdown />
         </div>
       </div>
     </header>

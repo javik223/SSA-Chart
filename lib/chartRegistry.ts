@@ -65,6 +65,7 @@ export interface ChartComponentProps {
   legendAlignment?: 'start' | 'center' | 'end';
   legendFontSize?: number;
   legendShowValues?: boolean;
+  legendGap?: number;
   config?: any;
 }
 

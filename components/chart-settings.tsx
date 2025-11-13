@@ -18,7 +18,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { CircleHelp, RefreshCw, Search, HelpCircle, X } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import {
+  CircleHelp,
+  RefreshCw,
+  Search,
+  HelpCircle,
+  X,
+  Smartphone,
+  Tablet,
+  Monitor,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Minus,
+  Maximize2,
+  Maximize,
+  Square,
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { getChartsByCategory } from '@/lib/chartRegistry';
@@ -58,10 +79,48 @@ export function ChartSettings() {
     setLegendFontSize,
     legendShowValues,
     setLegendShowValues,
+    legendGap,
+    setLegendGap,
+    legendPaddingTop,
+    setLegendPaddingTop,
+    legendPaddingRight,
+    setLegendPaddingRight,
+    legendPaddingBottom,
+    setLegendPaddingBottom,
+    legendPaddingLeft,
+    setLegendPaddingLeft,
     chartDescription,
     setChartDescription,
     chartFooter,
     setChartFooter,
+    layoutMainFont,
+    setLayoutMainFont,
+    layoutTextColor,
+    setLayoutTextColor,
+    layoutBackgroundColorEnabled,
+    setLayoutBackgroundColorEnabled,
+    layoutBackgroundImageEnabled,
+    setLayoutBackgroundImageEnabled,
+    layoutBackgroundColor,
+    setLayoutBackgroundColor,
+    layoutBackgroundImageUrl,
+    setLayoutBackgroundImageUrl,
+    layoutBackgroundImageSize,
+    setLayoutBackgroundImageSize,
+    layoutBackgroundImagePosition,
+    setLayoutBackgroundImagePosition,
+    layoutOrder,
+    setLayoutOrder,
+    layoutSpaceBetweenSections,
+    setLayoutSpaceBetweenSections,
+    layoutMarginTop,
+    setLayoutMarginTop,
+    layoutMarginRight,
+    setLayoutMarginRight,
+    layoutMarginBottom,
+    setLayoutMarginBottom,
+    layoutMarginLeft,
+    setLayoutMarginLeft,
     layoutPaddingTop,
     setLayoutPaddingTop,
     layoutPaddingRight,
@@ -70,14 +129,26 @@ export function ChartSettings() {
     setLayoutPaddingBottom,
     layoutPaddingLeft,
     setLayoutPaddingLeft,
-    layoutBackgroundColor,
-    setLayoutBackgroundColor,
-    layoutBorderRadius,
-    setLayoutBorderRadius,
-    layoutBorderWidth,
-    setLayoutBorderWidth,
+    layoutBorderEnabled,
+    setLayoutBorderEnabled,
+    layoutBorderTop,
+    setLayoutBorderTop,
+    layoutBorderRight,
+    setLayoutBorderRight,
+    layoutBorderBottom,
+    setLayoutBorderBottom,
+    layoutBorderLeft,
+    setLayoutBorderLeft,
+    layoutBorderStyle,
+    setLayoutBorderStyle,
     layoutBorderColor,
     setLayoutBorderColor,
+    layoutBorderWidth,
+    setLayoutBorderWidth,
+    layoutBorderRadius,
+    setLayoutBorderRadius,
+    layoutReadDirection,
+    setLayoutReadDirection,
   } = useChartStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,7 +160,14 @@ export function ChartSettings() {
       value: 'preview',
       title: 'Preview',
       description: 'Configure preview size, colorblind modes, and theme',
-      keywords: ['preview', 'size', 'colorblind', 'dark mode', 'dimensions', 'accessibility'],
+      keywords: [
+        'preview',
+        'size',
+        'colorblind',
+        'dark mode',
+        'dimensions',
+        'accessibility',
+      ],
     },
     {
       value: 'controls',
@@ -137,7 +215,14 @@ export function ChartSettings() {
       value: 'formatting',
       title: 'Number formatting',
       description: 'Format numbers, currency, and percentages',
-      keywords: ['number', 'formatting', 'format', 'currency', 'percentage', 'decimal'],
+      keywords: [
+        'number',
+        'formatting',
+        'format',
+        'currency',
+        'percentage',
+        'decimal',
+      ],
     },
     {
       value: 'legend',
@@ -175,10 +260,16 @@ export function ChartSettings() {
       description: 'Customize chart title and subtitle',
       keywords: ['header', 'title', 'subtitle', 'heading'],
     },
+    {
+      value: 'footer',
+      title: 'Footer',
+      description: 'Customize chart footer text',
+      keywords: ['footer', 'source', 'credits', 'notes'],
+    },
   ];
 
   // Check if a section matches the search query
-  const doesSectionMatch = (section: typeof accordionSections[0]) => {
+  const doesSectionMatch = (section: (typeof accordionSections)[0]) => {
     if (!searchQuery.trim()) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -366,7 +457,9 @@ export function ChartSettings() {
                   Sum
                 </Button>
                 <Button
-                  variant={aggregationMode === 'average' ? 'default' : 'outline'}
+                  variant={
+                    aggregationMode === 'average' ? 'default' : 'outline'
+                  }
                   size='sm'
                   className='flex-1 text-xs h-8'
                   onClick={() => setAggregationMode('average')}
@@ -429,12 +522,16 @@ export function ChartSettings() {
                           </Label>
                           <textarea
                             value={chartDescription}
-                            onChange={(e) => setChartDescription(e.target.value)}
+                            onChange={(e) =>
+                              setChartDescription(e.target.value)
+                            }
                             className='w-full h-20 px-3 py-2 text-xs border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
                             placeholder='Enter chart description'
                           />
                         </div>
-
+                      </div>
+                    ) : section.value === 'footer' ? (
+                      <div className='space-y-4 pb-4'>
                         {/* Chart Footer */}
                         <div className='space-y-2'>
                           <Label className='text-xs font-medium text-zinc-700'>
@@ -451,6 +548,460 @@ export function ChartSettings() {
                       </div>
                     ) : section.value === 'layout' ? (
                       <div className='space-y-4 pb-4'>
+                        {/* Row 1: Main Font and Text Color */}
+                        <div className='space-y-2'>
+                          <Label className='text-xs font-medium text-zinc-700'>
+                            Typography
+                          </Label>
+                          <div className='grid grid-cols-2 gap-2'>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Main Font
+                              </Label>
+                              <Select
+                                value={layoutMainFont}
+                                onValueChange={setLayoutMainFont}
+                              >
+                                <SelectTrigger className='h-7 text-xs'>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value='Inter'>Inter</SelectItem>
+                                  <SelectItem value='Arial'>Arial</SelectItem>
+                                  <SelectItem value='Helvetica'>
+                                    Helvetica
+                                  </SelectItem>
+                                  <SelectItem value='Times New Roman'>
+                                    Times New Roman
+                                  </SelectItem>
+                                  <SelectItem value='Georgia'>
+                                    Georgia
+                                  </SelectItem>
+                                  <SelectItem value='Verdana'>
+                                    Verdana
+                                  </SelectItem>
+                                  <SelectItem value='Roboto'>Roboto</SelectItem>
+                                  <SelectItem value='Open Sans'>
+                                    Open Sans
+                                  </SelectItem>
+                                  <SelectItem value='Lato'>Lato</SelectItem>
+                                  <SelectItem value='Montserrat'>
+                                    Montserrat
+                                  </SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Text Color
+                              </Label>
+                              <div className='flex gap-1'>
+                                <Input
+                                  type='color'
+                                  value={layoutTextColor}
+                                  onChange={(e) =>
+                                    setLayoutTextColor(e.target.value)
+                                  }
+                                  className='h-7 w-10 cursor-pointer p-0 border-0'
+                                />
+                                <Input
+                                  type='text'
+                                  value={layoutTextColor}
+                                  onChange={(e) =>
+                                    setLayoutTextColor(e.target.value)
+                                  }
+                                  className='h-7 text-xs flex-1'
+                                  placeholder='#000000'
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator />
+
+                        {/* Row 2: Background */}
+                        <div className='space-y-3'>
+                          <Label className='text-xs font-medium text-zinc-700'>
+                            Background
+                          </Label>
+
+                          {/* Background Toggle Row */}
+                          <div className='grid grid-cols-2 gap-2'>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Color
+                              </Label>
+                              <ButtonGroup className='w-full'>
+                                <Button
+                                  variant={
+                                    layoutBackgroundColorEnabled
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='sm'
+                                  className='flex-1 text-xs h-7'
+                                  onClick={() =>
+                                    setLayoutBackgroundColorEnabled(true)
+                                  }
+                                >
+                                  On
+                                </Button>
+                                <Button
+                                  variant={
+                                    !layoutBackgroundColorEnabled
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='sm'
+                                  className='flex-1 text-xs h-7'
+                                  onClick={() =>
+                                    setLayoutBackgroundColorEnabled(false)
+                                  }
+                                >
+                                  Off
+                                </Button>
+                              </ButtonGroup>
+                            </div>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Image
+                              </Label>
+                              <ButtonGroup className='w-full'>
+                                <Button
+                                  variant={
+                                    layoutBackgroundImageEnabled
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='sm'
+                                  className='flex-1 text-xs h-7'
+                                  onClick={() =>
+                                    setLayoutBackgroundImageEnabled(true)
+                                  }
+                                >
+                                  On
+                                </Button>
+                                <Button
+                                  variant={
+                                    !layoutBackgroundImageEnabled
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='sm'
+                                  className='flex-1 text-xs h-7'
+                                  onClick={() =>
+                                    setLayoutBackgroundImageEnabled(false)
+                                  }
+                                >
+                                  Off
+                                </Button>
+                              </ButtonGroup>
+                            </div>
+                          </div>
+
+                          {/* Background Settings Row */}
+                          {layoutBackgroundColorEnabled && (
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Background Color
+                              </Label>
+                              <div className='flex gap-1'>
+                                <Input
+                                  type='color'
+                                  value={layoutBackgroundColor}
+                                  onChange={(e) =>
+                                    setLayoutBackgroundColor(e.target.value)
+                                  }
+                                  className='h-7 w-10 cursor-pointer p-0 border-0'
+                                />
+                                <Input
+                                  type='text'
+                                  value={layoutBackgroundColor}
+                                  onChange={(e) =>
+                                    setLayoutBackgroundColor(e.target.value)
+                                  }
+                                  className='h-7 text-xs flex-1'
+                                  placeholder='#ffffff'
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {layoutBackgroundImageEnabled && (
+                            <>
+                              <div className='space-y-1'>
+                                <Label className='text-[10px] text-zinc-500'>
+                                  Image URL
+                                </Label>
+                                <Input
+                                  type='text'
+                                  value={layoutBackgroundImageUrl}
+                                  onChange={(e) =>
+                                    setLayoutBackgroundImageUrl(e.target.value)
+                                  }
+                                  className='h-7 text-xs'
+                                  placeholder='https://example.com/image.jpg'
+                                />
+                              </div>
+                              <div className='grid grid-cols-2 gap-2'>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Size
+                                  </Label>
+                                  <Select
+                                    value={layoutBackgroundImageSize}
+                                    onValueChange={setLayoutBackgroundImageSize}
+                                  >
+                                    <SelectTrigger className='h-7 text-xs'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='fill'>Fill</SelectItem>
+                                      <SelectItem value='fit'>Fit</SelectItem>
+                                      <SelectItem value='original'>
+                                        Original
+                                      </SelectItem>
+                                      <SelectItem value='stretch'>
+                                        Stretch
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Position
+                                  </Label>
+                                  <Select
+                                    value={layoutBackgroundImagePosition}
+                                    onValueChange={
+                                      setLayoutBackgroundImagePosition
+                                    }
+                                  >
+                                    <SelectTrigger className='h-7 text-xs'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='top-left'>
+                                        Top Left
+                                      </SelectItem>
+                                      <SelectItem value='top-center'>
+                                        Top Center
+                                      </SelectItem>
+                                      <SelectItem value='top-right'>
+                                        Top Right
+                                      </SelectItem>
+                                      <SelectItem value='center-left'>
+                                        Center Left
+                                      </SelectItem>
+                                      <SelectItem value='center'>
+                                        Center
+                                      </SelectItem>
+                                      <SelectItem value='center-right'>
+                                        Center Right
+                                      </SelectItem>
+                                      <SelectItem value='bottom-left'>
+                                        Bottom Left
+                                      </SelectItem>
+                                      <SelectItem value='bottom-center'>
+                                        Bottom Center
+                                      </SelectItem>
+                                      <SelectItem value='bottom-right'>
+                                        Bottom Right
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        <Separator />
+
+                        {/* Layout Order */}
+                        <div className='space-y-2'>
+                          <Label className='text-xs font-medium text-zinc-700'>
+                            Layout Order
+                          </Label>
+                          <Select
+                            value={layoutOrder}
+                            onValueChange={setLayoutOrder}
+                          >
+                            <SelectTrigger className='h-7 text-xs'>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value='header-controls-legend-primary-graphic-footer'>
+                                Header → Controls → Legend → Primary Graphic →
+                                Footer
+                              </SelectItem>
+                              <SelectItem value='primary-graphic-header-controls-footer'>
+                                Primary Graphic → Header → Controls → Footer
+                              </SelectItem>
+                              <SelectItem value='header-primary-graphic-controls-legend-footer'>
+                                Header → Primary Graphic → Controls → Legend →
+                                Footer
+                              </SelectItem>
+                              <SelectItem value='controls-primary-graphic-header-legend-footer'>
+                                Controls → Primary Graphic → Header → Legend →
+                                Footer
+                              </SelectItem>
+                              <SelectItem value='header-controls-primary-graphic-legend-footer'>
+                                Header → Controls → Primary Graphic → Legend →
+                                Footer
+                              </SelectItem>
+                              <SelectItem value='header-legend-primary-graphic-controls-footer'>
+                                Header → Legend → Primary Graphic → Controls →
+                                Footer
+                              </SelectItem>
+                              <SelectItem value='grid-mode-primary-graphic-right'>
+                                Grid Mode: Primary Graphic on Right
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <Separator />
+
+                        {/* Space Between Sections */}
+                        <div className='space-y-2'>
+                          <Label className='text-xs font-medium text-zinc-700'>
+                            Space Between Sections
+                          </Label>
+                          <ButtonGroup className='w-full grid grid-cols-4'>
+                            <Button
+                              variant={
+                                layoutSpaceBetweenSections === 'none'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='h-10 flex flex-col items-center justify-center gap-0.5'
+                              onClick={() =>
+                                setLayoutSpaceBetweenSections('none')
+                              }
+                              title='None'
+                            >
+                              <Minus className='h-3 w-3' />
+                              <span className='text-[9px]'>None</span>
+                            </Button>
+                            <Button
+                              variant={
+                                layoutSpaceBetweenSections === 'tight'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='h-10 flex flex-col items-center justify-center gap-0.5'
+                              onClick={() =>
+                                setLayoutSpaceBetweenSections('tight')
+                              }
+                              title='Tight'
+                            >
+                              <Square className='h-3 w-3' />
+                              <span className='text-[9px]'>Tight</span>
+                            </Button>
+                            <Button
+                              variant={
+                                layoutSpaceBetweenSections === 'loose'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='h-10 flex flex-col items-center justify-center gap-0.5'
+                              onClick={() =>
+                                setLayoutSpaceBetweenSections('loose')
+                              }
+                              title='Loose'
+                            >
+                              <Maximize2 className='h-3 w-3' />
+                              <span className='text-[9px]'>Loose</span>
+                            </Button>
+                            <Button
+                              variant={
+                                layoutSpaceBetweenSections === 'large'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='h-10 flex flex-col items-center justify-center gap-0.5'
+                              onClick={() =>
+                                setLayoutSpaceBetweenSections('large')
+                              }
+                              title='Large'
+                            >
+                              <Maximize className='h-3 w-3' />
+                              <span className='text-[9px]'>Large</span>
+                            </Button>
+                          </ButtonGroup>
+                        </div>
+
+                        <Separator />
+
+                        {/* Margins */}
+                        <div className='space-y-2'>
+                          <Label className='text-xs font-medium text-zinc-700'>
+                            Margins (px)
+                          </Label>
+                          <div className='grid grid-cols-4 gap-2'>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Top
+                              </Label>
+                              <Input
+                                type='number'
+                                value={layoutMarginTop}
+                                onChange={(e) =>
+                                  setLayoutMarginTop(Number(e.target.value))
+                                }
+                                className='h-7 text-xs'
+                              />
+                            </div>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Right
+                              </Label>
+                              <Input
+                                type='number'
+                                value={layoutMarginRight}
+                                onChange={(e) =>
+                                  setLayoutMarginRight(Number(e.target.value))
+                                }
+                                className='h-7 text-xs'
+                              />
+                            </div>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Bottom
+                              </Label>
+                              <Input
+                                type='number'
+                                value={layoutMarginBottom}
+                                onChange={(e) =>
+                                  setLayoutMarginBottom(Number(e.target.value))
+                                }
+                                className='h-7 text-xs'
+                              />
+                            </div>
+                            <div className='space-y-1'>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Left
+                              </Label>
+                              <Input
+                                type='number'
+                                value={layoutMarginLeft}
+                                onChange={(e) =>
+                                  setLayoutMarginLeft(Number(e.target.value))
+                                }
+                                className='h-7 text-xs'
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator />
+
                         {/* Padding Controls */}
                         <div className='space-y-2'>
                           <Label className='text-xs font-medium text-zinc-700'>
@@ -458,116 +1009,265 @@ export function ChartSettings() {
                           </Label>
                           <div className='grid grid-cols-4 gap-2'>
                             <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Top</Label>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Top
+                              </Label>
                               <Input
                                 type='number'
                                 value={layoutPaddingTop}
-                                onChange={(e) => setLayoutPaddingTop(Number(e.target.value))}
+                                onChange={(e) =>
+                                  setLayoutPaddingTop(Number(e.target.value))
+                                }
                                 className='h-7 text-xs'
                               />
                             </div>
                             <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Right</Label>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Right
+                              </Label>
                               <Input
                                 type='number'
                                 value={layoutPaddingRight}
-                                onChange={(e) => setLayoutPaddingRight(Number(e.target.value))}
+                                onChange={(e) =>
+                                  setLayoutPaddingRight(Number(e.target.value))
+                                }
                                 className='h-7 text-xs'
                               />
                             </div>
                             <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Bottom</Label>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Bottom
+                              </Label>
                               <Input
                                 type='number'
                                 value={layoutPaddingBottom}
-                                onChange={(e) => setLayoutPaddingBottom(Number(e.target.value))}
+                                onChange={(e) =>
+                                  setLayoutPaddingBottom(Number(e.target.value))
+                                }
                                 className='h-7 text-xs'
                               />
                             </div>
                             <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Left</Label>
+                              <Label className='text-[10px] text-zinc-500'>
+                                Left
+                              </Label>
                               <Input
                                 type='number'
                                 value={layoutPaddingLeft}
-                                onChange={(e) => setLayoutPaddingLeft(Number(e.target.value))}
+                                onChange={(e) =>
+                                  setLayoutPaddingLeft(Number(e.target.value))
+                                }
                                 className='h-7 text-xs'
                               />
                             </div>
                           </div>
                         </div>
 
-                        {/* Background & Border Color */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Colors
-                          </Label>
-                          <div className='grid grid-cols-2 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Background</Label>
-                              <div className='flex gap-1'>
-                                <Input
-                                  type='color'
-                                  value={layoutBackgroundColor}
-                                  onChange={(e) => setLayoutBackgroundColor(e.target.value)}
-                                  className='h-7 w-10 cursor-pointer p-0 border-0'
-                                />
-                                <Input
-                                  type='text'
-                                  value={layoutBackgroundColor}
-                                  onChange={(e) => setLayoutBackgroundColor(e.target.value)}
-                                  className='h-7 text-xs flex-1'
-                                  placeholder='#ffffff'
-                                />
-                              </div>
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Border</Label>
-                              <div className='flex gap-1'>
-                                <Input
-                                  type='color'
-                                  value={layoutBorderColor}
-                                  onChange={(e) => setLayoutBorderColor(e.target.value)}
-                                  className='h-7 w-10 cursor-pointer p-0 border-0'
-                                />
-                                <Input
-                                  type='text'
-                                  value={layoutBorderColor}
-                                  onChange={(e) => setLayoutBorderColor(e.target.value)}
-                                  className='h-7 text-xs flex-1'
-                                  placeholder='#e4e4e7'
-                                />
-                              </div>
-                            </div>
+                        <Separator />
+
+                        {/* Borders */}
+                        <div className='space-y-3'>
+                          <div className='flex items-center justify-between'>
+                            <Label className='text-xs font-medium text-zinc-700'>
+                              Show borders around visualisation
+                            </Label>
+                            <Switch
+                              checked={layoutBorderEnabled}
+                              onCheckedChange={setLayoutBorderEnabled}
+                            />
                           </div>
+
+                          {layoutBorderEnabled && (
+                            <>
+                              {/* Border Sides */}
+                              <div className='space-y-2'>
+                                <Label className='text-[10px] text-zinc-500'>
+                                  Border Sides
+                                </Label>
+                                <div className='grid grid-cols-4 gap-2'>
+                                  <div className='flex items-center space-x-1'>
+                                    <Switch
+                                      id='border-top'
+                                      checked={layoutBorderTop}
+                                      onCheckedChange={setLayoutBorderTop}
+                                      className='scale-75'
+                                    />
+                                    <Label
+                                      htmlFor='border-top'
+                                      className='text-[10px] text-zinc-600'
+                                    >
+                                      Top
+                                    </Label>
+                                  </div>
+                                  <div className='flex items-center space-x-1'>
+                                    <Switch
+                                      id='border-right'
+                                      checked={layoutBorderRight}
+                                      onCheckedChange={setLayoutBorderRight}
+                                      className='scale-75'
+                                    />
+                                    <Label
+                                      htmlFor='border-right'
+                                      className='text-[10px] text-zinc-600'
+                                    >
+                                      Right
+                                    </Label>
+                                  </div>
+                                  <div className='flex items-center space-x-1'>
+                                    <Switch
+                                      id='border-bottom'
+                                      checked={layoutBorderBottom}
+                                      onCheckedChange={setLayoutBorderBottom}
+                                      className='scale-75'
+                                    />
+                                    <Label
+                                      htmlFor='border-bottom'
+                                      className='text-[10px] text-zinc-600'
+                                    >
+                                      Bottom
+                                    </Label>
+                                  </div>
+                                  <div className='flex items-center space-x-1'>
+                                    <Switch
+                                      id='border-left'
+                                      checked={layoutBorderLeft}
+                                      onCheckedChange={setLayoutBorderLeft}
+                                      className='scale-75'
+                                    />
+                                    <Label
+                                      htmlFor='border-left'
+                                      className='text-[10px] text-zinc-600'
+                                    >
+                                      Left
+                                    </Label>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Border Style and Color */}
+                              <div className='grid grid-cols-2 gap-2'>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Style
+                                  </Label>
+                                  <Select
+                                    value={layoutBorderStyle}
+                                    onValueChange={setLayoutBorderStyle}
+                                  >
+                                    <SelectTrigger className='h-7 text-xs'>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value='solid'>
+                                        Solid
+                                      </SelectItem>
+                                      <SelectItem value='dashed'>
+                                        Dashed
+                                      </SelectItem>
+                                      <SelectItem value='dotted'>
+                                        Dotted
+                                      </SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Width (px)
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={layoutBorderWidth}
+                                    onChange={(e) =>
+                                      setLayoutBorderWidth(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Border Color and Radius */}
+                              <div className='grid grid-cols-2 gap-2'>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Color
+                                  </Label>
+                                  <div className='flex gap-1'>
+                                    <Input
+                                      type='color'
+                                      value={layoutBorderColor}
+                                      onChange={(e) =>
+                                        setLayoutBorderColor(e.target.value)
+                                      }
+                                      className='h-7 w-10 cursor-pointer p-0 border-0'
+                                    />
+                                    <Input
+                                      type='text'
+                                      value={layoutBorderColor}
+                                      onChange={(e) =>
+                                        setLayoutBorderColor(e.target.value)
+                                      }
+                                      className='h-7 text-xs flex-1'
+                                      placeholder='#e4e4e7'
+                                    />
+                                  </div>
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Radius (px)
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={layoutBorderRadius}
+                                    onChange={(e) =>
+                                      setLayoutBorderRadius(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          )}
                         </div>
 
-                        {/* Border Radius & Width */}
+                        <Separator />
+
+                        {/* Read Direction */}
                         <div className='space-y-2'>
                           <Label className='text-xs font-medium text-zinc-700'>
-                            Border Style
+                            Read Direction
                           </Label>
-                          <div className='grid grid-cols-2 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Radius (px)</Label>
-                              <Input
-                                type='number'
-                                value={layoutBorderRadius}
-                                onChange={(e) => setLayoutBorderRadius(Number(e.target.value))}
-                                className='h-7 text-xs'
-                                min={0}
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>Width (px)</Label>
-                              <Input
-                                type='number'
-                                value={layoutBorderWidth}
-                                onChange={(e) => setLayoutBorderWidth(Number(e.target.value))}
-                                className='h-7 text-xs'
-                                min={0}
-                              />
-                            </div>
-                          </div>
+                          <ButtonGroup className='w-full'>
+                            <Button
+                              variant={
+                                layoutReadDirection === 'ltr'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='flex-1 text-xs h-8'
+                              onClick={() => setLayoutReadDirection('ltr')}
+                            >
+                              Left to Right
+                            </Button>
+                            <Button
+                              variant={
+                                layoutReadDirection === 'rtl'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              size='sm'
+                              className='flex-1 text-xs h-8'
+                              onClick={() => setLayoutReadDirection('rtl')}
+                            >
+                              Right to Left
+                            </Button>
+                          </ButtonGroup>
                         </div>
                       </div>
                     ) : section.value === 'preview' ? (
@@ -581,62 +1281,68 @@ export function ChartSettings() {
                             <Input
                               type='number'
                               value={previewWidth}
-                              onChange={(e) => setPreviewWidth(Number(e.target.value))}
+                              onChange={(e) =>
+                                setPreviewWidth(Number(e.target.value))
+                              }
                               className='h-8 text-xs flex-1'
                               placeholder='Width'
                             />
                             <Input
                               type='number'
                               value={previewHeight}
-                              onChange={(e) => setPreviewHeight(Number(e.target.value))}
+                              onChange={(e) =>
+                                setPreviewHeight(Number(e.target.value))
+                              }
                               className='h-8 text-xs flex-1'
                               placeholder='Height'
                             />
-                          </div>
-                          <div className='flex gap-2 pt-1'>
-                            <Button
-                              variant={previewDevice === 'mobile' ? 'default' : 'outline'}
-                              size='sm'
-                              className='flex-1 h-9'
-                              onClick={() => {
-                                setPreviewDevice('mobile');
-                                setPreviewWidth(375);
-                                setPreviewHeight(667);
-                              }}
-                            >
-                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <rect x='7' y='4' width='10' height='16' rx='2' strokeWidth='2' />
-                              </svg>
-                            </Button>
-                            <Button
-                              variant={previewDevice === 'tablet' ? 'default' : 'outline'}
-                              size='sm'
-                              className='flex-1 h-9'
-                              onClick={() => {
-                                setPreviewDevice('tablet');
-                                setPreviewWidth(768);
-                                setPreviewHeight(1024);
-                              }}
-                            >
-                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <rect x='5' y='3' width='14' height='18' rx='2' strokeWidth='2' />
-                              </svg>
-                            </Button>
-                            <Button
-                              variant={previewDevice === 'desktop' ? 'default' : 'outline'}
-                              size='sm'
-                              className='flex-1 h-9'
-                              onClick={() => {
-                                setPreviewDevice('desktop');
-                                setPreviewWidth(1920);
-                                setPreviewHeight(1080);
-                              }}
-                            >
-                              <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <rect x='2' y='4' width='20' height='12' rx='2' strokeWidth='2' />
-                                <line x1='8' y1='20' x2='16' y2='20' strokeWidth='2' />
-                              </svg>
-                            </Button>
+                            <ButtonGroup className='flex'>
+                              <Button
+                                variant={
+                                  previewDevice === 'mobile'
+                                    ? 'default'
+                                    : 'outline'
+                                }
+                                size='icon'
+                                onClick={() => {
+                                  setPreviewDevice('mobile');
+                                  setPreviewWidth(375);
+                                  setPreviewHeight(667);
+                                }}
+                              >
+                                <Smartphone className='w-4 h-4' />
+                              </Button>
+                              <Button
+                                variant={
+                                  previewDevice === 'tablet'
+                                    ? 'default'
+                                    : 'outline'
+                                }
+                                size='icon'
+                                onClick={() => {
+                                  setPreviewDevice('tablet');
+                                  setPreviewWidth(768);
+                                  setPreviewHeight(1024);
+                                }}
+                              >
+                                <Tablet className='w-4 h-4' />
+                              </Button>
+                              <Button
+                                variant={
+                                  previewDevice === 'desktop'
+                                    ? 'default'
+                                    : 'outline'
+                                }
+                                size='icon'
+                                onClick={() => {
+                                  setPreviewDevice('desktop');
+                                  setPreviewWidth(1920);
+                                  setPreviewHeight(1080);
+                                }}
+                              >
+                                <Monitor className='w-4 h-4' />
+                              </Button>
+                            </ButtonGroup>
                           </div>
                         </div>
 
@@ -650,7 +1356,11 @@ export function ChartSettings() {
                           </div>
                           <div className='grid grid-cols-5 gap-2'>
                             <Button
-                              variant={colorblindMode === 'none' ? 'default' : 'outline'}
+                              variant={
+                                colorblindMode === 'none'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 flex flex-col items-center justify-center p-1'
                               onClick={() => setColorblindMode('none')}
@@ -658,7 +1368,11 @@ export function ChartSettings() {
                               <span className='text-[10px]'>None</span>
                             </Button>
                             <Button
-                              variant={colorblindMode === 'protanopia' ? 'default' : 'outline'}
+                              variant={
+                                colorblindMode === 'protanopia'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 p-1'
                               onClick={() => setColorblindMode('protanopia')}
@@ -670,7 +1384,11 @@ export function ChartSettings() {
                               </div>
                             </Button>
                             <Button
-                              variant={colorblindMode === 'deuteranopia' ? 'default' : 'outline'}
+                              variant={
+                                colorblindMode === 'deuteranopia'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 p-1'
                               onClick={() => setColorblindMode('deuteranopia')}
@@ -682,7 +1400,11 @@ export function ChartSettings() {
                               </div>
                             </Button>
                             <Button
-                              variant={colorblindMode === 'tritanopia' ? 'default' : 'outline'}
+                              variant={
+                                colorblindMode === 'tritanopia'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 p-1'
                               onClick={() => setColorblindMode('tritanopia')}
@@ -694,7 +1416,11 @@ export function ChartSettings() {
                               </div>
                             </Button>
                             <Button
-                              variant={colorblindMode === 'achromatopsia' ? 'default' : 'outline'}
+                              variant={
+                                colorblindMode === 'achromatopsia'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 p-1'
                               onClick={() => setColorblindMode('achromatopsia')}
@@ -718,24 +1444,48 @@ export function ChartSettings() {
                           </div>
                           <div className='grid grid-cols-2 gap-2'>
                             <Button
-                              variant={darkModePreview === 'light' ? 'default' : 'outline'}
+                              variant={
+                                darkModePreview === 'light'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 flex items-center justify-center'
                               onClick={() => setDarkModePreview('light')}
                             >
-                              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                              <svg
+                                className='w-6 h-6'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
                                 <circle cx='12' cy='12' r='4' strokeWidth='2' />
-                                <path d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41' strokeWidth='2' />
+                                <path
+                                  d='M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41'
+                                  strokeWidth='2'
+                                />
                               </svg>
                             </Button>
                             <Button
-                              variant={darkModePreview === 'dark' ? 'default' : 'outline'}
+                              variant={
+                                darkModePreview === 'dark'
+                                  ? 'default'
+                                  : 'outline'
+                              }
                               size='sm'
                               className='h-12 flex items-center justify-center'
                               onClick={() => setDarkModePreview('dark')}
                             >
-                              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' strokeWidth='2' />
+                              <svg
+                                className='w-6 h-6'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'
+                                  strokeWidth='2'
+                                />
                               </svg>
                             </Button>
                           </div>
@@ -744,131 +1494,266 @@ export function ChartSettings() {
                     ) : section.value === 'legend' ? (
                       <div className='space-y-4 pb-4'>
                         {/* Show Legend Toggle */}
-                        <div className='space-y-2'>
-                          <div className='flex items-center justify-between'>
-                            <Label className='text-xs font-medium text-zinc-700'>
-                              Show Legend
-                            </Label>
-                            <Button
-                              variant={legendShow ? 'default' : 'outline'}
-                              size='sm'
-                              className='h-7 px-3 text-xs'
-                              onClick={() => setLegendShow(!legendShow)}
-                            >
-                              {legendShow ? 'Visible' : 'Hidden'}
-                            </Button>
-                          </div>
+                        <div className='flex items-center justify-between'>
+                          <Label
+                            htmlFor='legend-show'
+                            className='text-xs font-medium text-zinc-700'
+                          >
+                            Show Legend
+                          </Label>
+                          <Switch
+                            id='legend-show'
+                            checked={legendShow}
+                            onCheckedChange={setLegendShow}
+                          />
                         </div>
 
                         {legendShow && (
                           <>
-                            {/* Legend Position */}
+                            <div className='flex gap-4'>
+                              {/* Legend Position */}
+                              <div className='space-y-2'>
+                                <Label className='text-xs font-medium text-zinc-700'>
+                                  Position
+                                </Label>
+                                <ButtonGroup className='w-full'>
+                                  <Button
+                                    variant={
+                                      legendPosition === 'top'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='flex-1 h-8'
+                                    onClick={() => setLegendPosition('top')}
+                                    title='Top'
+                                  >
+                                    <ArrowUp className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      legendPosition === 'right'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='flex-1 h-8'
+                                    onClick={() => setLegendPosition('right')}
+                                    title='Right'
+                                  >
+                                    <ArrowRight className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      legendPosition === 'bottom'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='flex-1 h-8'
+                                    onClick={() => setLegendPosition('bottom')}
+                                    title='Bottom'
+                                  >
+                                    <ArrowDown className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      legendPosition === 'left'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='flex-1 h-8'
+                                    onClick={() => setLegendPosition('left')}
+                                    title='Left'
+                                  >
+                                    <ArrowLeft className='h-4 w-4' />
+                                  </Button>
+                                </ButtonGroup>
+                              </div>
+
+                              {/* Legend Alignment */}
+                              <div className='space-y-2'>
+                                <Label className='text-xs font-medium text-zinc-700'>
+                                  Alignment
+                                </Label>
+                                <ButtonGroup className='grid grid-cols-3'>
+                                  <Button
+                                    variant={
+                                      legendAlignment === 'start'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='h-8'
+                                    onClick={() => setLegendAlignment('start')}
+                                    title='Start'
+                                  >
+                                    <AlignLeft className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      legendAlignment === 'center'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='h-8'
+                                    onClick={() => setLegendAlignment('center')}
+                                    title='Center'
+                                  >
+                                    <AlignCenter className='h-4 w-4' />
+                                  </Button>
+                                  <Button
+                                    variant={
+                                      legendAlignment === 'end'
+                                        ? 'default'
+                                        : 'outline'
+                                    }
+                                    size='sm'
+                                    className='h-8'
+                                    onClick={() => setLegendAlignment('end')}
+                                    title='End'
+                                  >
+                                    <AlignRight className='h-4 w-4' />
+                                  </Button>
+                                </ButtonGroup>
+                              </div>
+                            </div>
+
+                            {/* Font Size & Gap */}
                             <div className='space-y-2'>
                               <Label className='text-xs font-medium text-zinc-700'>
-                                Position
+                                Spacing
                               </Label>
                               <div className='grid grid-cols-2 gap-2'>
-                                <Button
-                                  variant={legendPosition === 'top' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendPosition('top')}
-                                >
-                                  Top
-                                </Button>
-                                <Button
-                                  variant={legendPosition === 'right' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendPosition('right')}
-                                >
-                                  Right
-                                </Button>
-                                <Button
-                                  variant={legendPosition === 'bottom' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendPosition('bottom')}
-                                >
-                                  Bottom
-                                </Button>
-                                <Button
-                                  variant={legendPosition === 'left' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendPosition('left')}
-                                >
-                                  Left
-                                </Button>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Size
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendFontSize}
+                                    onChange={(e) =>
+                                      setLegendFontSize(Number(e.target.value))
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0.1}
+                                    max={10.0}
+                                    step={0.1}
+                                  />
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Gap (px)
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendGap}
+                                    onChange={(e) =>
+                                      setLegendGap(Number(e.target.value))
+                                    }
+                                    className='h-7 text-xs'
+                                    min={5}
+                                    max={50}
+                                  />
+                                </div>
                               </div>
-                            </div>
-
-                            {/* Legend Alignment */}
-                            <div className='space-y-2'>
-                              <Label className='text-xs font-medium text-zinc-700'>
-                                Alignment
-                              </Label>
-                              <div className='grid grid-cols-3 gap-2'>
-                                <Button
-                                  variant={legendAlignment === 'start' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendAlignment('start')}
-                                >
-                                  Start
-                                </Button>
-                                <Button
-                                  variant={legendAlignment === 'center' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendAlignment('center')}
-                                >
-                                  Center
-                                </Button>
-                                <Button
-                                  variant={legendAlignment === 'end' ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-8 text-xs'
-                                  onClick={() => setLegendAlignment('end')}
-                                >
-                                  End
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Font Size */}
-                            <div className='space-y-2'>
-                              <Label className='text-xs font-medium text-zinc-700'>
-                                Font Size (px)
-                              </Label>
-                              <Input
-                                type='number'
-                                value={legendFontSize}
-                                onChange={(e) => setLegendFontSize(Number(e.target.value))}
-                                className='h-8 text-xs'
-                                min={8}
-                                max={24}
-                              />
                             </div>
 
                             {/* Show Values Toggle */}
                             <div className='space-y-2'>
                               <div className='flex items-center justify-between'>
-                                <Label className='text-xs font-medium text-zinc-700'>
-                                  Show Values
-                                </Label>
-                                <Button
-                                  variant={legendShowValues ? 'default' : 'outline'}
-                                  size='sm'
-                                  className='h-7 px-3 text-xs'
-                                  onClick={() => setLegendShowValues(!legendShowValues)}
-                                >
-                                  {legendShowValues ? 'On' : 'Off'}
-                                </Button>
+                                <div className='space-y-0.5'>
+                                  <Label
+                                    htmlFor='legend-show-values'
+                                    className='text-xs font-medium text-zinc-700'
+                                  >
+                                    Show Values
+                                  </Label>
+                                  <p className='text-[10px] text-zinc-500'>
+                                    Display numeric values next to legend items
+                                  </p>
+                                </div>
+                                <Switch
+                                  id='legend-show-values'
+                                  checked={legendShowValues}
+                                  onCheckedChange={setLegendShowValues}
+                                />
                               </div>
-                              <p className='text-[10px] text-zinc-500'>
-                                Display numeric values next to legend items
-                              </p>
+                            </div>
+
+                            {/* Legend Padding */}
+                            <div className='space-y-2'>
+                              <Label className='text-xs font-medium text-zinc-700'>
+                                Padding (px)
+                              </Label>
+                              <div className='flex gap-2'>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Top
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendPaddingTop}
+                                    onChange={(e) =>
+                                      setLegendPaddingTop(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Right
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendPaddingRight}
+                                    onChange={(e) =>
+                                      setLegendPaddingRight(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Bottom
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendPaddingBottom}
+                                    onChange={(e) =>
+                                      setLegendPaddingBottom(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                                <div className='space-y-1'>
+                                  <Label className='text-[10px] text-zinc-500'>
+                                    Left
+                                  </Label>
+                                  <Input
+                                    type='number'
+                                    value={legendPaddingLeft}
+                                    onChange={(e) =>
+                                      setLegendPaddingLeft(
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                    className='h-7 text-xs'
+                                    min={0}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           </>
                         )}

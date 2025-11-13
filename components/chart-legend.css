@@ -1,0 +1,88 @@
+/* Chart Legend Styles */
+
+.chart-legend {
+  display: flex;
+  gap: var(--legend-gap);
+  padding-top: var(--legend-padding-top);
+  padding-right: var(--legend-padding-right);
+  padding-bottom: var(--legend-padding-bottom);
+  padding-left: var(--legend-padding-left);
+  transition: all 0.1s ease-out;
+}
+
+/* Responsive font sizing based on breakpoints */
+.chart-legend {
+  font-size: var(--legend-font-size-mobile);
+}
+
+@media (min-width: 768px) {
+  .chart-legend {
+    font-size: var(--legend-font-size-tablet);
+  }
+}
+
+@media (min-width: 1024px) {
+  .chart-legend {
+    font-size: var(--legend-font-size-desktop);
+  }
+}
+
+/* Horizontal layout */
+.chart-legend--horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Vertical layout */
+.chart-legend--vertical {
+  flex-direction: column;
+}
+
+/* Alignment variations */
+.chart-legend--horizontal.chart-legend--align-start {
+  justify-content: flex-start;
+}
+
+.chart-legend--horizontal.chart-legend--align-center {
+  justify-content: center;
+}
+
+.chart-legend--horizontal.chart-legend--align-end {
+  justify-content: flex-end;
+}
+
+.chart-legend--vertical.chart-legend--align-start {
+  align-items: flex-start;
+}
+
+.chart-legend--vertical.chart-legend--align-center {
+  align-items: center;
+}
+
+.chart-legend--vertical.chart-legend--align-end {
+  align-items: flex-end;
+}
+
+/* Legend item spacing */
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-legend--horizontal .chart-legend-item {
+  margin-right: var(--legend-item-gap-half);
+}
+
+.chart-legend--vertical .chart-legend-item {
+  margin-bottom: var(--legend-item-gap-half);
+}
+
+/* Legend color box */
+.chart-legend-color-box {
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.125rem;
+  background-color: var(--legend-color);
+}

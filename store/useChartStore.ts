@@ -92,6 +92,48 @@ interface ChartStore {
   setChartFooter: (footer: string) => void;
 
   // Layout settings
+  layoutMainFont: string;
+  setLayoutMainFont: (font: string) => void;
+
+  layoutTextColor: string;
+  setLayoutTextColor: (color: string) => void;
+
+  layoutBackgroundColorEnabled: boolean;
+  setLayoutBackgroundColorEnabled: (enabled: boolean) => void;
+
+  layoutBackgroundImageEnabled: boolean;
+  setLayoutBackgroundImageEnabled: (enabled: boolean) => void;
+
+  layoutBackgroundColor: string;
+  setLayoutBackgroundColor: (color: string) => void;
+
+  layoutBackgroundImageUrl: string;
+  setLayoutBackgroundImageUrl: (url: string) => void;
+
+  layoutBackgroundImageSize: 'fill' | 'fit' | 'original' | 'stretch';
+  setLayoutBackgroundImageSize: (size: 'fill' | 'fit' | 'original' | 'stretch') => void;
+
+  layoutBackgroundImagePosition: 'top-left' | 'top-right' | 'top-center' | 'center' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-right' | 'bottom-center';
+  setLayoutBackgroundImagePosition: (position: 'top-left' | 'top-right' | 'top-center' | 'center' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-right' | 'bottom-center') => void;
+
+  layoutOrder: string;
+  setLayoutOrder: (order: string) => void;
+
+  layoutSpaceBetweenSections: 'none' | 'tight' | 'loose' | 'large';
+  setLayoutSpaceBetweenSections: (space: 'none' | 'tight' | 'loose' | 'large') => void;
+
+  layoutMarginTop: number;
+  setLayoutMarginTop: (margin: number) => void;
+
+  layoutMarginRight: number;
+  setLayoutMarginRight: (margin: number) => void;
+
+  layoutMarginBottom: number;
+  setLayoutMarginBottom: (margin: number) => void;
+
+  layoutMarginLeft: number;
+  setLayoutMarginLeft: (margin: number) => void;
+
   layoutPaddingTop: number;
   setLayoutPaddingTop: (padding: number) => void;
 
@@ -104,17 +146,35 @@ interface ChartStore {
   layoutPaddingLeft: number;
   setLayoutPaddingLeft: (padding: number) => void;
 
-  layoutBackgroundColor: string;
-  setLayoutBackgroundColor: (color: string) => void;
+  layoutBorderEnabled: boolean;
+  setLayoutBorderEnabled: (enabled: boolean) => void;
 
-  layoutBorderRadius: number;
-  setLayoutBorderRadius: (radius: number) => void;
+  layoutBorderTop: boolean;
+  setLayoutBorderTop: (enabled: boolean) => void;
+
+  layoutBorderRight: boolean;
+  setLayoutBorderRight: (enabled: boolean) => void;
+
+  layoutBorderBottom: boolean;
+  setLayoutBorderBottom: (enabled: boolean) => void;
+
+  layoutBorderLeft: boolean;
+  setLayoutBorderLeft: (enabled: boolean) => void;
+
+  layoutBorderStyle: 'solid' | 'dashed' | 'dotted';
+  setLayoutBorderStyle: (style: 'solid' | 'dashed' | 'dotted') => void;
+
+  layoutBorderColor: string;
+  setLayoutBorderColor: (color: string) => void;
 
   layoutBorderWidth: number;
   setLayoutBorderWidth: (width: number) => void;
 
-  layoutBorderColor: string;
-  setLayoutBorderColor: (color: string) => void;
+  layoutBorderRadius: number;
+  setLayoutBorderRadius: (radius: number) => void;
+
+  layoutReadDirection: 'ltr' | 'rtl';
+  setLayoutReadDirection: (direction: 'ltr' | 'rtl') => void;
 
   // Legend settings
   legendShow: boolean;
@@ -126,11 +186,35 @@ interface ChartStore {
   legendAlignment: 'start' | 'center' | 'end';
   setLegendAlignment: (alignment: 'start' | 'center' | 'end') => void;
 
-  legendFontSize: number;
+  legendFontSize: number; // Size multiplier (0.1 to 10.0) applied to base rem size
   setLegendFontSize: (size: number) => void;
+
+  legendBaseFontSizeMobile: number; // Base font size in px for mobile (<768px)
+  setLegendBaseFontSizeMobile: (size: number) => void;
+
+  legendBaseFontSizeTablet: number; // Base font size in px for tablet (768px-1024px)
+  setLegendBaseFontSizeTablet: (size: number) => void;
+
+  legendBaseFontSizeDesktop: number; // Base font size in px for desktop (>1024px)
+  setLegendBaseFontSizeDesktop: (size: number) => void;
 
   legendShowValues: boolean;
   setLegendShowValues: (show: boolean) => void;
+
+  legendGap: number;
+  setLegendGap: (gap: number) => void;
+
+  legendPaddingTop: number;
+  setLegendPaddingTop: (padding: number) => void;
+
+  legendPaddingRight: number;
+  setLegendPaddingRight: (padding: number) => void;
+
+  legendPaddingBottom: number;
+  setLegendPaddingBottom: (padding: number) => void;
+
+  legendPaddingLeft: number;
+  setLegendPaddingLeft: (padding: number) => void;
 
   // UI state
   isDataPanelOpen: boolean;
@@ -362,6 +446,48 @@ export const useChartStore = create<ChartStore>()(
   setChartFooter: (footer) => set({ chartFooter: footer }),
 
   // Layout settings
+  layoutMainFont: 'Inter',
+  setLayoutMainFont: (font) => set({ layoutMainFont: font }),
+
+  layoutTextColor: '#000000',
+  setLayoutTextColor: (color) => set({ layoutTextColor: color }),
+
+  layoutBackgroundColorEnabled: true,
+  setLayoutBackgroundColorEnabled: (enabled) => set({ layoutBackgroundColorEnabled: enabled }),
+
+  layoutBackgroundImageEnabled: false,
+  setLayoutBackgroundImageEnabled: (enabled) => set({ layoutBackgroundImageEnabled: enabled }),
+
+  layoutBackgroundColor: '#ffffff',
+  setLayoutBackgroundColor: (color) => set({ layoutBackgroundColor: color }),
+
+  layoutBackgroundImageUrl: '',
+  setLayoutBackgroundImageUrl: (url) => set({ layoutBackgroundImageUrl: url }),
+
+  layoutBackgroundImageSize: 'fill',
+  setLayoutBackgroundImageSize: (size) => set({ layoutBackgroundImageSize: size }),
+
+  layoutBackgroundImagePosition: 'center',
+  setLayoutBackgroundImagePosition: (position) => set({ layoutBackgroundImagePosition: position }),
+
+  layoutOrder: 'header-controls-legend-primary-graphic-footer',
+  setLayoutOrder: (order) => set({ layoutOrder: order }),
+
+  layoutSpaceBetweenSections: 'loose',
+  setLayoutSpaceBetweenSections: (space) => set({ layoutSpaceBetweenSections: space }),
+
+  layoutMarginTop: 0,
+  setLayoutMarginTop: (margin) => set({ layoutMarginTop: margin }),
+
+  layoutMarginRight: 0,
+  setLayoutMarginRight: (margin) => set({ layoutMarginRight: margin }),
+
+  layoutMarginBottom: 0,
+  setLayoutMarginBottom: (margin) => set({ layoutMarginBottom: margin }),
+
+  layoutMarginLeft: 0,
+  setLayoutMarginLeft: (margin) => set({ layoutMarginLeft: margin }),
+
   layoutPaddingTop: 24,
   setLayoutPaddingTop: (padding) => set({ layoutPaddingTop: padding }),
 
@@ -374,17 +500,35 @@ export const useChartStore = create<ChartStore>()(
   layoutPaddingLeft: 24,
   setLayoutPaddingLeft: (padding) => set({ layoutPaddingLeft: padding }),
 
-  layoutBackgroundColor: '#ffffff',
-  setLayoutBackgroundColor: (color) => set({ layoutBackgroundColor: color }),
+  layoutBorderEnabled: false,
+  setLayoutBorderEnabled: (enabled) => set({ layoutBorderEnabled: enabled }),
 
-  layoutBorderRadius: 0,
-  setLayoutBorderRadius: (radius) => set({ layoutBorderRadius: radius }),
+  layoutBorderTop: true,
+  setLayoutBorderTop: (enabled) => set({ layoutBorderTop: enabled }),
+
+  layoutBorderRight: true,
+  setLayoutBorderRight: (enabled) => set({ layoutBorderRight: enabled }),
+
+  layoutBorderBottom: true,
+  setLayoutBorderBottom: (enabled) => set({ layoutBorderBottom: enabled }),
+
+  layoutBorderLeft: true,
+  setLayoutBorderLeft: (enabled) => set({ layoutBorderLeft: enabled }),
+
+  layoutBorderStyle: 'solid',
+  setLayoutBorderStyle: (style) => set({ layoutBorderStyle: style }),
+
+  layoutBorderColor: '#e4e4e7',
+  setLayoutBorderColor: (color) => set({ layoutBorderColor: color }),
 
   layoutBorderWidth: 1,
   setLayoutBorderWidth: (width) => set({ layoutBorderWidth: width }),
 
-  layoutBorderColor: '#e4e4e7',
-  setLayoutBorderColor: (color) => set({ layoutBorderColor: color }),
+  layoutBorderRadius: 0,
+  setLayoutBorderRadius: (radius) => set({ layoutBorderRadius: radius }),
+
+  layoutReadDirection: 'ltr',
+  setLayoutReadDirection: (direction) => set({ layoutReadDirection: direction }),
 
   // Legend settings
   legendShow: true,
@@ -396,11 +540,35 @@ export const useChartStore = create<ChartStore>()(
   legendAlignment: 'start',
   setLegendAlignment: (alignment) => set({ legendAlignment: alignment }),
 
-  legendFontSize: 12,
+  legendFontSize: 1.0, // Default 1.0 = 1rem
   setLegendFontSize: (size) => set({ legendFontSize: size }),
+
+  legendBaseFontSizeMobile: 12, // 12px base for mobile
+  setLegendBaseFontSizeMobile: (size) => set({ legendBaseFontSizeMobile: size }),
+
+  legendBaseFontSizeTablet: 14, // 14px base for tablet
+  setLegendBaseFontSizeTablet: (size) => set({ legendBaseFontSizeTablet: size }),
+
+  legendBaseFontSizeDesktop: 16, // 16px base for desktop
+  setLegendBaseFontSizeDesktop: (size) => set({ legendBaseFontSizeDesktop: size }),
 
   legendShowValues: false,
   setLegendShowValues: (show) => set({ legendShowValues: show }),
+
+  legendGap: 20,
+  setLegendGap: (gap) => set({ legendGap: gap }),
+
+  legendPaddingTop: 0,
+  setLegendPaddingTop: (padding) => set({ legendPaddingTop: padding }),
+
+  legendPaddingRight: 0,
+  setLegendPaddingRight: (padding) => set({ legendPaddingRight: padding }),
+
+  legendPaddingBottom: 0,
+  setLegendPaddingBottom: (padding) => set({ legendPaddingBottom: padding }),
+
+  legendPaddingLeft: 0,
+  setLegendPaddingLeft: (padding) => set({ legendPaddingLeft: padding }),
 
   // Initial UI state
   isDataPanelOpen: true,
@@ -467,19 +635,47 @@ export const useChartStore = create<ChartStore>()(
         chartTitle: state.chartTitle,
         chartDescription: state.chartDescription,
         chartFooter: state.chartFooter,
+        layoutMainFont: state.layoutMainFont,
+        layoutTextColor: state.layoutTextColor,
+        layoutBackgroundColorEnabled: state.layoutBackgroundColorEnabled,
+        layoutBackgroundImageEnabled: state.layoutBackgroundImageEnabled,
+        layoutBackgroundColor: state.layoutBackgroundColor,
+        layoutBackgroundImageUrl: state.layoutBackgroundImageUrl,
+        layoutBackgroundImageSize: state.layoutBackgroundImageSize,
+        layoutBackgroundImagePosition: state.layoutBackgroundImagePosition,
+        layoutOrder: state.layoutOrder,
+        layoutSpaceBetweenSections: state.layoutSpaceBetweenSections,
+        layoutMarginTop: state.layoutMarginTop,
+        layoutMarginRight: state.layoutMarginRight,
+        layoutMarginBottom: state.layoutMarginBottom,
+        layoutMarginLeft: state.layoutMarginLeft,
         layoutPaddingTop: state.layoutPaddingTop,
         layoutPaddingRight: state.layoutPaddingRight,
         layoutPaddingBottom: state.layoutPaddingBottom,
         layoutPaddingLeft: state.layoutPaddingLeft,
-        layoutBackgroundColor: state.layoutBackgroundColor,
-        layoutBorderRadius: state.layoutBorderRadius,
-        layoutBorderWidth: state.layoutBorderWidth,
+        layoutBorderEnabled: state.layoutBorderEnabled,
+        layoutBorderTop: state.layoutBorderTop,
+        layoutBorderRight: state.layoutBorderRight,
+        layoutBorderBottom: state.layoutBorderBottom,
+        layoutBorderLeft: state.layoutBorderLeft,
+        layoutBorderStyle: state.layoutBorderStyle,
         layoutBorderColor: state.layoutBorderColor,
+        layoutBorderWidth: state.layoutBorderWidth,
+        layoutBorderRadius: state.layoutBorderRadius,
+        layoutReadDirection: state.layoutReadDirection,
         legendShow: state.legendShow,
         legendPosition: state.legendPosition,
         legendAlignment: state.legendAlignment,
         legendFontSize: state.legendFontSize,
+        legendBaseFontSizeMobile: state.legendBaseFontSizeMobile,
+        legendBaseFontSizeTablet: state.legendBaseFontSizeTablet,
+        legendBaseFontSizeDesktop: state.legendBaseFontSizeDesktop,
         legendShowValues: state.legendShowValues,
+        legendGap: state.legendGap,
+        legendPaddingTop: state.legendPaddingTop,
+        legendPaddingRight: state.legendPaddingRight,
+        legendPaddingBottom: state.legendPaddingBottom,
+        legendPaddingLeft: state.legendPaddingLeft,
       }),
     }
   )

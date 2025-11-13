@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChartHeader } from '@/components/chart-header';
+import { PageHeader } from '@/components/page-header';
 import { TabContent } from '@/components/tab-content';
 
 export default function Home() {
@@ -10,7 +10,7 @@ export default function Home() {
 
   return (
     <main className='flex flex-col h-screen'>
-      <ChartHeader />
+      <PageHeader />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className='flex-1 bg-slate-100'>
         <TabsList className='w-100 self-center my-2 bg-slate-100'>

@@ -7,38 +7,75 @@ interface LineChartD3Props {
   data: Array<Record<string, string | number>>;
   labelKey: string;
   valueKeys: string[];
+  width?: number;
+  height?: number;
+  legendShow?: boolean;
+  legendPosition?: 'top' | 'right' | 'bottom' | 'left';
+  legendAlignment?: 'start' | 'center' | 'end';
+  legendFontSize?: number;
+  legendShowValues?: boolean;
+  legendGap?: number;
+  legendPaddingTop?: number;
+  legendPaddingRight?: number;
+  legendPaddingBottom?: number;
+  legendPaddingLeft?: number;
 }
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
 
-export function LineChartD3({ data, labelKey, valueKeys }: LineChartD3Props) {
+export function LineChartD3({
+  data,
+  labelKey,
+  valueKeys,
+  width: propWidth = 800,
+  height: propHeight = 600,
+  legendShow = true,
+  legendPosition = 'right',
+  legendAlignment = 'start',
+  legendFontSize = 12,
+  legendGap = 20,
+  legendPaddingTop = 0,
+  legendPaddingRight = 0,
+  legendPaddingBottom = 0,
+  legendPaddingLeft = 0,
+}: LineChartD3Props) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!svgRef.current || !containerRef.current || data.length === 0) return;
+    if (!svgRef.current || data.length === 0) return;
 
     // Clear previous chart
     d3.select(svgRef.current).selectAll('*').remove();
 
-    // Get container dimensions
-    const container = containerRef.current;
-    const width = container.clientWidth;
-    const height = container.clientHeight;
+    // Use prop dimensions for calculations
+    const width = propWidth;
+    const height = propHeight;
 
-    const margin = { top: 40, right: 120, bottom: 60, left: 60 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    // Reserve space for legend based on position
+    const legendSpace = legendShow ? 120 : 0;
+    const chartMargin = {
+      top: legendPosition === 'top' ? legendSpace : 0,
+      right: legendPosition === 'right' ? legendSpace : 0,
+      bottom: legendPosition === 'bottom' ? legendSpace : 40, // Space for x-axis labels
+      left: legendPosition === 'left' ? legendSpace : 50, // Space for y-axis
+    };
 
-    // Create SVG
+    // Add minimal space for axes when legend isn't on that side
+    if (legendPosition !== 'bottom') chartMargin.bottom = Math.max(chartMargin.bottom, 40);
+    if (legendPosition !== 'left') chartMargin.left = Math.max(chartMargin.left, 50);
+
+    const innerWidth = width - chartMargin.left - chartMargin.right;
+    const innerHeight = height - chartMargin.top - chartMargin.bottom;
+
+    // Create SVG with viewBox for responsiveness
     const svg = d3
       .select(svgRef.current)
-      .attr('width', width)
-      .attr('height', height);
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
     const g = svg
       .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .attr('transform', `translate(${chartMargin.left},${chartMargin.top})`);
 
     // Scales
     const xScale = d3
@@ -123,34 +160,130 @@ export function LineChartD3({ data, labelKey, valueKeys }: LineChartD3Props) {
     });
 
     // Legend
-    const legend = g
-      .append('g')
-      .attr('transform', `translate(${innerWidth + 10}, 0)`);
+    if (legendShow) {
+      // Calculate legend position based on legendPosition prop
+      let legendX = 0;
+      let legendY = 0;
+      let legendOrientation: 'vertical' | 'horizontal' = 'vertical';
 
-    valueKeys.forEach((key, index) => {
-      const legendRow = legend
+      if (legendPosition === 'right') {
+        legendX = width - chartMargin.right + 5 - legendPaddingRight;
+        // Apply vertical alignment for right position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
+        legendOrientation = 'vertical';
+      } else if (legendPosition === 'left') {
+        legendX = 5 + legendPaddingLeft;
+        // Apply vertical alignment for left position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
+        legendOrientation = 'vertical';
+      } else if (legendPosition === 'top') {
+        // Apply horizontal alignment for top position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = 5 + legendPaddingTop;
+        legendOrientation = 'horizontal';
+      } else if (legendPosition === 'bottom') {
+        // Apply horizontal alignment for bottom position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = height - chartMargin.bottom + 45 - legendPaddingBottom;
+        legendOrientation = 'horizontal';
+      }
+
+      const legend = svg
         .append('g')
-        .attr('transform', `translate(0, ${index * 25})`);
+        .attr('transform', `translate(${legendX}, ${legendY})`);
 
-      legendRow
-        .append('rect')
-        .attr('width', 15)
-        .attr('height', 15)
-        .attr('fill', COLORS[index % COLORS.length]);
+      if (legendOrientation === 'vertical') {
+        // Vertical layout
+        valueKeys.forEach((key, index) => {
+          const legendRow = legend
+            .append('g')
+            .attr('transform', `translate(0, ${index * (15 + legendGap)})`);
 
-      legendRow
-        .append('text')
-        .attr('x', 20)
-        .attr('y', 12)
-        .text(key)
-        .style('font-size', '12px')
-        .attr('text-anchor', 'start');
-    });
-  }, [data, labelKey, valueKeys]);
+          legendRow
+            .append('rect')
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('fill', COLORS[index % COLORS.length]);
+
+          legendRow
+            .append('text')
+            .attr('x', 20)
+            .attr('y', 12)
+            .text(key)
+            .style('font-size', `${legendFontSize}px`)
+            .attr('text-anchor', 'start');
+        });
+      } else {
+        // Horizontal layout with wrapping
+        let cumulativeX = 0;
+        let cumulativeY = 0;
+        const maxWidth = innerWidth;
+        const lineHeight = 15 + legendGap;
+
+        valueKeys.forEach((key, index) => {
+          // Estimate item width (rect + spacing + text width)
+          const itemWidth = 15 + 5 + key.length * legendFontSize * 0.6 + legendGap;
+
+          // Check if we need to wrap to next line
+          if (cumulativeX > 0 && cumulativeX + itemWidth > maxWidth) {
+            cumulativeX = 0;
+            cumulativeY += lineHeight;
+          }
+
+          const legendItem = legend
+            .append('g')
+            .attr('transform', `translate(${cumulativeX}, ${cumulativeY})`);
+
+          legendItem
+            .append('rect')
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('fill', COLORS[index % COLORS.length]);
+
+          legendItem
+            .append('text')
+            .attr('x', 20)
+            .attr('y', 12)
+            .text(key)
+            .style('font-size', `${legendFontSize}px`)
+            .attr('text-anchor', 'start');
+
+          // Move X position for next item
+          cumulativeX += itemWidth;
+        });
+      }
+    }
+  }, [data, labelKey, valueKeys, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
-    <div ref={containerRef} className='w-full h-full'>
-      <svg ref={svgRef}></svg>
-    </div>
+    <svg ref={svgRef} className='w-full h-full' />
   );
 }

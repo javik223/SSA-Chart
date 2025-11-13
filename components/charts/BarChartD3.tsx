@@ -14,6 +14,11 @@ interface BarChartD3Props {
   legendAlignment?: 'start' | 'center' | 'end';
   legendFontSize?: number;
   legendShowValues?: boolean;
+  legendGap?: number;
+  legendPaddingTop?: number;
+  legendPaddingRight?: number;
+  legendPaddingBottom?: number;
+  legendPaddingLeft?: number;
 }
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
@@ -26,7 +31,13 @@ export function BarChartD3({
   height: propHeight = 600,
   legendShow = true,
   legendPosition = 'right',
+  legendAlignment = 'start',
   legendFontSize = 12,
+  legendGap = 20,
+  legendPaddingTop = 0,
+  legendPaddingRight = 0,
+  legendPaddingBottom = 0,
+  legendPaddingLeft = 0,
 }: BarChartD3Props) {
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -40,18 +51,21 @@ export function BarChartD3({
     const width = propWidth;
     const height = propHeight;
 
-    // Adjust margins based on legend position
-    const baseMargin = { top: 40, right: 40, bottom: 60, left: 60 };
+    // Reserve space for legend based on position
     const legendSpace = legendShow ? 120 : 0;
-    const margin = {
-      top: baseMargin.top + (legendPosition === 'top' ? legendSpace : 0),
-      right: baseMargin.right + (legendPosition === 'right' ? legendSpace : 0),
-      bottom: baseMargin.bottom + (legendPosition === 'bottom' ? legendSpace : 0),
-      left: baseMargin.left + (legendPosition === 'left' ? legendSpace : 0),
+    const chartMargin = {
+      top: legendPosition === 'top' ? legendSpace : 0,
+      right: legendPosition === 'right' ? legendSpace : 0,
+      bottom: legendPosition === 'bottom' ? legendSpace : 40, // Space for x-axis labels
+      left: legendPosition === 'left' ? legendSpace : 50, // Space for y-axis
     };
 
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    // Add minimal space for axes when legend isn't on that side
+    if (legendPosition !== 'bottom') chartMargin.bottom = Math.max(chartMargin.bottom, 40);
+    if (legendPosition !== 'left') chartMargin.left = Math.max(chartMargin.left, 50);
+
+    const innerWidth = width - chartMargin.left - chartMargin.right;
+    const innerHeight = height - chartMargin.top - chartMargin.bottom;
 
     // Create SVG with viewBox for responsiveness
     const svg = d3
@@ -61,7 +75,7 @@ export function BarChartD3({
 
     const g = svg
       .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+      .attr('transform', `translate(${chartMargin.left},${chartMargin.top})`);
 
     // Scales
     const x0Scale = d3
@@ -136,24 +150,56 @@ export function BarChartD3({
       let legendOrientation: 'vertical' | 'horizontal' = 'vertical';
 
       if (legendPosition === 'right') {
-        legendX = innerWidth + 10;
-        legendY = 0;
+        legendX = width - chartMargin.right + 5 - legendPaddingRight;
+        // Apply vertical alignment for right position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
         legendOrientation = 'vertical';
       } else if (legendPosition === 'left') {
-        legendX = -margin.left + 10;
-        legendY = 0;
+        legendX = 5 + legendPaddingLeft;
+        // Apply vertical alignment for left position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
         legendOrientation = 'vertical';
       } else if (legendPosition === 'top') {
-        legendX = 0;
-        legendY = -margin.top + 10;
+        // Apply horizontal alignment for top position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = 5 + legendPaddingTop;
         legendOrientation = 'horizontal';
       } else if (legendPosition === 'bottom') {
-        legendX = 0;
-        legendY = innerHeight + 40;
+        // Apply horizontal alignment for bottom position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = height - chartMargin.bottom + 45 - legendPaddingBottom;
         legendOrientation = 'horizontal';
       }
 
-      const legend = g
+      const legend = svg
         .append('g')
         .attr('transform', `translate(${legendX}, ${legendY})`);
 
@@ -162,7 +208,7 @@ export function BarChartD3({
         valueKeys.forEach((key, index) => {
           const legendRow = legend
             .append('g')
-            .attr('transform', `translate(0, ${index * 25})`);
+            .attr('transform', `translate(0, ${index * (15 + legendGap)})`);
 
           legendRow
             .append('rect')
@@ -179,12 +225,25 @@ export function BarChartD3({
             .attr('text-anchor', 'start');
         });
       } else {
-        // Horizontal layout
+        // Horizontal layout with wrapping
         let cumulativeX = 0;
+        let cumulativeY = 0;
+        const maxWidth = innerWidth;
+        const lineHeight = 15 + legendGap;
+
         valueKeys.forEach((key, index) => {
+          // Estimate item width (rect + spacing + text width)
+          const itemWidth = 15 + 5 + key.length * legendFontSize * 0.6 + legendGap;
+
+          // Check if we need to wrap to next line
+          if (cumulativeX > 0 && cumulativeX + itemWidth > maxWidth) {
+            cumulativeX = 0;
+            cumulativeY += lineHeight;
+          }
+
           const legendItem = legend
             .append('g')
-            .attr('transform', `translate(${cumulativeX}, 0)`);
+            .attr('transform', `translate(${cumulativeX}, ${cumulativeY})`);
 
           legendItem
             .append('rect')
@@ -200,12 +259,12 @@ export function BarChartD3({
             .style('font-size', `${legendFontSize}px`)
             .attr('text-anchor', 'start');
 
-          // Calculate width for next item (rect + spacing + text width estimate)
-          cumulativeX += 15 + 5 + key.length * legendFontSize * 0.6 + 20;
+          // Move X position for next item
+          cumulativeX += itemWidth;
         });
       }
     }
-  }, [data, labelKey, valueKeys, propWidth, propHeight, legendShow, legendPosition, legendFontSize]);
+  }, [data, labelKey, valueKeys, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
     <svg ref={svgRef} className='w-full h-full' />

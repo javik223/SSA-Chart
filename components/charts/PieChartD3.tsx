@@ -15,6 +15,11 @@ interface PieChartD3Props {
   legendAlignment?: 'start' | 'center' | 'end';
   legendFontSize?: number;
   legendShowValues?: boolean;
+  legendGap?: number;
+  legendPaddingTop?: number;
+  legendPaddingRight?: number;
+  legendPaddingBottom?: number;
+  legendPaddingLeft?: number;
 }
 
 const COLORS = [
@@ -39,8 +44,14 @@ export function PieChartD3({
   height: propHeight = 600,
   legendShow = true,
   legendPosition = 'right',
+  legendAlignment = 'start',
   legendFontSize = 12,
   legendShowValues = false,
+  legendGap = 20,
+  legendPaddingTop = 0,
+  legendPaddingRight = 0,
+  legendPaddingBottom = 0,
+  legendPaddingLeft = 0,
 }: PieChartD3Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -55,17 +66,20 @@ export function PieChartD3({
     const width = propWidth;
     const height = propHeight;
 
-    // Adjust margins based on legend position
-    const baseMargin = { top: 40, right: 40, bottom: 40, left: 40 };
-    const legendSpace = legendShow ? 150 : 0;
-    const margin = {
-      top: baseMargin.top + (legendPosition === 'top' ? legendSpace : 0),
-      right: baseMargin.right + (legendPosition === 'right' ? legendSpace : 0),
-      bottom: baseMargin.bottom + (legendPosition === 'bottom' ? legendSpace : 0),
-      left: baseMargin.left + (legendPosition === 'left' ? legendSpace : 0),
+    // Reserve space for legend based on position
+    // Use more space for horizontal legends (top/bottom) as they may wrap
+    const legendSpace = legendShow
+      ? (legendPosition === 'top' || legendPosition === 'bottom' ? 100 : 150)
+      : 0;
+    const chartMargin = {
+      top: legendPosition === 'top' ? legendSpace : 20,
+      right: legendPosition === 'right' ? legendSpace : 20,
+      bottom: legendPosition === 'bottom' ? legendSpace : 20,
+      left: legendPosition === 'left' ? legendSpace : 20,
     };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+
+    const innerWidth = width - chartMargin.left - chartMargin.right;
+    const innerHeight = height - chartMargin.top - chartMargin.bottom;
 
     // Determine radius
     const radius = Math.min(innerWidth, innerHeight) / 2;
@@ -82,7 +96,7 @@ export function PieChartD3({
       .append('g')
       .attr(
         'transform',
-        `translate(${margin.left + innerWidth / 2},${margin.top + innerHeight / 2})`
+        `translate(${chartMargin.left + innerWidth / 2},${chartMargin.top + innerHeight / 2})`
       );
 
     // Use first value key for pie chart (pie charts typically show one value series)
@@ -211,20 +225,52 @@ export function PieChartD3({
       let legendOrientation: 'vertical' | 'horizontal' = 'vertical';
 
       if (legendPosition === 'right') {
-        legendX = width - margin.right + 20;
-        legendY = margin.top;
+        legendX = width - chartMargin.right + 5 - legendPaddingRight;
+        // Apply vertical alignment for right position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
         legendOrientation = 'vertical';
       } else if (legendPosition === 'left') {
-        legendX = 20;
-        legendY = margin.top;
+        legendX = 5 + legendPaddingLeft;
+        // Apply vertical alignment for left position
+        if (legendAlignment === 'center') {
+          legendY = height / 2;
+        } else if (legendAlignment === 'end') {
+          legendY = height - chartMargin.bottom;
+        } else {
+          legendY = chartMargin.top;
+        }
+        legendY += legendPaddingTop;
         legendOrientation = 'vertical';
       } else if (legendPosition === 'top') {
-        legendX = margin.left;
-        legendY = 20;
+        // Apply horizontal alignment for top position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = 5 + legendPaddingTop;
         legendOrientation = 'horizontal';
       } else if (legendPosition === 'bottom') {
-        legendX = margin.left;
-        legendY = height - margin.bottom + 60;
+        // Apply horizontal alignment for bottom position
+        if (legendAlignment === 'center') {
+          legendX = width / 2;
+        } else if (legendAlignment === 'end') {
+          legendX = width - chartMargin.right;
+        } else {
+          legendX = chartMargin.left;
+        }
+        legendX += legendPaddingLeft;
+        legendY = height - chartMargin.bottom + 10 + legendPaddingTop;
         legendOrientation = 'horizontal';
       }
 
@@ -240,7 +286,7 @@ export function PieChartD3({
           .enter()
           .append('g')
           .attr('class', 'legend-item')
-          .attr('transform', (d, i) => `translate(0, ${i * 25})`);
+          .attr('transform', (d, i) => `translate(0, ${i * (15 + legendGap)})`);
 
         legendItems
           .append('rect')
@@ -262,23 +308,36 @@ export function PieChartD3({
           .style('font-size', `${legendFontSize}px`)
           .attr('text-anchor', 'start');
       } else {
-        // Horizontal layout
+        // Horizontal layout with wrapping
         let cumulativeX = 0;
+        let cumulativeY = 0;
+        const maxWidth = innerWidth;
+        const lineHeight = 15 + legendGap;
+
         pieData.forEach((d, i) => {
+          const percentage = ((d.value / total) * 100).toFixed(1);
+          const label = legendShowValues
+            ? `${d.label} (${d.value.toLocaleString()}, ${percentage}%)`
+            : `${d.label} (${percentage}%)`;
+
+          // Estimate item width (rect + spacing + text width)
+          const itemWidth = 15 + 5 + label.length * legendFontSize * 0.6 + legendGap;
+
+          // Check if we need to wrap to next line
+          if (cumulativeX > 0 && cumulativeX + itemWidth > maxWidth) {
+            cumulativeX = 0;
+            cumulativeY += lineHeight;
+          }
+
           const legendItem = legend
             .append('g')
-            .attr('transform', `translate(${cumulativeX}, 0)`);
+            .attr('transform', `translate(${cumulativeX}, ${cumulativeY})`);
 
           legendItem
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
             .attr('fill', COLORS[i % COLORS.length]);
-
-          const percentage = ((d.value / total) * 100).toFixed(1);
-          const label = legendShowValues
-            ? `${d.label} (${d.value.toLocaleString()}, ${percentage}%)`
-            : `${d.label} (${percentage}%)`;
 
           legendItem
             .append('text')
@@ -288,8 +347,8 @@ export function PieChartD3({
             .style('font-size', `${legendFontSize}px`)
             .attr('text-anchor', 'start');
 
-          // Calculate width for next item
-          cumulativeX += 15 + 5 + label.length * legendFontSize * 0.6 + 20;
+          // Move X position for next item
+          cumulativeX += itemWidth;
         });
       }
     }
@@ -315,7 +374,7 @@ export function PieChartD3({
         .style('fill', '#666')
         .text('Total');
     }
-  }, [data, labelKey, valueKeys, innerRadius, propWidth, propHeight, legendShow, legendPosition, legendFontSize, legendShowValues]);
+  }, [data, labelKey, valueKeys, innerRadius, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
     <div className='relative w-full h-full'>

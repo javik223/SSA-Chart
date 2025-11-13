@@ -14,6 +14,11 @@ interface DonutChartD3Props {
   legendAlignment?: 'start' | 'center' | 'end';
   legendFontSize?: number;
   legendShowValues?: boolean;
+  legendGap?: number;
+  legendPaddingTop?: number;
+  legendPaddingRight?: number;
+  legendPaddingBottom?: number;
+  legendPaddingLeft?: number;
 }
 
 /**
@@ -32,6 +37,11 @@ export function DonutChartD3({
   legendAlignment,
   legendFontSize,
   legendShowValues,
+  legendGap,
+  legendPaddingTop,
+  legendPaddingRight,
+  legendPaddingBottom,
+  legendPaddingLeft,
 }: DonutChartD3Props) {
   return (
     <PieChartD3
@@ -46,6 +56,11 @@ export function DonutChartD3({
       legendAlignment={legendAlignment}
       legendFontSize={legendFontSize}
       legendShowValues={legendShowValues}
+      legendGap={legendGap}
+      legendPaddingTop={legendPaddingTop}
+      legendPaddingRight={legendPaddingRight}
+      legendPaddingBottom={legendPaddingBottom}
+      legendPaddingLeft={legendPaddingLeft}
     />
   );
 }

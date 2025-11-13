@@ -1,148 +1,240 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { BarChart3, GripVertical } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import { BasicChart } from '@/components/charts/BasicChart';
+import { ChartTitleSection } from '@/components/chart-title-section';
+import { ChartFooter } from '@/components/chart-footer';
+import { ChartLegend } from '@/components/chart-legend';
+import { ChartControls } from '@/components/chart-controls';
+import { ResizeHandle } from '@/components/resize-handle';
 import { useChartStore } from '@/store/useChartStore';
 import { cn } from '@/lib/utils';
 
 export function ChartCanvas() {
-  const {
-    data,
-    columnMapping,
-    previewWidth,
-    previewHeight,
-    setPreviewWidth,
-    chartTitle,
-    setChartTitle,
-    chartDescription,
-    setChartDescription,
-    chartFooter,
-    setChartFooter,
-    layoutPaddingTop,
-    layoutPaddingRight,
-    layoutPaddingBottom,
-    layoutPaddingLeft,
-    layoutBackgroundColor,
-    layoutBorderRadius,
-    layoutBorderWidth,
-    layoutBorderColor,
-  } = useChartStore();
+  const data = useChartStore((state) => state.data);
+  const columnMapping = useChartStore((state) => state.columnMapping);
+  const previewWidth = useChartStore((state) => state.previewWidth);
+  const previewHeight = useChartStore((state) => state.previewHeight);
 
-  const [isResizing, setIsResizing] = useState(false);
-  const [editingField, setEditingField] = useState<
-    'title' | 'description' | 'footer' | null
-  >(null);
-  const [tempValue, setTempValue] = useState('');
+  // Typography
+  const layoutMainFont = useChartStore((state) => state.layoutMainFont);
+  const layoutTextColor = useChartStore((state) => state.layoutTextColor);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef(0);
-  const startWidthRef = useRef(0);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Background
+  const layoutBackgroundColorEnabled = useChartStore((state) => state.layoutBackgroundColorEnabled);
+  const layoutBackgroundImageEnabled = useChartStore((state) => state.layoutBackgroundImageEnabled);
+  const layoutBackgroundColor = useChartStore((state) => state.layoutBackgroundColor);
+  const layoutBackgroundImageUrl = useChartStore((state) => state.layoutBackgroundImageUrl);
+  const layoutBackgroundImageSize = useChartStore((state) => state.layoutBackgroundImageSize);
+  const layoutBackgroundImagePosition = useChartStore((state) => state.layoutBackgroundImagePosition);
 
-  // Handle resize
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-    startXRef.current = e.clientX;
-    startWidthRef.current = previewWidth;
-  };
+  // Spacing
+  const layoutSpaceBetweenSections = useChartStore((state) => state.layoutSpaceBetweenSections);
+  const layoutMarginTop = useChartStore((state) => state.layoutMarginTop);
+  const layoutMarginRight = useChartStore((state) => state.layoutMarginRight);
+  const layoutMarginBottom = useChartStore((state) => state.layoutMarginBottom);
+  const layoutMarginLeft = useChartStore((state) => state.layoutMarginLeft);
+  const layoutPaddingTop = useChartStore((state) => state.layoutPaddingTop);
+  const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+  const layoutPaddingBottom = useChartStore((state) => state.layoutPaddingBottom);
+  const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
 
-  // Handle inline editing
-  const handleDoubleClick = (
-    field: 'title' | 'description' | 'footer',
-    currentValue: string
-  ) => {
-    setEditingField(field);
-    setTempValue(currentValue);
-  };
+  // Borders
+  const layoutBorderEnabled = useChartStore((state) => state.layoutBorderEnabled);
+  const layoutBorderTop = useChartStore((state) => state.layoutBorderTop);
+  const layoutBorderRight = useChartStore((state) => state.layoutBorderRight);
+  const layoutBorderBottom = useChartStore((state) => state.layoutBorderBottom);
+  const layoutBorderLeft = useChartStore((state) => state.layoutBorderLeft);
+  const layoutBorderStyle = useChartStore((state) => state.layoutBorderStyle);
+  const layoutBorderColor = useChartStore((state) => state.layoutBorderColor);
+  const layoutBorderWidth = useChartStore((state) => state.layoutBorderWidth);
+  const layoutBorderRadius = useChartStore((state) => state.layoutBorderRadius);
 
-  const saveEdit = () => {
-    if (editingField === 'title') {
-      setChartTitle(tempValue);
-    } else if (editingField === 'description') {
-      setChartDescription(tempValue);
-    } else if (editingField === 'footer') {
-      setChartFooter(tempValue);
-    }
-    setEditingField(null);
-    setTempValue('');
-  };
+  // Read Direction
+  const layoutReadDirection = useChartStore((state) => state.layoutReadDirection);
 
-  const cancelEdit = () => {
-    setEditingField(null);
-    setTempValue('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      cancelEdit();
-    } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      saveEdit();
-    }
-  };
-
-  // Auto-grow textarea based on content
-  const autoGrowTextarea = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + 'px';
-    }
-  };
-
-  // Focus textarea when editing starts
-  useEffect(() => {
-    if (editingField) {
-      textareaRef.current?.focus();
-      textareaRef.current?.select();
-      // Initial auto-grow
-      setTimeout(autoGrowTextarea, 0);
-    }
-  }, [editingField]);
-
-  // Auto-grow textarea when content changes
-  useEffect(() => {
-    if (editingField) {
-      autoGrowTextarea();
-    }
-  }, [tempValue, editingField]);
-
-  // Handle resize
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-
-      const deltaX = e.clientX - startXRef.current;
-      const newWidth = Math.max(300, startWidthRef.current + deltaX);
-      setPreviewWidth(newWidth);
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'ew-resize';
-      document.body.style.userSelect = 'none';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing, setPreviewWidth]);
+  // Layout Order
+  const layoutOrder = useChartStore((state) => state.layoutOrder);
 
   // Check if we have data and valid column mapping
   const hasData = data && data.length > 1;
   const hasMapping =
     columnMapping.labels !== null && columnMapping.values.length > 0;
+
+  // Get value keys for legend
+  const valueKeys =
+    hasData && hasMapping && data[0]
+      ? columnMapping.values.map((idx) => String(data[0][idx]))
+      : [];
+
+  // Helper function to convert background image size to CSS
+  const getBackgroundSize = () => {
+    switch (layoutBackgroundImageSize) {
+      case 'fill':
+        return 'cover';
+      case 'fit':
+        return 'contain';
+      case 'original':
+        return 'auto';
+      case 'stretch':
+        return '100% 100%';
+      default:
+        return 'cover';
+    }
+  };
+
+  // Helper function to convert background image position to CSS
+  const getBackgroundPosition = () => {
+    switch (layoutBackgroundImagePosition) {
+      case 'top-left':
+        return 'top left';
+      case 'top-center':
+        return 'top center';
+      case 'top-right':
+        return 'top right';
+      case 'center-left':
+        return 'center left';
+      case 'center':
+        return 'center';
+      case 'center-right':
+        return 'center right';
+      case 'bottom-left':
+        return 'bottom left';
+      case 'bottom-center':
+        return 'bottom center';
+      case 'bottom-right':
+        return 'bottom right';
+      default:
+        return 'center';
+    }
+  };
+
+  // Helper function to get spacing value
+  const getSectionSpacing = () => {
+    switch (layoutSpaceBetweenSections) {
+      case 'none':
+        return 0;
+      case 'tight':
+        return 8;
+      case 'loose':
+        return 16;
+      case 'large':
+        return 32;
+      default:
+        return 16;
+    }
+  };
+
+  // Helper function to create border style string
+  const getBorderStyle = (side: 'Top' | 'Right' | 'Bottom' | 'Left') => {
+    if (!layoutBorderEnabled) return 'none';
+
+    const sideEnabled = {
+      Top: layoutBorderTop,
+      Right: layoutBorderRight,
+      Bottom: layoutBorderBottom,
+      Left: layoutBorderLeft,
+    }[side];
+
+    if (!sideEnabled) return 'none';
+
+    return `${layoutBorderWidth}px ${layoutBorderStyle} ${layoutBorderColor}`;
+  };
+
+  // Define all available sections
+  const sections = {
+    header: <ChartTitleSection key='header' />,
+    controls: <ChartControls key='controls' />,
+    legend: <ChartLegend key='legend' valueKeys={valueKeys} />,
+    'primary-graphic': (
+      <div
+        key='primary-graphic'
+        style={{
+          aspectRatio: `${previewWidth} / ${previewHeight}`,
+          maxHeight: `${previewHeight}px`,
+          paddingLeft: `${layoutPaddingLeft}px`,
+          paddingRight: `${layoutPaddingRight}px`,
+        }}
+        className={cn('w-full')}
+      >
+        <BasicChart />
+      </div>
+    ),
+    footer: <ChartFooter key='footer' />,
+  };
+
+  // Check if we're in grid mode
+  const isGridMode = layoutOrder === 'grid-mode-primary-graphic-right';
+
+  // Get ordered sections based on layoutOrder setting
+  const getOrderedSections = () => {
+    // Parse layout order string to get section order
+    const orderMap: Record<string, string[]> = {
+      'header-controls-legend-primary-graphic-footer': [
+        'header',
+        'controls',
+        'legend',
+        'primary-graphic',
+        'footer',
+      ],
+      'primary-graphic-header-controls-footer': [
+        'primary-graphic',
+        'header',
+        'controls',
+        'footer',
+      ],
+      'header-primary-graphic-controls-legend-footer': [
+        'header',
+        'primary-graphic',
+        'controls',
+        'legend',
+        'footer',
+      ],
+      'controls-primary-graphic-header-legend-footer': [
+        'controls',
+        'primary-graphic',
+        'header',
+        'legend',
+        'footer',
+      ],
+      'header-controls-primary-graphic-legend-footer': [
+        'header',
+        'controls',
+        'primary-graphic',
+        'legend',
+        'footer',
+      ],
+      'header-legend-primary-graphic-controls-footer': [
+        'header',
+        'legend',
+        'primary-graphic',
+        'controls',
+        'footer',
+      ],
+      'grid-mode-primary-graphic-right': [
+        'header',
+        'controls',
+        'legend',
+        'footer',
+      ],
+    };
+
+    const order =
+      orderMap[layoutOrder] ||
+      orderMap['header-controls-legend-primary-graphic-footer'];
+
+    return order
+      .map((sectionKey) => sections[sectionKey as keyof typeof sections])
+      .filter(Boolean);
+  };
+
+  // Get left column sections for grid mode (excludes primary-graphic)
+  const getLeftColumnSections = () => {
+    return ['header', 'controls', 'legend', 'footer']
+      .map((sectionKey) => sections[sectionKey as keyof typeof sections])
+      .filter(Boolean);
+  };
 
   if (!hasData || !hasMapping) {
     return (
@@ -173,171 +265,65 @@ export function ChartCanvas() {
       )}
     >
       <div
-        ref={containerRef}
+        data-chart-container
         style={{
           width: `${previewWidth}px`,
-          maxWidth: '100%',
-          minWidth: '300px',
-          backgroundColor: layoutBackgroundColor,
+          fontFamily: layoutMainFont,
+          color: layoutTextColor,
+          backgroundColor: layoutBackgroundColorEnabled
+            ? layoutBackgroundColor
+            : 'transparent',
+          backgroundImage:
+            layoutBackgroundImageEnabled && layoutBackgroundImageUrl
+              ? `url(${layoutBackgroundImageUrl})`
+              : 'none',
+          backgroundSize: layoutBackgroundImageEnabled
+            ? getBackgroundSize()
+            : 'auto',
+          backgroundPosition: layoutBackgroundImageEnabled
+            ? getBackgroundPosition()
+            : 'center',
+          backgroundRepeat: 'no-repeat',
+          marginTop: `${layoutMarginTop}px`,
+          marginRight: `${layoutMarginRight}px`,
+          marginBottom: `${layoutMarginBottom}px`,
+          marginLeft: `${layoutMarginLeft}px`,
+          borderTop: getBorderStyle('Top'),
+          borderRight: getBorderStyle('Right'),
+          borderBottom: getBorderStyle('Bottom'),
+          borderLeft: getBorderStyle('Left'),
           borderRadius: `${layoutBorderRadius}px`,
-          borderWidth: `${layoutBorderWidth}px`,
-          borderColor: layoutBorderColor,
-          borderStyle: 'solid',
+          direction: layoutReadDirection,
+          gap: `${getSectionSpacing()}px`,
         }}
-        className={cn('relative shadow-md')}
+        className={cn(
+          'relative shadow-md max-w-full min-w-75',
+          isGridMode ? 'grid grid-cols-1 md:grid-cols-2' : 'flex flex-col'
+        )}
       >
-        {/* Chart Title */}
-        {(chartTitle || editingField === 'title') && (
-          <div
-            style={{
-              paddingLeft: `${layoutPaddingLeft}px`,
-              paddingRight: `${layoutPaddingRight}px`,
-              paddingTop: `${layoutPaddingTop}px`,
-              paddingBottom: '8px',
-            }}
-          >
-            {editingField === 'title' ? (
-              <textarea
-                ref={textareaRef}
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                onBlur={saveEdit}
-                onKeyDown={handleKeyDown}
-                className={cn(
-                  'w-full text-2xl font-bold text-zinc-900',
-                  'border-2 border-blue-500 rounded px-2 py-1',
-                  'focus:outline-none resize-none overflow-hidden'
-                )}
-                placeholder='Enter chart title (Cmd/Ctrl+Enter to save)'
-                style={{ minHeight: '3rem' }}
-              />
-            ) : (
-              <h2
-                className={cn(
-                  'text-2xl font-bold text-zinc-900 cursor-text',
-                  'hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-                  'transition-colors whitespace-pre-wrap'
-                )}
-                onDoubleClick={() => handleDoubleClick('title', chartTitle)}
-                title='Double-click to edit'
-              >
-                {chartTitle}
-              </h2>
-            )}
-          </div>
+        {isGridMode ? (
+          <>
+            {/* Left column: header, controls, legend, footer */}
+            <div
+              className='flex flex-col'
+              style={{
+                gap: `${getSectionSpacing()}px`,
+              }}
+            >
+              {getLeftColumnSections()}
+            </div>
+
+            {/* Right column: primary graphic */}
+            <div className='flex items-center justify-center'>
+              {sections['primary-graphic']}
+            </div>
+          </>
+        ) : (
+          /* Normal vertical layout */
+          getOrderedSections()
         )}
 
-        {/* Chart Description */}
-        {(chartDescription || editingField === 'description') && (
-          <div
-            style={{
-              paddingLeft: `${layoutPaddingLeft}px`,
-              paddingRight: `${layoutPaddingRight}px`,
-              paddingBottom: '16px',
-            }}
-          >
-            {editingField === 'description' ? (
-              <textarea
-                ref={textareaRef}
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                onBlur={saveEdit}
-                onKeyDown={handleKeyDown}
-                className={cn(
-                  'w-full text-sm text-zinc-600',
-                  'border-2 border-blue-500 rounded px-2 py-1',
-                  'focus:outline-none resize-none overflow-hidden'
-                )}
-                placeholder='Enter chart description (Cmd/Ctrl+Enter to save)'
-                style={{ minHeight: '3rem' }}
-              />
-            ) : (
-              <p
-                className={cn(
-                  'text-sm text-zinc-600 cursor-text',
-                  'hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-                  'transition-colors whitespace-pre-wrap'
-                )}
-                onDoubleClick={() =>
-                  handleDoubleClick('description', chartDescription)
-                }
-                title='Double-click to edit'
-              >
-                {chartDescription}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Chart SVG Container */}
-        <div
-          style={{
-            aspectRatio: `${previewWidth} / ${previewHeight}`,
-            maxHeight: `${previewHeight}px`,
-          }}
-          className={cn('w-full')}
-        >
-          <BasicChart />
-        </div>
-
-        {/* Chart Footer */}
-        {(chartFooter || editingField === 'footer') && (
-          <div
-            className={cn('border-t border-zinc-100')}
-            style={{
-              paddingLeft: `${layoutPaddingLeft}px`,
-              paddingRight: `${layoutPaddingRight}px`,
-              paddingTop: '16px',
-              paddingBottom: `${layoutPaddingBottom}px`,
-            }}
-          >
-            {editingField === 'footer' ? (
-              <textarea
-                ref={textareaRef}
-                value={tempValue}
-                onChange={(e) => setTempValue(e.target.value)}
-                onBlur={saveEdit}
-                onKeyDown={handleKeyDown}
-                className={cn(
-                  'w-full text-xs text-zinc-500',
-                  'border-2 border-blue-500 rounded px-2 py-1',
-                  'focus:outline-none resize-none overflow-hidden'
-                )}
-                placeholder='Enter chart footer (Cmd/Ctrl+Enter to save)'
-                style={{ minHeight: '2rem' }}
-              />
-            ) : (
-              <p
-                className={cn(
-                  'text-xs text-zinc-500 cursor-text',
-                  'hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-                  'transition-colors whitespace-pre-wrap'
-                )}
-                onDoubleClick={() => handleDoubleClick('footer', chartFooter)}
-                title='Double-click to edit'
-              >
-                {chartFooter}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Resize Handle */}
-        <div
-          onMouseDown={handleMouseDown}
-          className={cn(
-            'absolute bottom-0 right-0 w-6 h-6 cursor-ew-resize',
-            'hover:bg-zinc-100 active:bg-zinc-200',
-            'flex items-center justify-center group transition-colors'
-          )}
-          title='Drag to resize width'
-        >
-          <GripVertical
-            className={cn(
-              'w-4 h-4 text-zinc-400 group-hover:text-zinc-600 rotate-90'
-            )}
-          />
-        </div>
+        <ResizeHandle />
       </div>
     </div>
   );
