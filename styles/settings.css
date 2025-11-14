@@ -1,8 +1,11 @@
 /* Settings Panel Form Styles */
+.settings-legend-title {
+  @apply text-xs font-medium text-zinc-500;
+}
 
 /* Label Styles */
 .settings-label-primary {
-  @apply text-xs font-medium text-zinc-700;
+  @apply text-[14px] font-medium text-zinc-700 mb-0;
 }
 
 .settings-label-secondary {
@@ -47,7 +50,7 @@
 
 /* Color Picker Styles */
 .settings-color-input {
-  @apply h-8 w-full cursor-pointer p-0 border-0;
+  @apply w-full cursor-pointer p-0 rounded-md;
 }
 
 /* Container Styles */

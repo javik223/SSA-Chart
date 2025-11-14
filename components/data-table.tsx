@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { DataGrid } from '@/components/data-grid';
+import { DataGrid } from '@/components/data-grid-handsontable';
 import { DataSidebar } from '@/components/data-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,9 +107,14 @@ export function DataTable() {
                       <Search className='data-table-icon' />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className='data-table-search-popover' align='end'>
+                  <PopoverContent
+                    className='data-table-search-popover'
+                    align='end'
+                  >
                     <div className='data-table-search-content'>
-                      <h4 className='data-table-search-heading'>Search in data</h4>
+                      <h4 className='data-table-search-heading'>
+                        Search in data
+                      </h4>
                       <div className='data-table-search-input-container'>
                         {isSearching ? (
                           <Loader2 className='data-table-search-icon-loading' />

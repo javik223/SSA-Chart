@@ -1,23 +1,20 @@
 'use client';
 
-import {
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Bold,
-  Type,
-  ArrowUp,
-  ArrowLeft,
-  ArrowRight,
-  ArrowDown,
-} from 'lucide-react';
+import { FormField } from '@/components/ui/form-field';
+import { FormGrid } from '@/components/ui/form-grid';
+import { FormSection } from '@/components/ui/form-section';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
-import { FormField } from '@/components/ui/form-field';
-import { FormSection } from '@/components/ui/form-section';
-import { FormGrid } from '@/components/ui/form-grid';
-import { FormRow } from '@/components/ui/form-row';
-import { FormCol } from '@/components/ui/form-col';
+import {
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Bold,
+  Type,
+} from 'lucide-react';
 
 export function FooterSettingsSection() {
   // Alignment
@@ -133,31 +130,31 @@ export function FooterSettingsSection() {
   return (
     <div className='settings-container'>
       {/* Alignment */}
-      <FormSection title='Alignment'>
-        <FormField
-          type='button-group'
-          value={footerAlignment}
-          onChange={setFooterAlignment}
-          options={[
-            { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
-            { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
-            { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
-          ]}
-        />
-      </FormSection>
+      <FormField
+        label='Alignment'
+        type='button-group'
+        value={footerAlignment}
+        onChange={setFooterAlignment}
+        options={[
+          { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
+          { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
+          { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
+        ]}
+      />
 
       <Separator />
 
       {/* Advanced Footer Styles */}
-      <FormSection title='Advanced footer styles'>
+      <FormSection>
         <FormField
+          label='Advanced footer styles'
           type='switch'
           checked={footerStylesEnabled}
           onChange={setFooterStylesEnabled}
         />
 
         {footerStylesEnabled && (
-          <div className='settings-nested-section'>
+          <FormSection className='settings-nested-section'>
             <FormField
               type='select'
               label='Title Font'
@@ -185,7 +182,7 @@ export function FooterSettingsSection() {
               ]}
             />
 
-            <div className='settings-field'>
+            <FormSection className='settings-field'>
               <FormField
                 type='text'
                 label='Source name'
@@ -205,7 +202,7 @@ export function FooterSettingsSection() {
                 onChange={setFooterSourceLabel}
                 placeholder='Source label (for Citation)'
               />
-            </div>
+            </FormSection>
 
             <div className='settings-field'>
               <FormField
@@ -224,22 +221,23 @@ export function FooterSettingsSection() {
                 rows={4}
               />
             </div>
-          </div>
+          </FormSection>
         )}
       </FormSection>
 
       <Separator />
 
       {/* Logo / Image */}
-      <FormSection title='Add logo or image'>
+      <FormSection>
         <FormField
+          label='Add logo or image'
           type='switch'
           checked={footerLogoEnabled}
           onChange={setFooterLogoEnabled}
         />
 
         {footerLogoEnabled && (
-          <div className='settings-nested-section'>
+          <FormSection className='settings-nested-section'>
             <FormGrid columns={2}>
               <FormField
                 type='url'
@@ -293,41 +291,42 @@ export function FooterSettingsSection() {
             <FormGrid columns={4}>
               <FormField
                 type='number'
-                label='Top (px)'
+                label='Top'
                 value={footerLogoPositionTop}
                 onChange={setFooterLogoPositionTop}
               />
 
               <FormField
                 type='number'
-                label='Right (px)'
+                label='Right'
                 value={footerLogoPositionRight}
                 onChange={setFooterLogoPositionRight}
               />
 
               <FormField
                 type='number'
-                label='Bottom (px)'
+                label='Bottom'
                 value={footerLogoPositionBottom}
                 onChange={setFooterLogoPositionBottom}
               />
 
               <FormField
                 type='number'
-                label='Left (px)'
+                label='Left'
                 value={footerLogoPositionLeft}
                 onChange={setFooterLogoPositionLeft}
               />
             </FormGrid>
-          </div>
+          </FormSection>
         )}
       </FormSection>
 
       <Separator />
 
       {/* Border */}
-      <FormSection title='Border'>
+      <FormSection>
         <FormField
+          label='Border'
           type='select'
           value={footerBorder}
           onChange={setFooterBorder}
@@ -340,7 +339,7 @@ export function FooterSettingsSection() {
         />
 
         {footerBorder !== 'none' && (
-          <div className='settings-nested-section'>
+          <FormSection className='settings-nested-section'>
             <FormGrid columns={2}>
               <FormField
                 type='select'
@@ -379,7 +378,7 @@ export function FooterSettingsSection() {
                 onChange={setFooterBorderColor}
               />
             </FormGrid>
-          </div>
+          </FormSection>
         )}
       </FormSection>
     </div>

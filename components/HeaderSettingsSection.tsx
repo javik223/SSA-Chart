@@ -22,6 +22,140 @@ import { FormGrid } from '@/components/ui/form-grid';
 import { FormRow } from '@/components/ui/form-row';
 import { FormCol } from '@/components/ui/form-col';
 
+interface CustomStyleProps {
+  styleEnabled: boolean;
+  setStyleEnabled: (enabled: boolean) => void;
+  font: string;
+  setFont: (font: string) => void;
+  fontSize: number;
+  setFontSize: (size: number) => void;
+  fontWeight: 'bold' | 'regular' | 'medium';
+  setFontWeight: (weight: 'bold' | 'regular' | 'medium') => void;
+  color: string;
+  setColor: (color: string) => void;
+  lineHeight: number;
+  setLineHeight: (height: number) => void;
+  spaceAbove: 'slim' | 'medium' | 'large' | 'none';
+  setSpaceAbove: (height: 'slim' | 'medium' | 'large' | 'none') => void;
+}
+
+const CustomStyle = (props: CustomStyleProps) => {
+  const {
+    styleEnabled,
+    setStyleEnabled,
+    font,
+    setFont,
+    fontSize: size,
+    setFontSize: setSize,
+    color,
+    setColor,
+    fontWeight,
+    setFontWeight,
+    spaceAbove,
+    setSpaceAbove,
+    lineHeight,
+    setLineHeight,
+  } = props;
+  return (
+    <>
+      <FormField
+        type='switch'
+        label='Custom Style'
+        checked={styleEnabled}
+        onChange={setStyleEnabled}
+      />
+      {styleEnabled && (
+        <FormSection>
+          <Separator />
+          <FormRow>
+            <FormCol span='auto'>
+              <FormField
+                type='select'
+                label='Font'
+                value={font}
+                onChange={setFont}
+                options={[
+                  { value: 'Same as parent', label: 'Same as parent' },
+                  { value: 'Inter', label: 'Inter' },
+                  { value: 'Arial', label: 'Arial' },
+                  { value: 'Helvetica', label: 'Helvetica' },
+                  { value: 'Times New Roman', label: 'Times New Roman' },
+                  { value: 'Georgia', label: 'Georgia' },
+                  { value: 'Verdana', label: 'Verdana' },
+                  { value: 'Roboto', label: 'Roboto' },
+                  { value: 'Open Sans', label: 'Open Sans' },
+                  { value: 'Lato', label: 'Lato' },
+                  { value: 'Montserrat', label: 'Montserrat' },
+                ]}
+              />
+            </FormCol>
+
+            <FormCol span={4}>
+              <FormField
+                type='number'
+                label='Size'
+                value={size}
+                onChange={setSize}
+                min={0.1}
+                max={5}
+                step={0.1}
+              />
+            </FormCol>
+          </FormRow>
+          <FormRow>
+            <FormCol span={6}>
+              <FormField
+                type='button-group'
+                label='Weight'
+                value={fontWeight}
+                onChange={setFontWeight}
+                options={[
+                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
+                  { value: 'medium', label: 'M' },
+                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
+                ]}
+              />
+            </FormCol>
+
+            <FormCol span={3}>
+              <FormField
+                type='color'
+                label='Color'
+                value={color}
+                onChange={setColor}
+              />
+            </FormCol>
+
+            <FormCol span={4}>
+              <FormField
+                type='number'
+                label='Line Height'
+                value={lineHeight}
+                onChange={setLineHeight}
+                min={0.8}
+                max={3}
+                step={0.1}
+              />
+            </FormCol>
+          </FormRow>
+          <FormField
+            type='button-group'
+            label='Space Above'
+            value={spaceAbove}
+            onChange={setSpaceAbove}
+            options={[
+              { value: 'slim', icon: <Minus className='h-4 w-4' /> },
+              { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
+              { value: 'large', icon: <Maximize className='h-4 w-4' /> },
+              { value: 'none', icon: <Square className='h-4 w-4' /> },
+            ]}
+          />
+        </FormSection>
+      )}
+    </>
+  );
+};
+
 export function HeaderSettingsSection() {
   // Alignment
   const headerAlignment = useChartStore((state) => state.headerAlignment);
@@ -186,120 +320,46 @@ export function HeaderSettingsSection() {
   return (
     <div className='settings-container'>
       {/* Alignment */}
-      <FormSection title='Alignment'>
-        <FormField
-          type='button-group'
-          value={headerAlignment}
-          onChange={setHeaderAlignment}
-          options={[
-            { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
-            { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
-            { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
-          ]}
-        />
-      </FormSection>
+      <FormField
+        label='Alignment'
+        type='button-group'
+        value={headerAlignment}
+        onChange={setHeaderAlignment}
+        options={[
+          { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
+          { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
+          { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
+        ]}
+      />
 
       <Separator />
 
       {/* Title */}
       <FormSection title='Title'>
         <FormField
+          label='Title'
           type='text'
           value={chartTitle}
           onChange={setChartTitle}
           placeholder='Enter chart title'
         />
 
-        <FormField
-          type='switch'
-          label='Custom Style'
-          checked={titleStyleEnabled}
-          onChange={setTitleStyleEnabled}
+        <CustomStyle
+          styleEnabled={titleStyleEnabled}
+          setStyleEnabled={setTitleStyleEnabled}
+          color={titleColor}
+          setColor={setTitleColor}
+          font={titleFont}
+          setFont={setTitleFont}
+          fontSize={titleFontSize}
+          setFontSize={setTitleFontSize}
+          fontWeight={titleFontWeight}
+          setFontWeight={setTitleFontWeight}
+          lineHeight={titleLineHeight}
+          setLineHeight={setTitleLineHeight}
+          spaceAbove={titleSpaceAbove}
+          setSpaceAbove={setTitleSpaceAbove}
         />
-
-        {titleStyleEnabled && (
-          <div className='settings-nested-section'>
-            <FormRow>
-              <FormCol span='auto'>
-                <FormField
-                  type='select'
-                  label='Font'
-                  value={titleFont}
-                  onChange={setTitleFont}
-                  options={[
-                    { value: 'Same as parent', label: 'Same as parent' },
-                    { value: 'Inter', label: 'Inter' },
-                    { value: 'Arial', label: 'Arial' },
-                    { value: 'Helvetica', label: 'Helvetica' },
-                    { value: 'Times New Roman', label: 'Times New Roman' },
-                    { value: 'Georgia', label: 'Georgia' },
-                    { value: 'Verdana', label: 'Verdana' },
-                    { value: 'Roboto', label: 'Roboto' },
-                    { value: 'Open Sans', label: 'Open Sans' },
-                    { value: 'Lato', label: 'Lato' },
-                    { value: 'Montserrat', label: 'Montserrat' },
-                  ]}
-                />
-              </FormCol>
-
-              <FormCol span={4}>
-                <FormField
-                  type='number'
-                  label='Size'
-                  value={titleFontSize}
-                  onChange={setTitleFontSize}
-                  min={0.1}
-                  max={5}
-                  step={0.1}
-                />
-              </FormCol>
-            </FormRow>
-
-            <FormGrid columns={3}>
-              <FormField
-                type='button-group'
-                label='Weight'
-                value={titleFontWeight}
-                onChange={setTitleFontWeight}
-                options={[
-                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
-                  { value: 'medium', label: 'M' },
-                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
-                ]}
-              />
-
-              <FormField
-                type='color'
-                label='Color'
-                value={titleColor}
-                onChange={setTitleColor}
-              />
-
-              <FormField
-                type='number'
-                label='Line Height'
-                value={titleLineHeight}
-                onChange={setTitleLineHeight}
-                min={0.8}
-                max={3}
-                step={0.1}
-              />
-            </FormGrid>
-
-            <FormField
-              type='button-group'
-              label='Space Above'
-              value={titleSpaceAbove}
-              onChange={setTitleSpaceAbove}
-              options={[
-                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
-                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
-                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
-                { value: 'none', icon: <Square className='h-4 w-4' /> },
-              ]}
-            />
-          </div>
-        )}
       </FormSection>
 
       <Separator />
@@ -307,96 +367,28 @@ export function HeaderSettingsSection() {
       {/* Subtitle */}
       <FormSection title='Subtitle'>
         <FormField
+          label='Subtitle'
           type='text'
           value={chartSubtitle}
           onChange={setChartSubtitle}
           placeholder='Enter chart subtitle'
         />
-
-        <FormField
-          type='switch'
-          label='Custom Style'
-          checked={subtitleStyleEnabled}
-          onChange={setSubtitleStyleEnabled}
+        <CustomStyle
+          styleEnabled={subtitleStyleEnabled}
+          setStyleEnabled={setSubtitleStyleEnabled}
+          color={subtitleColor}
+          setColor={setSubtitleColor}
+          font={subtitleFont}
+          setFont={setSubtitleFont}
+          fontSize={subtitleFontSize}
+          setFontSize={setSubtitleFontSize}
+          fontWeight={subtitleFontWeight}
+          setFontWeight={setSubtitleFontWeight}
+          lineHeight={subtitleLineHeight}
+          setLineHeight={setSubtitleLineHeight}
+          spaceAbove={subtitleSpaceAbove}
+          setSpaceAbove={setSubtitleSpaceAbove}
         />
-
-        {subtitleStyleEnabled && (
-          <div className='settings-nested-section'>
-            <FormField
-              type='select'
-              label='Font'
-              value={subtitleFont}
-              onChange={setSubtitleFont}
-              options={[
-                { value: 'Same as parent', label: 'Same as parent' },
-                { value: 'Inter', label: 'Inter' },
-                { value: 'Arial', label: 'Arial' },
-                { value: 'Helvetica', label: 'Helvetica' },
-                { value: 'Times New Roman', label: 'Times New Roman' },
-                { value: 'Georgia', label: 'Georgia' },
-                { value: 'Verdana', label: 'Verdana' },
-                { value: 'Roboto', label: 'Roboto' },
-                { value: 'Open Sans', label: 'Open Sans' },
-                { value: 'Lato', label: 'Lato' },
-                { value: 'Montserrat', label: 'Montserrat' },
-              ]}
-            />
-
-            <FormField
-              type='number'
-              label='Size'
-              value={subtitleFontSize}
-              onChange={setSubtitleFontSize}
-              min={0.1}
-              max={5}
-              step={0.1}
-            />
-
-            <FormGrid columns={3}>
-              <FormField
-                type='button-group'
-                label='Weight'
-                value={subtitleFontWeight}
-                onChange={setSubtitleFontWeight}
-                options={[
-                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
-                  { value: 'medium', label: 'M' },
-                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
-                ]}
-              />
-
-              <FormField
-                type='color'
-                label='Color'
-                value={subtitleColor}
-                onChange={setSubtitleColor}
-              />
-
-              <FormField
-                type='number'
-                label='Line Height'
-                value={subtitleLineHeight}
-                onChange={setSubtitleLineHeight}
-                min={0.8}
-                max={3}
-                step={0.1}
-              />
-            </FormGrid>
-
-            <FormField
-              type='button-group'
-              label='Space Above'
-              value={subtitleSpaceAbove}
-              onChange={setSubtitleSpaceAbove}
-              options={[
-                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
-                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
-                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
-                { value: 'none', icon: <Square className='h-4 w-4' /> },
-              ]}
-            />
-          </div>
-        )}
       </FormSection>
 
       <Separator />
@@ -404,6 +396,7 @@ export function HeaderSettingsSection() {
       {/* Header Text */}
       <FormSection title='Text'>
         <FormField
+          label='Text'
           type='textarea'
           value={headerText}
           onChange={setHeaderText}
@@ -411,96 +404,22 @@ export function HeaderSettingsSection() {
           rows={5}
         />
 
-        <FormField
-          type='switch'
-          label='Custom Style'
-          checked={headerTextStyleEnabled}
-          onChange={setHeaderTextStyleEnabled}
+        <CustomStyle
+          styleEnabled={headerTextStyleEnabled}
+          setStyleEnabled={setHeaderTextStyleEnabled}
+          color={headerTextColor}
+          setColor={setHeaderTextColor}
+          font={headerTextFont}
+          setFont={setHeaderTextFont}
+          fontSize={headerTextFontSize}
+          setFontSize={setHeaderTextFontSize}
+          fontWeight={headerTextFontWeight}
+          setFontWeight={setHeaderTextFontWeight}
+          lineHeight={headerTextLineHeight}
+          setLineHeight={setHeaderTextLineHeight}
+          spaceAbove={headerTextSpaceAbove}
+          setSpaceAbove={setHeaderTextSpaceAbove}
         />
-
-        {headerTextStyleEnabled && (
-          <div className='settings-nested-section-enhanced'>
-            <FormRow gap='md' align='start'>
-              <FormCol span='auto'>
-                <FormField
-                  type='select'
-                  label='Font'
-                  value={headerTextFont}
-                  onChange={setHeaderTextFont}
-                  options={[
-                    { value: 'Same as parent', label: 'Same as parent' },
-                    { value: 'Inter', label: 'Inter' },
-                    { value: 'Arial', label: 'Arial' },
-                    { value: 'Helvetica', label: 'Helvetica' },
-                    { value: 'Times New Roman', label: 'Times New Roman' },
-                    { value: 'Georgia', label: 'Georgia' },
-                    { value: 'Verdana', label: 'Verdana' },
-                    { value: 'Roboto', label: 'Roboto' },
-                    { value: 'Open Sans', label: 'Open Sans' },
-                    { value: 'Lato', label: 'Lato' },
-                    { value: 'Montserrat', label: 'Montserrat' },
-                  ]}
-                />
-              </FormCol>
-
-              <FormCol span={4}>
-                <FormField
-                  type='number'
-                  label='Size'
-                  value={headerTextFontSize}
-                  onChange={setHeaderTextFontSize}
-                  min={0.1}
-                  max={5}
-                  step={0.1}
-                />
-              </FormCol>
-            </FormRow>
-
-            <FormGrid columns={3}>
-              <FormField
-                type='button-group'
-                label='Weight'
-                value={headerTextFontWeight}
-                onChange={setHeaderTextFontWeight}
-                options={[
-                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
-                  { value: 'medium', label: 'M' },
-                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
-                ]}
-              />
-
-              <FormField
-                type='color'
-                label='Color'
-                value={headerTextColor}
-                onChange={setHeaderTextColor}
-              />
-
-              <FormField
-                type='number'
-                label='Line Height'
-                value={headerTextLineHeight}
-                onChange={setHeaderTextLineHeight}
-                min={0.8}
-                max={3}
-                step={0.1}
-              />
-            </FormGrid>
-
-            <FormField
-              type='button-group'
-              label='Space Above'
-              value={headerTextSpaceAbove}
-              onChange={setHeaderTextSpaceAbove}
-              options={[
-                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
-                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
-                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
-                { value: 'none', icon: <Square className='h-4 w-4' /> },
-              ]}
-            />
-          </div>
-        )}
       </FormSection>
 
       <Separator />
@@ -521,44 +440,47 @@ export function HeaderSettingsSection() {
 
         {headerBorder !== 'none' && (
           <div className='settings-nested-section'>
-            <FormGrid columns={2}>
-              <FormField
-                type='select'
-                label='Style'
-                value={headerBorderStyle}
-                onChange={setHeaderBorderStyle}
-                options={[
-                  { value: 'solid', label: 'Solid' },
-                  { value: 'dashed', label: 'Dashed' },
-                  { value: 'dotted', label: 'Dotted' },
-                ]}
-              />
+            <FormSection>
+              <FormGrid columns={2}>
+                <FormField
+                  type='select'
+                  label='Style'
+                  value={headerBorderStyle}
+                  onChange={setHeaderBorderStyle}
+                  options={[
+                    { value: 'solid', label: 'Solid' },
+                    { value: 'dashed', label: 'Dashed' },
+                    { value: 'dotted', label: 'Dotted' },
+                  ]}
+                />
 
-              <FormField
-                type='number'
-                label='Space (px)'
-                value={headerBorderSpace}
-                onChange={setHeaderBorderSpace}
-                min={0}
-                max={50}
-              />
+                <FormField
+                  type='number'
+                  label='Space (px)'
+                  value={headerBorderSpace}
+                  onChange={setHeaderBorderSpace}
+                  min={0}
+                  max={50}
+                />
+              </FormGrid>
+              <FormGrid columns={2}>
+                <FormField
+                  type='number'
+                  label='Width (px)'
+                  value={headerBorderWidth}
+                  onChange={setHeaderBorderWidth}
+                  min={1}
+                  max={10}
+                />
 
-              <FormField
-                type='number'
-                label='Width (px)'
-                value={headerBorderWidth}
-                onChange={setHeaderBorderWidth}
-                min={1}
-                max={10}
-              />
-
-              <FormField
-                type='color'
-                label='Color'
-                value={headerBorderColor}
-                onChange={setHeaderBorderColor}
-              />
-            </FormGrid>
+                <FormField
+                  type='color'
+                  label='Color'
+                  value={headerBorderColor}
+                  onChange={setHeaderBorderColor}
+                />
+              </FormGrid>
+            </FormSection>
           </div>
         )}
       </FormSection>
@@ -568,13 +490,14 @@ export function HeaderSettingsSection() {
       {/* Logo / Image */}
       <FormSection title='Logo / Image'>
         <FormField
+          label='Enabled'
           type='switch'
           checked={headerLogoEnabled}
           onChange={setHeaderLogoEnabled}
         />
 
         {headerLogoEnabled && (
-          <div className='settings-nested-section'>
+          <FormSection className='settings-nested-section'>
             <FormGrid columns={2}>
               <FormField
                 type='url'
@@ -624,37 +547,36 @@ export function HeaderSettingsSection() {
                 { value: 'right', icon: <ArrowRight className='h-4 w-4' /> },
               ]}
             />
-
             <FormGrid columns={4}>
               <FormField
                 type='number'
-                label='Top (px)'
+                label='Top'
                 value={headerLogoPositionTop}
                 onChange={setHeaderLogoPositionTop}
               />
 
               <FormField
                 type='number'
-                label='Right (px)'
+                label='Right'
                 value={headerLogoPositionRight}
                 onChange={setHeaderLogoPositionRight}
               />
 
               <FormField
                 type='number'
-                label='Bottom (px)'
+                label='Bottom'
                 value={headerLogoPositionBottom}
                 onChange={setHeaderLogoPositionBottom}
               />
 
               <FormField
                 type='number'
-                label='Left (px)'
+                label='Left'
                 value={headerLogoPositionLeft}
                 onChange={setHeaderLogoPositionLeft}
               />
             </FormGrid>
-          </div>
+          </FormSection>
         )}
       </FormSection>
     </div>

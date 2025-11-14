@@ -1,19 +1,16 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
+import { getColumnTypeIcon } from '@/utils/dataTypeUtils';
+import { searchData, type SearchResult } from '@/utils/searchUtils';
+import { HotTable, type HotTableRef } from '@handsontable/react-wrapper';
+import type Handsontable from 'handsontable/base';
+import { registerAllModules } from 'handsontable/registry';
 import 'handsontable/styles/handsontable.min.css';
 import 'handsontable/styles/ht-theme-main.min.css';
-import type Handsontable from 'handsontable/base';
-import { HotTable, type HotTableRef } from '@handsontable/react-wrapper';
-import { registerAllModules } from 'handsontable/registry';
-import {
-  searchData,
-  getCellClassName,
-  type SearchResult,
-} from '@/utils/searchUtils';
-import { getColumnTypeIcon } from '@/utils/dataTypeUtils';
 import debounce from 'lodash.debounce';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import './data-grid-handsontable.css';
 
 registerAllModules();
 
@@ -46,6 +43,14 @@ export const DataGrid = memo(function DataGrid({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const batchUpdateRef = useRef<NodeJS.Timeout | null>(null);
 
+  const rowHeaderFunction = useCallback((row: number) => {
+    return `
+        <div class="flex items-center justify-center gap-1.5">
+          <span class="text-sm text-slate-700 font-mono">${row}</span>
+        </div>
+      `;
+  }, []);
+
   // Memoize column header function to prevent recreation on every render
   const colHeaderFunction = useCallback(
     (col: number) => {
@@ -56,7 +61,7 @@ export const DataGrid = memo(function DataGrid({
       return `
         <div class="flex items-center justify-center gap-1.5">
           <span class="inline-flex items-center justify-center rounded bg-violet-100 px-1 py-0.5 text-[12px] font-mono font-medium text-slate-500 scale-75" title="${type}">${icon}</span>
-          <span class="text-sm text-slate-700">${letter}</span>
+          <span class="text-sm text-slate-700 font-mono">${letter}</span>
         </div>
       `;
     },
@@ -135,7 +140,7 @@ export const DataGrid = memo(function DataGrid({
             { length: dataRowCount },
             (_, i) => i + 1
           );
-          hiddenRowsPlugin.showRows(allDataRows);
+          // hiddenRowsPlugin.showRows(allDataRows);
         }
       });
     };
@@ -188,7 +193,7 @@ export const DataGrid = memo(function DataGrid({
     () =>
       debounce((newData: unknown[][]) => {
         setData(newData);
-      }, 150),
+      }, 10),
     [setData]
   );
 
@@ -228,7 +233,7 @@ export const DataGrid = memo(function DataGrid({
 
       // Style header row (row 0)
       if (row === 0) {
-        classNames.push('htMiddle', 'font-semibold');
+        classNames.push('htMiddle', 'font-semibold', 'sticky', 'top-0');
         cellProperties.readOnly = false; // Allow editing headers
       }
 
@@ -272,8 +277,10 @@ export const DataGrid = memo(function DataGrid({
         autoRowSize={false}
         autoColumnSize={false}
         // Performance: Optimized viewport rendering (reduced from 100 to 30)
-        viewportRowRenderingOffset={200}
+        viewportRowRenderingOffset={100}
+        viewportRowRenderingThreshold={'auto'}
         viewportColumnRenderingOffset={100}
+        bindRowsWithHeaders={true}
         // Performance: Prevent rendering all rows at once
         renderAllRows={false}
         // Performance: Prevent overflow calculations
@@ -283,9 +290,9 @@ export const DataGrid = memo(function DataGrid({
         // Performance: Disable unnecessary calculations
         autoWrapRow={true}
         autoWrapCol={true}
-        // Core settings
+        allowHtml={false} // Core settings
         data={data}
-        rowHeaders={true}
+        rowHeaders={rowHeaderFunction}
         colHeaders={colHeaderFunction}
         height='100%'
         width='100%'
@@ -293,8 +300,8 @@ export const DataGrid = memo(function DataGrid({
         collapsibleColumns={true}
         navigableHeaders={true}
         contextMenu={true}
-        minSpareRows={0}
-        stretchH='all'
+        // minSpareRows={0}
+        // stretchH='all'
         licenseKey='non-commercial-and-evaluation'
         manualColumnResize={true}
         manualRowResize={true}
@@ -306,19 +313,29 @@ export const DataGrid = memo(function DataGrid({
         textEllipsis={true}
         wordWrap={true}
         manualColumnFreeze={true}
-        hiddenRows={false}
+        loading={true}
+        // fixedColumnsLeft={1}
+        // fixedRowsTop={1}
+        hiddenRows={true}
+        tabMoves={{
+          col: 1,
+          row: 0,
+        }}
+        selectionMode='multiple'
         trimRows={true}
         // Performance: Pagination for large datasets
         pagination={{
-          pageSize: 200,
+          pageSize: 1000,
         }}
         // Performance: Use memoized callbacks
         beforeColumnSort={() => {
           // Disable sorting to prevent header row from being sorted
           return false;
         }}
+        columnSorting={true}
         cells={handleCells}
         afterChange={handleDataChange}
+        search={true}
       />
     </div>
   );

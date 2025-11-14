@@ -586,13 +586,12 @@ export function ChartSettings() {
                       </div>
                     ) : section.value === 'legend' ? (
                       <div className='settings-container'>
-                        <FormSection title='Show Legend'>
-                          <FormField
-                            type='switch'
-                            checked={legendShow}
-                            onChange={setLegendShow}
-                          />
-                        </FormSection>
+                        <FormField
+                          label='Show Legend'
+                          type='switch'
+                          checked={legendShow}
+                          onChange={setLegendShow}
+                        />
 
                         {legendShow && (
                           <>
@@ -613,7 +612,9 @@ export function ChartSettings() {
                                       },
                                       {
                                         value: 'right',
-                                        icon: <ArrowRight className='h-4 w-4' />,
+                                        icon: (
+                                          <ArrowRight className='h-4 w-4' />
+                                        ),
                                       },
                                       {
                                         value: 'bottom',
@@ -640,11 +641,15 @@ export function ChartSettings() {
                                       },
                                       {
                                         value: 'center',
-                                        icon: <AlignCenter className='h-4 w-4' />,
+                                        icon: (
+                                          <AlignCenter className='h-4 w-4' />
+                                        ),
                                       },
                                       {
                                         value: 'end',
-                                        icon: <AlignRight className='h-4 w-4' />,
+                                        icon: (
+                                          <AlignRight className='h-4 w-4' />
+                                        ),
                                       },
                                     ]}
                                   />
@@ -678,16 +683,13 @@ export function ChartSettings() {
 
                             <Separator />
 
-                            <FormSection title='Show Values'>
-                              <p className='text-xs text-zinc-500 mb-2'>
-                                Display numeric values next to legend items
-                              </p>
-                              <FormField
-                                type='switch'
-                                checked={legendShowValues}
-                                onChange={setLegendShowValues}
-                              />
-                            </FormSection>
+                            <FormField
+                              label='Show Values'
+                              description='Display numeric values next to legend items'
+                              type='switch'
+                              checked={legendShowValues}
+                              onChange={setLegendShowValues}
+                            />
 
                             <Separator />
 

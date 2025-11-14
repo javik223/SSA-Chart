@@ -1,8 +1,11 @@
+import { COLOR_PALETTES } from '@/lib/colorPalettes';
 import { ReactNode } from 'react';
 
 // Base field props shared across all field types
 interface BaseFieldProps {
   label?: string;
+  description?: string;
+  id?: string;
   className?: string;
   required?: boolean;
   disabled?: boolean;
@@ -69,6 +72,13 @@ interface TextareaField extends BaseFieldProps {
   rows?: number;
 }
 
+interface ColorPaletteField extends BaseFieldProps {
+  type: 'color-palette';
+  options: typeof COLOR_PALETTES;
+  value: (typeof COLOR_PALETTES)[0];
+  onChange: (value: string) => void;
+}
+
 // Discriminated union of all field types
 export type FormFieldProps =
   | TextInputField
@@ -77,11 +87,13 @@ export type FormFieldProps =
   | ButtonGroupField
   | SwitchField
   | ColorField
-  | TextareaField;
+  | TextareaField
+  | ColorPaletteField;
 
 // Form section props
 export interface FormSectionProps {
   title?: string;
+  description?: string;
   children: ReactNode;
   collapsible?: boolean;
   defaultCollapsed?: boolean;

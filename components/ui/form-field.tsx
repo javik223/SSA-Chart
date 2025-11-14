@@ -1,11 +1,9 @@
 'use client';
 
-import { FormFieldProps } from '@/types/form';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -13,9 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { FormFieldProps } from '@/types/form';
+import {
+  ColorPalettePreview,
+  ColorPaletteSelectItem,
+} from '../settings/ColorsSection';
+import { Field, FieldDescription, FieldLabel } from './field';
+import { ColorPicker } from './color-picker';
 
 export function FormField(props: FormFieldProps) {
-  const { label, className = '', required, disabled } = props;
+  const { label, className = '', required, disabled, description, id } = props;
 
   const renderField = () => {
     switch (props.type) {
@@ -26,6 +32,7 @@ export function FormField(props: FormFieldProps) {
         return (
           <Input
             type={props.type}
+            id={props.id}
             value={props.value}
             onChange={(e) => props.onChange(e.target.value)}
             placeholder={props.placeholder}
@@ -40,6 +47,7 @@ export function FormField(props: FormFieldProps) {
         return (
           <Input
             type='number'
+            id={props.id}
             value={props.value}
             onChange={(e) => props.onChange(Number(e.target.value))}
             min={props.min}
@@ -63,7 +71,7 @@ export function FormField(props: FormFieldProps) {
             <SelectTrigger className='settings-select-trigger'>
               <SelectValue placeholder={props.placeholder} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent id={props.id}>
               {props.options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -75,7 +83,7 @@ export function FormField(props: FormFieldProps) {
 
       case 'button-group':
         return (
-          <ButtonGroup className='w-full'>
+          <ButtonGroup className='w-full gap-0'>
             {props.options.map((option) => (
               <Button
                 key={option.value}
@@ -96,15 +104,14 @@ export function FormField(props: FormFieldProps) {
           <div className='settings-switch-row'>
             {props.description && (
               <div className='flex-1'>
-                {label && (
-                  <Label className='settings-label-secondary'>{label}</Label>
-                )}
+                {label && <FieldLabel>{label}</FieldLabel>}
                 {props.description && (
-                  <p className='text-xs text-zinc-500'>{props.description}</p>
+                  <FieldDescription>{props.description}</FieldDescription>
                 )}
               </div>
             )}
             <Switch
+              id={props.id}
               checked={props.checked}
               onCheckedChange={props.onChange}
               disabled={disabled}
@@ -114,11 +121,17 @@ export function FormField(props: FormFieldProps) {
 
       case 'color':
         return (
-          <Input
-            type='color'
+          // <Input
+          //   type='color'
+          //   id={props.id}
+          //   value={props.value}
+          //   onChange={(e) => props.onChange(e.target.value)}
+          //   disabled={disabled}
+          //   className='settings-color-input'
+          // />
+          <ColorPicker
             value={props.value}
-            onChange={(e) => props.onChange(e.target.value)}
-            disabled={disabled}
+            onChange={props.onChange}
             className='settings-color-input'
           />
         );
@@ -126,6 +139,7 @@ export function FormField(props: FormFieldProps) {
       case 'textarea':
         return (
           <textarea
+            id={props.id}
             value={props.value}
             onChange={(e) => props.onChange(e.target.value)}
             placeholder={props.placeholder}
@@ -134,6 +148,39 @@ export function FormField(props: FormFieldProps) {
             required={required}
             className='settings-textarea'
           />
+        );
+
+      case 'color-palette':
+        return (
+          <div className='space-y-3'>
+            {/* Color palette selector */}
+            <Select value={props.value.name} onValueChange={props.onChange}>
+              <SelectTrigger className='w-full h-auto p-1.5 border border-zinc-200 rounded-md relative'>
+                <span className='absolute my-auto pl-2 text-black text-xs font-medium mix-blend-plus-soft-light opacity-70'>
+                  {props.value.name}
+                </span>
+                <div className='flex-1 flex items-center'>
+                  {props.value.colors.map((color, index) => (
+                    <ColorPalettePreview key={index} color={color} />
+                  ))}
+                </div>
+              </SelectTrigger>
+              <SelectContent id={props.id}>
+                {props.options.map((palette) => (
+                  <SelectItem key={palette.id} value={palette.id}>
+                    <div className='flex items-center gap-2'>
+                      <div className='flex'>
+                        {palette.colors.slice(0, 6).map((color, index) => (
+                          <ColorPaletteSelectItem key={index} color={color} />
+                        ))}
+                      </div>
+                      <span>{palette.name}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         );
 
       default:
@@ -147,9 +194,14 @@ export function FormField(props: FormFieldProps) {
   }
 
   return (
-    <div className={`settings-field ${className}`}>
-      {label && <Label className='settings-label-secondary'>{label}</Label>}
+    <Field className={`settings-field ${className}`}>
+      {label && (
+        <FieldLabel className='settings-label-primary' htmlFor={id}>
+          {label}
+        </FieldLabel>
+      )}
+      {description && <FieldDescription>{description}</FieldDescription>}
       {renderField()}
-    </div>
+    </Field>
   );
 }

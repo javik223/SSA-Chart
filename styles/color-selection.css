@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+@import './theme.css';
+
+.color-palette-preview {
+  @apply flex-1 h-6 first-of-type:rounded-tl first-of-type:rounded-bl last-of-type:rounded-tr last-of-type:rounded-br;
+}
+
+.color-palette-select-item {
+  @apply w-5 h-5 first-of-type:rounded-tl-xs first-of-type:rounded-bl-xs last-of-type:rounded-tr-xs last-of-type:rounded-br-xs;
+}
