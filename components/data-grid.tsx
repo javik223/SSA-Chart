@@ -1,21 +1,46 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
-import { useChartStore } from '@/store/useChartStore';
-import 'handsontable/styles/handsontable.min.css';
-import 'handsontable/styles/ht-theme-main.min.css';
-import type Handsontable from 'handsontable/base';
-import { HotTable, type HotTableRef } from '@handsontable/react-wrapper';
-import { registerAllModules } from 'handsontable/registry';
 import {
-  searchData,
-  getCellClassName,
-  type SearchResult,
-} from '@/utils/searchUtils';
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+  memo,
+} from 'react';
+import { useChartStore } from '@/store/useChartStore';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+  type ColumnSizingState,
+  type PaginationState,
+  type Table as TableType,
+} from '@tanstack/react-table';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { getColumnTypeIcon } from '@/utils/dataTypeUtils';
 import debounce from 'lodash.debounce';
-
-registerAllModules();
+import { TableCell, TableHead, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
+import './data-grid.css';
 
 interface DataGridProps {
   searchQuery?: string;
@@ -23,7 +48,7 @@ interface DataGridProps {
   onNavigated?: () => void;
 }
 
-// Helper function to convert column index to Excel-style letter (outside component)
+// Helper function to convert column index to Excel-style letter
 const getColumnLetter = (index: number): string => {
   let letter = '';
   let num = index;
@@ -34,6 +59,187 @@ const getColumnLetter = (index: number): string => {
   return letter;
 };
 
+// Editable header cell component
+function EditableHeaderCell({
+  initialValue,
+  colIndex,
+  onUpdate,
+  isEditing,
+  onStartEdit,
+  onStopEdit,
+}: {
+  initialValue: unknown;
+  colIndex: number;
+  onUpdate: (colIndex: number, value: unknown) => void;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onStopEdit: () => void;
+}) {
+  const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Reset value when initialValue changes
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  // Auto-focus input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const saveValue = () => {
+    onUpdate(colIndex, value);
+    onStopEdit();
+  };
+
+  const cancelEdit = () => {
+    setValue(initialValue);
+    onStopEdit();
+  };
+
+  const onBlur = () => {
+    saveValue();
+  };
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveValue();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  if (!isEditing) {
+    return (
+      <div
+        className="data-grid-cell-display"
+        onClick={onStartEdit}
+        onDoubleClick={onStartEdit}
+      >
+        {String(value ?? '')}
+      </div>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      value={value as string}
+      onChange={onChange}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      className="data-grid-cell-input"
+    />
+  );
+}
+
+// Editable cell component
+function EditableCell({
+  getValue,
+  row,
+  column,
+  table,
+}: {
+  getValue: () => unknown;
+  row: { index: number };
+  column: { id: string };
+  table: TableType<unknown[]>;
+}) {
+  const initialValue = getValue();
+  const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const meta = table.options.meta as {
+    updateData: (rowIndex: number, columnId: string, value: unknown) => void;
+    stopEditing: () => void;
+    startEditing: (rowIndex: number, colIndex: number) => void;
+    editingCell: { rowIndex: number; colIndex: number } | null;
+  };
+
+  const colIndex = parseInt(column.id);
+  const isEditing =
+    meta?.editingCell?.rowIndex === row.index &&
+    meta?.editingCell?.colIndex === colIndex;
+
+  // Reset value when initialValue changes
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  // Auto-focus input when editing starts
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const saveValue = () => {
+    meta?.updateData(row.index, column.id, value);
+    meta?.stopEditing();
+  };
+
+  const cancelEdit = () => {
+    setValue(initialValue);
+    meta?.stopEditing();
+  };
+
+  const onStartEdit = () => {
+    meta?.startEditing(row.index, colIndex);
+  };
+
+  const onBlur = () => {
+    saveValue();
+  };
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      saveValue();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      cancelEdit();
+    }
+  };
+
+  if (!isEditing) {
+    return (
+      <div
+        className="data-grid-cell-display"
+        onClick={onStartEdit}
+        onDoubleClick={onStartEdit}
+      >
+        {String(value ?? '')}
+      </div>
+    );
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      value={value as string}
+      onChange={onChange}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      className="data-grid-cell-input"
+    />
+  );
+}
+
 export const DataGrid = memo(function DataGrid({
   searchQuery = '',
   shouldNavigate = false,
@@ -42,26 +248,20 @@ export const DataGrid = memo(function DataGrid({
   const { data, setData, columnMapping, autoSetColumns, columnTypes } =
     useChartStore();
   const hasAutoSet = useRef(false);
-  const hotRef = useRef<HotTableRef>(null);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const batchUpdateRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Memoize column header function to prevent recreation on every render
-  const colHeaderFunction = useCallback(
-    (col: number) => {
-      const type = columnTypes[col]?.type || 'text';
-      const icon = getColumnTypeIcon(type);
-      const letter = getColumnLetter(col);
-
-      return `
-        <div class="flex items-center justify-center gap-1.5">
-          <span class="inline-flex items-center justify-center rounded bg-violet-100 px-1 py-0.5 text-[12px] font-mono font-medium text-slate-500 scale-75" title="${type}">${icon}</span>
-          <span class="text-sm text-slate-700">${letter}</span>
-        </div>
-      `;
-    },
-    [columnTypes]
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 100,
+  });
+  const [highlightedCells, setHighlightedCells] = useState<Set<string>>(
+    new Set()
   );
+  const [editingCell, setEditingCell] = useState<{
+    rowIndex: number;
+    colIndex: number;
+  } | null>(null);
 
   useEffect(() => {
     if (!data || data.length === 0) {
@@ -74,116 +274,7 @@ export const DataGrid = memo(function DataGrid({
     }
   }, [data, autoSetColumns]);
 
-  // Performance-optimized search with batching
-  useEffect(() => {
-    const performSearch = () => {
-      const hotInstance = hotRef.current?.hotInstance;
-      if (!hotInstance) return;
-
-      const hiddenRowsPlugin = hotInstance.getPlugin('hiddenRows');
-      if (!hiddenRowsPlugin) return;
-
-      // Calculate data row count (excluding header row 0)
-      const dataRowCount = data.length - 1;
-
-      // Use batch operation to minimize renders
-      hotInstance.batch(() => {
-        if (searchQuery) {
-          // Use optimized search function with max 100 results for highlighting
-          const results = searchData(data, searchQuery, 100);
-          setSearchResults(results);
-
-          // First, show all rows to reset (skip row 0 which is header)
-          const allDataRows = Array.from(
-            { length: dataRowCount },
-            (_, i) => i + 1
-          );
-          hiddenRowsPlugin.showRows(allDataRows);
-
-          // Find rows that match the search (excluding header row)
-          const normalizedQuery = searchQuery.toLowerCase().trim();
-          const matchingRows = new Set<number>();
-
-          // Check each data row (starting from index 1 because 0 is header)
-          for (let row = 1; row < data.length; row++) {
-            const rowData = data[row];
-            const hasMatch = rowData?.some(
-              (cell: unknown) =>
-                cell != null &&
-                String(cell).toLowerCase().includes(normalizedQuery)
-            );
-            if (hasMatch) {
-              matchingRows.add(row);
-            }
-          }
-
-          // Hide rows that don't match (skip row 0)
-          const rowsToHide: number[] = [];
-          for (let i = 1; i <= dataRowCount; i++) {
-            if (!matchingRows.has(i)) {
-              rowsToHide.push(i);
-            }
-          }
-
-          if (rowsToHide.length > 0) {
-            hiddenRowsPlugin.hideRows(rowsToHide);
-          }
-        } else {
-          // Clear search and show all rows (skip row 0)
-          setSearchResults([]);
-          const allDataRows = Array.from(
-            { length: dataRowCount },
-            (_, i) => i + 1
-          );
-          hiddenRowsPlugin.showRows(allDataRows);
-        }
-      });
-    };
-
-    // Small delay to ensure Handsontable is fully initialized
-    const timeoutId = setTimeout(performSearch, 0);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, data]);
-
-  // Performance-optimized re-render when search results change
-  useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (hotInstance) {
-      // Batch operations to minimize renders
-      hotInstance.batch(() => {
-        if (searchResults.length === 0 && !searchQuery) {
-          hotInstance.deselectCell();
-        }
-      });
-    }
-  }, [searchResults, searchQuery]);
-
-  // Performance-optimized re-render when column mapping changes
-  useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (hotInstance) {
-      // Use batch to minimize renders
-      hotInstance.batch(() => {
-        // Render will be called automatically after batch
-      });
-    }
-  }, [columnMapping]);
-
-  // Handle navigation to first result (only when Enter is pressed)
-  useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (shouldNavigate && hotInstance && searchResults.length > 0) {
-      const firstResult = searchResults[0];
-      // Navigate to the cell directly
-      hotInstance.selectCell(firstResult.row, firstResult.col);
-      hotInstance.scrollViewportTo(firstResult.row, firstResult.col);
-
-      // Notify parent that navigation is complete
-      onNavigated?.();
-    }
-  }, [shouldNavigate, onNavigated, searchResults]);
-
-  // Debounced data update to batch rapid changes (Performance optimization)
+  // Debounced data update
   const debouncedSetData = useMemo(
     () =>
       debounce((newData: unknown[][]) => {
@@ -192,134 +283,410 @@ export const DataGrid = memo(function DataGrid({
     [setData]
   );
 
-  // Optimized data change handler with batching
-  const handleDataChange = useCallback(
-    (
-      changes: Handsontable.CellChange[] | null,
-      source: Handsontable.ChangeSource
-    ) => {
-      if (changes && source !== 'loadData') {
-        const hotInstance = hotRef.current?.hotInstance;
-        if (!hotInstance) return;
-
-        // Use batch operation to minimize renders
-        hotInstance.batch(() => {
-          const newData = [...data];
-          changes.forEach(([row, col, , newValue]) => {
-            if (!newData[row]) {
-              newData[row] = [];
-            }
-            newData[row][col as number] = newValue;
-          });
-          debouncedSetData(newData);
-        });
-      }
+  // Update data handler (adjust for row offset since table excludes header row 0)
+  const updateData = useCallback(
+    (rowIndex: number, columnId: string, value: unknown) => {
+      const colIndex = parseInt(columnId);
+      // rowIndex from table is 0-based on dataRows, so actual row in data is rowIndex + 1
+      const actualRowIndex = rowIndex + 1;
+      const newData = data.map((row, index) => {
+        if (index === actualRowIndex) {
+          const newRow = [...row];
+          newRow[colIndex] = value;
+          return newRow;
+        }
+        return row;
+      });
+      debouncedSetData(newData);
     },
     [data, debouncedSetData]
   );
 
-  // Optimized cells callback with memoization
-  const handleCells = useCallback(
-    (row: number, col: number) => {
-      const cellProperties: Partial<Handsontable.CellProperties> = {};
-
-      // Build className array for better management
-      const classNames: string[] = [];
-
-      // Style header row (row 0)
-      if (row === 0) {
-        classNames.push('htMiddle', 'font-semibold');
-        cellProperties.readOnly = false; // Allow editing headers
-      }
-
-      // Apply cell styling for column mapping (skip header row)
-      if (row > 0) {
-        if (col === columnMapping.labels) {
-          classNames.push('bg-pink-100');
-        } else if (columnMapping.values.includes(col)) {
-          classNames.push('bg-purple-100');
+  // Update header row data (row 0)
+  const updateHeaderData = useCallback(
+    (colIndex: number, value: unknown) => {
+      const newData = data.map((row, index) => {
+        if (index === 0) {
+          const newRow = [...row];
+          newRow[colIndex] = value;
+          return newRow;
         }
-      }
-
-      // Check for search highlights
-      const isSearchResult = searchResults.some(
-        (result) => result.row === row && result.col === col
-      );
-      if (isSearchResult) {
-        classNames.push('bg-yellow-200');
-      }
-
-      // Set the final className
-      if (classNames.length > 0) {
-        cellProperties.className = classNames.join(' ');
-      }
-
-      return cellProperties;
+        return row;
+      });
+      debouncedSetData(newData);
     },
-    [columnMapping, searchResults]
+    [data, debouncedSetData]
   );
 
+  // Search functionality (skip header row 0)
+  useEffect(() => {
+    if (!searchQuery || !data) {
+      setHighlightedCells(new Set());
+      return;
+    }
+
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    const matches = new Set<string>();
+
+    // Skip row 0 (header), only search data rows
+    data.forEach((row, rowIndex) => {
+      if (rowIndex === 0) return; // Skip header row
+
+      row.forEach((cell, colIndex) => {
+        if (
+          cell != null &&
+          String(cell).toLowerCase().includes(normalizedQuery)
+        ) {
+          matches.add(`${rowIndex}-${colIndex}`);
+        }
+      });
+    });
+
+    setHighlightedCells(matches);
+  }, [searchQuery, data]);
+
+  // Navigate to first search result
+  useEffect(() => {
+    if (shouldNavigate && highlightedCells.size > 0) {
+      const firstMatch = Array.from(highlightedCells)[0];
+      const [row, col] = firstMatch.split('-').map(Number);
+
+      // Scroll to the cell
+      const tableContainer = tableContainerRef.current;
+      if (tableContainer) {
+        const cellElement = tableContainer.querySelector(
+          `[data-row="${row}"][data-col="${col}"]`
+        );
+        cellElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      onNavigated?.();
+    }
+  }, [shouldNavigate, highlightedCells, onNavigated]);
+
+  // Separate header row (row 0) from data rows (rows 1+) - memoize to prevent infinite loops
+  const headerRow = useMemo(() => {
+    return data && data.length > 0 ? data[0] : [];
+  }, [data]);
+
+  const dataRows = useMemo(() => {
+    return data && data.length > 1 ? data.slice(1) : [];
+  }, [data]);
+
+  // Create columns from data
+  const columns = useMemo<ColumnDef<unknown[]>[]>(() => {
+    if (!data || data.length === 0) return [];
+
+    const columnCount = data[0]?.length || 0;
+
+    return Array.from({ length: columnCount }, (_, index) => ({
+      id: String(index),
+      accessorFn: (row: unknown[]) => row[index],
+      header: () => {
+        const type = columnTypes[index]?.type || 'text';
+        const icon = getColumnTypeIcon(type);
+        const letter = getColumnLetter(index);
+
+        return (
+          <div className="data-grid-column-header">
+            <span className="data-grid-column-icon" title={type}>
+              {icon}
+            </span>
+            <span className="data-grid-column-letter">{letter}</span>
+          </div>
+        );
+      },
+      cell: EditableCell,
+      size: 120,
+      minSize: 60,
+      maxSize: 500,
+    }));
+  }, [data, columnTypes]);
+
+  const startEditing = useCallback((rowIndex: number, colIndex: number) => {
+    setEditingCell({ rowIndex, colIndex });
+  }, []);
+
+  const stopEditing = useCallback(() => {
+    setEditingCell(null);
+  }, []);
+
+  const table = useReactTable({
+    data: dataRows,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      sorting,
+      columnSizing,
+      pagination,
+    },
+    onSortingChange: setSorting,
+    onColumnSizingChange: setColumnSizing,
+    onPaginationChange: setPagination,
+    columnResizeMode: 'onChange',
+    enableColumnResizing: true,
+    meta: {
+      updateData,
+      editingCell,
+      startEditing,
+      stopEditing,
+    },
+    enableSortingRemoval: false,
+  });
+
+  // Get paginated rows from table
+  const { rows } = table.getRowModel();
+
+  // Filter rows based on search (header row 0 is already excluded from table data)
+  const filteredRows = useMemo(() => {
+    if (!searchQuery) return rows;
+
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    return rows.filter((row) => {
+      const rowData = row.original as unknown[];
+      return rowData.some(
+        (cell) =>
+          cell != null && String(cell).toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [rows, searchQuery]);
+
+  const displayRows = searchQuery ? filteredRows : rows;
+
+  // Virtualization - virtualize only the rows being displayed (after pagination and filtering)
+  const rowVirtualizer = useVirtualizer({
+    count: displayRows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 33,
+    overscan: 10, // Reduced since pagination limits rows per page
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const totalSize = rowVirtualizer.getTotalSize();
+
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start || 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? totalSize - (virtualRows[virtualRows.length - 1]?.end || 0)
+      : 0;
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="data-grid-empty">
+        <p className="data-grid-empty-text">No data available</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='w-full h-full overflow-hidden'>
-      <HotTable
-        ref={hotRef}
-        themeName='ht-theme-main'
-        className='w-full h-full'
-        // Performance: Fixed dimensions prevent recalculation
-        colWidths={120}
-        rowHeights={28}
-        // Performance: Disable auto-sizing for faster rendering
-        autoRowSize={false}
-        autoColumnSize={false}
-        // Performance: Optimized viewport rendering (reduced from 100 to 30)
-        viewportRowRenderingOffset={200}
-        viewportColumnRenderingOffset={100}
-        // Performance: Prevent rendering all rows at once
-        renderAllRows={false}
-        // Performance: Prevent overflow calculations
-        preventOverflow='horizontal'
-        // Performance: Enable fragment selection for faster rendering
-        fragmentSelection={true}
-        // Performance: Disable unnecessary calculations
-        autoWrapRow={true}
-        autoWrapCol={true}
-        // Core settings
-        data={data}
-        rowHeaders={true}
-        colHeaders={colHeaderFunction}
-        height='100%'
-        width='100%'
-        // Features
-        collapsibleColumns={true}
-        navigableHeaders={true}
-        contextMenu={true}
-        minSpareRows={0}
-        stretchH='all'
-        licenseKey='non-commercial-and-evaluation'
-        manualColumnResize={true}
-        manualRowResize={true}
-        manualColumnMove={true}
-        manualRowMove={true}
-        dropdownMenu={true}
-        filters={true}
-        multiColumnSorting={true}
-        textEllipsis={true}
-        wordWrap={true}
-        manualColumnFreeze={true}
-        hiddenRows={false}
-        trimRows={true}
-        // Performance: Pagination for large datasets
-        pagination={{
-          pageSize: 200,
-        }}
-        // Performance: Use memoized callbacks
-        beforeColumnSort={() => {
-          // Disable sorting to prevent header row from being sorted
-          return false;
-        }}
-        cells={handleCells}
-        afterChange={handleDataChange}
-      />
+    <div className="data-grid-container">
+      <div ref={tableContainerRef} className="data-grid-table-wrapper">
+        <div className="data-grid-table-inner" style={{ height: `${totalSize}px` }}>
+          <table
+            className="data-grid-table"
+            style={{
+              width: table.getCenterTotalSize(),
+            }}
+          >
+            <thead className="data-grid-thead">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  <TableHead className="data-grid-th data-grid-th-row-number">
+                    #
+                  </TableHead>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className="data-grid-th"
+                      style={{ width: header.getSize() }}
+                    >
+                      <div
+                        className="data-grid-th-content"
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        <span className="data-grid-sort-indicator">
+                          {{
+                            asc: '↑',
+                            desc: '↓',
+                          }[header.column.getIsSorted() as string] ?? ''}
+                        </span>
+                      </div>
+                      {/* Resize handle */}
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        data-resizing={header.column.getIsResizing()}
+                        className="data-grid-resize-handle"
+                      />
+                    </TableHead>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="data-grid-tbody">
+              {/* Always render header row first (row 0) */}
+              <TableRow className="data-grid-tr data-grid-tr-header">
+                <TableCell className="data-grid-td data-grid-td-row-number">
+                  1
+                </TableCell>
+                {columns.map((column, colIndex) => {
+                  const cellValue = headerRow[colIndex];
+                  const isHeaderEditing =
+                    editingCell?.rowIndex === 0 && editingCell?.colIndex === colIndex;
+                  return (
+                    <TableCell
+                      key={column.id}
+                      data-row={0}
+                      data-col={colIndex}
+                      className="data-grid-td data-grid-td-header"
+                      style={{ width: column.size }}
+                    >
+                      <EditableHeaderCell
+                        initialValue={cellValue}
+                        colIndex={colIndex}
+                        onUpdate={updateHeaderData}
+                        isEditing={isHeaderEditing}
+                        onStartEdit={() => startEditing(0, colIndex)}
+                        onStopEdit={stopEditing}
+                      />
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+
+              {/* Render data rows with virtualization */}
+              {paddingTop > 0 && (
+                <tr>
+                  <td style={{ height: `${paddingTop}px` }} />
+                </tr>
+              )}
+              {virtualRows.map((virtualRow) => {
+                const row = displayRows[virtualRow.index];
+
+                if (!row) return null;
+
+                // Actual row index in original data (offset by 1 for header)
+                const actualRowIndex = row.index + 1;
+
+                return (
+                  <TableRow key={row.id} className="data-grid-tr">
+                    <TableCell className="data-grid-td data-grid-td-row-number">
+                      {actualRowIndex + 1}
+                    </TableCell>
+                    {row.getVisibleCells().map((cell) => {
+                      const colIndex = parseInt(cell.column.id);
+                      const cellKey = `${actualRowIndex}-${colIndex}`;
+                      const isHighlighted = highlightedCells.has(cellKey);
+                      const isLabelColumn = colIndex === columnMapping.labels;
+                      const isValueColumn =
+                        columnMapping.values.includes(colIndex);
+
+                      return (
+                        <TableCell
+                          key={cell.id}
+                          data-row={actualRowIndex}
+                          data-col={colIndex}
+                          data-label={isLabelColumn}
+                          data-value={isValueColumn}
+                          data-highlighted={isHighlighted}
+                          className="data-grid-td"
+                          style={{ width: cell.column.getSize() }}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                );
+              })}
+              {paddingBottom > 0 && (
+                <tr>
+                  <td style={{ height: `${paddingBottom}px` }} />
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination controls */}
+      <div className="data-grid-pagination">
+        <div className="data-grid-pagination-left">
+          <span className="data-grid-pagination-label">Rows per page:</span>
+          <Select
+            value={`${table.getState().pagination.pageSize}`}
+            onValueChange={(value) => {
+              table.setPageSize(Number(value));
+            }}
+          >
+            <SelectTrigger className="h-8 w-[70px]">
+              <SelectValue placeholder={table.getState().pagination.pageSize} />
+            </SelectTrigger>
+            <SelectContent side="top">
+              {[10, 20, 50, 100, 200].map((pageSize) => (
+                <SelectItem key={pageSize} value={`${pageSize}`}>
+                  {pageSize}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="data-grid-pagination-right">
+          <span className="data-grid-pagination-info">
+            Page {table.getState().pagination.pageIndex + 1} of{' '}
+            {table.getPageCount()}
+          </span>
+          <div className="data-grid-pagination-buttons">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(0)}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+              disabled={!table.getCanNextPage()}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 });

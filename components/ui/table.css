@@ -1,0 +1,95 @@
+/* Table Component Styles */
+
+/* Table Container */
+[data-slot="table-container"] {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* Table */
+[data-slot="table"] {
+  width: 100%;
+  caption-side: bottom;
+  font-size: 0.875rem;
+}
+
+/* Table Header */
+[data-slot="table-header"] tr {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Table Body */
+[data-slot="table-body"] tr:last-child {
+  border-bottom: 0;
+}
+
+/* Table Footer */
+[data-slot="table-footer"] {
+  background-color: hsl(var(--muted) / 0.5);
+  border-top: 1px solid hsl(var(--border));
+  font-weight: 500;
+}
+
+[data-slot="table-footer"] > tr:last-child {
+  border-bottom: 0;
+}
+
+/* Table Row */
+[data-slot="table-row"] {
+  border-bottom: 1px solid hsl(var(--border));
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+[data-slot="table-row"]:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+[data-slot="table-row"][data-state="selected"] {
+  background-color: hsl(var(--muted));
+}
+
+/* Table Head */
+[data-slot="table-head"] {
+  color: hsl(var(--foreground));
+  height: 2.5rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  text-align: left;
+  vertical-align: middle;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+[data-slot="table-head"]:has([role="checkbox"]) {
+  padding-right: 0;
+}
+
+[data-slot="table-head"] > [role="checkbox"] {
+  transform: translateY(2px);
+}
+
+/* Table Cell */
+[data-slot="table-cell"] {
+  padding: 0.5rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+[data-slot="table-cell"]:has([role="checkbox"]) {
+  padding-right: 0;
+}
+
+[data-slot="table-cell"] > [role="checkbox"] {
+  transform: translateY(2px);
+}
+
+/* Table Caption */
+[data-slot="table-caption"] {
+  color: hsl(var(--muted-foreground));
+  margin-top: 1rem;
+  font-size: 0.875rem;
+}

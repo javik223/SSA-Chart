@@ -18,6 +18,7 @@ import {
 import { Plus, Search, X, Loader2 } from 'lucide-react';
 import { useChartStore } from '@/store/useChartStore';
 import debounce from 'lodash.debounce';
+import './data-table.css';
 
 export function DataTable() {
   const { addRows } = useChartStore();
@@ -67,15 +68,15 @@ export function DataTable() {
   }, []);
 
   return (
-    <div className='flex h-full flex-col bg-white'>
+    <div className='data-table-container'>
       {/* Main Content: Resizable Grid + Sidebar */}
-      <div className='flex-1 overflow-hidden'>
+      <div className='data-table-content'>
         <ResizablePanelGroup direction='horizontal'>
           {/* Grid Area */}
           <ResizablePanel defaultSize={75} minSize={30}>
-            <div className='flex h-full flex-col'>
+            <div className='data-table-grid-area'>
               {/* Data Grid - fills available space */}
-              <div className='flex-1 overflow-auto'>
+              <div className='data-table-grid-wrapper'>
                 <DataGrid
                   searchQuery={searchQuery}
                   shouldNavigate={shouldNavigate}
@@ -84,10 +85,10 @@ export function DataTable() {
               </div>
 
               {/* Bottom toolbar - fixed at bottom */}
-              <div className='flex items-center justify-between border-t bg-slate-50 px-4 py-2'>
-                <div className='flex items-center gap-2'>
+              <div className='data-table-toolbar'>
+                <div className='data-table-toolbar-left'>
                   <Button variant='ghost' size='sm' onClick={handleAddRows}>
-                    <Plus className='h-4 w-4' />
+                    <Plus className='data-table-icon' />
                     more rows
                   </Button>
                   <Input
@@ -96,43 +97,43 @@ export function DataTable() {
                     max={1000}
                     value={rowCount}
                     onChange={(e) => setRowCount(parseInt(e.target.value) || 1)}
-                    className='w-16 h-8 rounded-full text-center'
+                    className='data-table-row-count-input'
                   />
                 </div>
 
                 <Popover open={searchOpen} onOpenChange={setSearchOpen}>
                   <PopoverTrigger asChild>
                     <Button variant='ghost' size='sm'>
-                      <Search className='h-4 w-4' />
+                      <Search className='data-table-icon' />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className='w-80' align='end'>
-                    <div className='space-y-2'>
-                      <h4 className='font-medium text-sm'>Search in data</h4>
-                      <div className='relative'>
+                  <PopoverContent className='data-table-search-popover' align='end'>
+                    <div className='data-table-search-content'>
+                      <h4 className='data-table-search-heading'>Search in data</h4>
+                      <div className='data-table-search-input-container'>
                         {isSearching ? (
-                          <Loader2 className='absolute left-2 top-2.5 h-4 w-4 text-zinc-500 animate-spin' />
+                          <Loader2 className='data-table-search-icon-loading' />
                         ) : (
-                          <Search className='absolute left-2 top-2.5 h-4 w-4 text-zinc-500' />
+                          <Search className='data-table-search-icon' />
                         )}
                         <Input
                           placeholder='Search...'
                           value={searchInput}
                           onChange={(e) => handleSearch(e.target.value)}
                           onKeyDown={handleSearchKeyDown}
-                          className='pl-8 pr-8'
+                          className='data-table-search-input'
                           autoFocus
                         />
                         {searchInput && (
                           <button
                             onClick={handleClearSearch}
-                            className='absolute right-2 top-2.5 text-zinc-500 hover:text-zinc-700'
+                            className='data-table-search-clear'
                           >
-                            <X className='h-4 w-4' />
+                            <X className='data-table-icon' />
                           </button>
                         )}
                       </div>
-                      <p className='text-xs text-zinc-500'>
+                      <p className='data-table-search-help'>
                         {isSearching
                           ? 'Searching...'
                           : 'Press Enter to navigate, Esc to close'}
@@ -145,7 +146,7 @@ export function DataTable() {
           </ResizablePanel>
 
           {/* Resize Handle */}
-          <ResizableHandle withHandle className='w-0 bg-transparent' />
+          <ResizableHandle withHandle className='data-table-resize-handle' />
 
           {/* Sidebar */}
           <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
