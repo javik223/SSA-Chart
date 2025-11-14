@@ -16,11 +16,8 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ButtonGroup } from '@/components/ui/button-group';
-import { Switch } from '@/components/ui/switch';
 import {
-  CircleHelp,
   RefreshCw,
   Search,
   HelpCircle,
@@ -35,16 +32,20 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Minus,
-  Maximize2,
-  Maximize,
-  Square,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { getChartsByCategory } from '@/lib/chartRegistry';
 import { getStatusLabel } from '@/lib/chartRegistrations';
 import { HeaderSettingsSection } from '@/components/HeaderSettingsSection';
+import { FooterSettingsSection } from '@/components/FooterSettingsSection';
+import { LayoutSettings } from '@/components/settings/LayoutSettings';
+import { ColorsSection } from '@/components/settings/ColorsSection';
+import { FormField } from '@/components/ui/form-field';
+import { FormSection } from '@/components/ui/form-section';
+import { FormGrid } from '@/components/ui/form-grid';
+import { FormRow } from '@/components/ui/form-row';
+import { FormCol } from '@/components/ui/form-col';
 
 export function ChartSettings() {
   const {
@@ -88,64 +89,6 @@ export function ChartSettings() {
     setLegendPaddingBottom,
     legendPaddingLeft,
     setLegendPaddingLeft,
-    chartFooter,
-    setChartFooter,
-    layoutMainFont,
-    setLayoutMainFont,
-    layoutTextColor,
-    setLayoutTextColor,
-    layoutBackgroundColorEnabled,
-    setLayoutBackgroundColorEnabled,
-    layoutBackgroundImageEnabled,
-    setLayoutBackgroundImageEnabled,
-    layoutBackgroundColor,
-    setLayoutBackgroundColor,
-    layoutBackgroundImageUrl,
-    setLayoutBackgroundImageUrl,
-    layoutBackgroundImageSize,
-    setLayoutBackgroundImageSize,
-    layoutBackgroundImagePosition,
-    setLayoutBackgroundImagePosition,
-    layoutOrder,
-    setLayoutOrder,
-    layoutSpaceBetweenSections,
-    setLayoutSpaceBetweenSections,
-    layoutMarginTop,
-    setLayoutMarginTop,
-    layoutMarginRight,
-    setLayoutMarginRight,
-    layoutMarginBottom,
-    setLayoutMarginBottom,
-    layoutMarginLeft,
-    setLayoutMarginLeft,
-    layoutPaddingTop,
-    setLayoutPaddingTop,
-    layoutPaddingRight,
-    setLayoutPaddingRight,
-    layoutPaddingBottom,
-    setLayoutPaddingBottom,
-    layoutPaddingLeft,
-    setLayoutPaddingLeft,
-    layoutBorderEnabled,
-    setLayoutBorderEnabled,
-    layoutBorderTop,
-    setLayoutBorderTop,
-    layoutBorderRight,
-    setLayoutBorderRight,
-    layoutBorderBottom,
-    setLayoutBorderBottom,
-    layoutBorderLeft,
-    setLayoutBorderLeft,
-    layoutBorderStyle,
-    setLayoutBorderStyle,
-    layoutBorderColor,
-    setLayoutBorderColor,
-    layoutBorderWidth,
-    setLayoutBorderWidth,
-    layoutBorderRadius,
-    setLayoutBorderRadius,
-    layoutReadDirection,
-    setLayoutReadDirection,
   } = useChartStore();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -296,50 +239,48 @@ export function ChartSettings() {
 
       {/* Scrollable Content */}
       <div className='flex-1 overflow-y-auto'>
-        <div className='p-4 space-y-4'>
+        <div className='space-y-4'>
           {/* Theme Section */}
-          <div className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <Label className='text-xs font-medium text-zinc-700 flex items-center gap-1'>
-                Theme
-                <CircleHelp className='h-3 w-3 text-zinc-400' />
-              </Label>
-            </div>
-            <div className='flex items-center gap-2'>
-              <Select value={theme} onValueChange={setTheme}>
-                <SelectTrigger className='h-8 text-xs'>
-                  <SelectValue placeholder='No theme' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='none'>No theme</SelectItem>
-                  <SelectItem value='light'>Light</SelectItem>
-                  <SelectItem value='dark'>Dark</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant='outline' size='sm' className='h-8 w-8 p-0'>
-                <RefreshCw className='h-3 w-3' />
-              </Button>
-            </div>
+          <div className='px-4 pt-4'>
+            <FormSection title='Theme' helpIcon>
+              <FormRow gap='sm'>
+                <FormCol span='auto'>
+                  <FormField
+                    type='select'
+                    value={theme}
+                    onChange={setTheme}
+                    options={[
+                      { value: 'none', label: 'No theme' },
+                      { value: 'light', label: 'Light' },
+                      { value: 'dark', label: 'Dark' },
+                    ]}
+                  />
+                </FormCol>
+                <FormCol span={1}>
+                  <Button variant='outline' size='sm' className='h-8 w-8 p-0'>
+                    <RefreshCw className='h-3 w-3' />
+                  </Button>
+                </FormCol>
+              </FormRow>
+            </FormSection>
           </div>
 
           <Separator />
 
           {/* Chart Type Section - Always Visible */}
-          <div className='space-y-3'>
-            <div className='flex items-center justify-between'>
-              <h3 className='text-sm font-medium text-zinc-900'>Chart type</h3>
-              <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
-                <span className='text-lg'>+</span>
-              </Button>
-            </div>
+          <div className='px-4'>
+            <FormSection title='Chart type'>
+              <div className='flex items-center justify-end -mt-8 mb-2'>
+                <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
+                  <span className='text-lg'>+</span>
+                </Button>
+              </div>
 
-            {/* Chart Type Dropdown */}
-            <div className='space-y-2'>
               <Select value={chartType} onValueChange={setChartType}>
                 <SelectTrigger className='h-8 text-xs'>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className='max-h-[400px]'>
+                <SelectContent>
                   {getChartsByCategory().map(({ category, charts }) => (
                     <div key={category.id}>
                       <div className='px-2 py-1.5 text-xs font-semibold text-zinc-500 first:pt-0'>
@@ -368,111 +309,43 @@ export function ChartSettings() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Grid Mode */}
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-zinc-700 flex items-center gap-1'>
-                Grid mode
-                <CircleHelp className='h-3 w-3 text-zinc-400' />
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={gridMode === 'single' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setGridMode('single')}
-                >
-                  Single chart
-                </Button>
-                <Button
-                  variant={gridMode === 'grid' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setGridMode('grid')}
-                >
-                  Grid of charts
-                </Button>
-              </ButtonGroup>
-            </div>
+              <FormField
+                type='button-group'
+                label='Grid mode'
+                value={gridMode}
+                onChange={setGridMode}
+                options={[
+                  { value: 'single', label: 'Single chart' },
+                  { value: 'grid', label: 'Grid of charts' },
+                ]}
+              />
 
-            {/* Height Mode */}
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-zinc-700 flex items-center gap-1'>
-                Height mode
-                <CircleHelp className='h-3 w-3 text-zinc-400' />
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={heightMode === 'auto' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setHeightMode('auto')}
-                >
-                  Auto
-                </Button>
-                <Button
-                  variant={heightMode === 'standard' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setHeightMode('standard')}
-                >
-                  Standard
-                </Button>
-                <Button
-                  variant={heightMode === 'aspect' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setHeightMode('aspect')}
-                >
-                  Aspect ratio
-                </Button>
-              </ButtonGroup>
-            </div>
+              <FormField
+                type='button-group'
+                label='Height mode'
+                value={heightMode}
+                onChange={setHeightMode}
+                options={[
+                  { value: 'auto', label: 'Auto' },
+                  { value: 'standard', label: 'Standard' },
+                  { value: 'aspect', label: 'Aspect ratio' },
+                ]}
+              />
 
-            {/* Aggregation Mode */}
-            <div className='space-y-2'>
-              <Label className='text-xs font-medium text-zinc-700 flex items-center gap-1'>
-                Aggregation mode
-                <CircleHelp className='h-3 w-3 text-zinc-400' />
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={aggregationMode === 'none' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setAggregationMode('none')}
-                >
-                  None
-                </Button>
-                <Button
-                  variant={aggregationMode === 'sum' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setAggregationMode('sum')}
-                >
-                  Sum
-                </Button>
-                <Button
-                  variant={
-                    aggregationMode === 'average' ? 'default' : 'outline'
-                  }
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setAggregationMode('average')}
-                >
-                  Average
-                </Button>
-                <Button
-                  variant={aggregationMode === 'count' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-8'
-                  onClick={() => setAggregationMode('count')}
-                >
-                  Count
-                </Button>
-              </ButtonGroup>
-            </div>
+              <FormField
+                type='button-group'
+                label='Aggregation mode'
+                value={aggregationMode}
+                onChange={setAggregationMode}
+                options={[
+                  { value: 'none', label: 'None' },
+                  { value: 'sum', label: 'Sum' },
+                  { value: 'average', label: 'Average' },
+                  { value: 'count', label: 'Count' },
+                ]}
+              />
+            </FormSection>
           </div>
 
           <Separator />
@@ -492,836 +365,93 @@ export function ChartSettings() {
                   value={section.value}
                   className={!isMatch ? 'opacity-30 blur-[0.5px]' : ''}
                 >
-                  <AccordionTrigger className='text-sm py-3 hover:no-underline'>
+                  <AccordionTrigger className='text-sm py-3 px-4 hover:no-underline'>
                     {section.title}
                   </AccordionTrigger>
-                  <AccordionContent>
+                  <AccordionContent className='px-4'>
                     {section.value === 'header' ? (
                       <HeaderSettingsSection />
                     ) : section.value === 'footer' ? (
-                      <div className='space-y-4 pb-4'>
-                        {/* Chart Footer */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Footer
-                          </Label>
-                          <Input
-                            type='text'
-                            value={chartFooter}
-                            onChange={(e) => setChartFooter(e.target.value)}
-                            className='h-8 text-xs'
-                            placeholder='Enter chart footer (e.g., source, credits)'
-                          />
-                        </div>
-                      </div>
+                      <FooterSettingsSection />
                     ) : section.value === 'layout' ? (
-                      <div className='space-y-4 pb-4'>
-                        {/* Row 1: Main Font and Text Color */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Typography
-                          </Label>
-                          <div className='grid grid-cols-2 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Main Font
-                              </Label>
-                              <Select
-                                value={layoutMainFont}
-                                onValueChange={setLayoutMainFont}
-                              >
-                                <SelectTrigger className='h-7 text-xs'>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value='Inter'>Inter</SelectItem>
-                                  <SelectItem value='Arial'>Arial</SelectItem>
-                                  <SelectItem value='Helvetica'>
-                                    Helvetica
-                                  </SelectItem>
-                                  <SelectItem value='Times New Roman'>
-                                    Times New Roman
-                                  </SelectItem>
-                                  <SelectItem value='Georgia'>
-                                    Georgia
-                                  </SelectItem>
-                                  <SelectItem value='Verdana'>
-                                    Verdana
-                                  </SelectItem>
-                                  <SelectItem value='Roboto'>Roboto</SelectItem>
-                                  <SelectItem value='Open Sans'>
-                                    Open Sans
-                                  </SelectItem>
-                                  <SelectItem value='Lato'>Lato</SelectItem>
-                                  <SelectItem value='Montserrat'>
-                                    Montserrat
-                                  </SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Text Color
-                              </Label>
-                              <div className='flex gap-1'>
-                                <Input
-                                  type='color'
-                                  value={layoutTextColor}
-                                  onChange={(e) =>
-                                    setLayoutTextColor(e.target.value)
-                                  }
-                                  className='h-7 w-10 cursor-pointer p-0 border-0'
-                                />
-                                <Input
-                                  type='text'
-                                  value={layoutTextColor}
-                                  onChange={(e) =>
-                                    setLayoutTextColor(e.target.value)
-                                  }
-                                  className='h-7 text-xs flex-1'
-                                  placeholder='#000000'
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Row 2: Background */}
-                        <div className='space-y-3'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Background
-                          </Label>
-
-                          {/* Background Toggle Row */}
-                          <div className='grid grid-cols-2 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Color
-                              </Label>
-                              <ButtonGroup className='w-full'>
-                                <Button
-                                  variant={
-                                    layoutBackgroundColorEnabled
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  size='sm'
-                                  className='flex-1 text-xs h-7'
-                                  onClick={() =>
-                                    setLayoutBackgroundColorEnabled(true)
-                                  }
-                                >
-                                  On
-                                </Button>
-                                <Button
-                                  variant={
-                                    !layoutBackgroundColorEnabled
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  size='sm'
-                                  className='flex-1 text-xs h-7'
-                                  onClick={() =>
-                                    setLayoutBackgroundColorEnabled(false)
-                                  }
-                                >
-                                  Off
-                                </Button>
-                              </ButtonGroup>
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Image
-                              </Label>
-                              <ButtonGroup className='w-full'>
-                                <Button
-                                  variant={
-                                    layoutBackgroundImageEnabled
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  size='sm'
-                                  className='flex-1 text-xs h-7'
-                                  onClick={() =>
-                                    setLayoutBackgroundImageEnabled(true)
-                                  }
-                                >
-                                  On
-                                </Button>
-                                <Button
-                                  variant={
-                                    !layoutBackgroundImageEnabled
-                                      ? 'default'
-                                      : 'outline'
-                                  }
-                                  size='sm'
-                                  className='flex-1 text-xs h-7'
-                                  onClick={() =>
-                                    setLayoutBackgroundImageEnabled(false)
-                                  }
-                                >
-                                  Off
-                                </Button>
-                              </ButtonGroup>
-                            </div>
-                          </div>
-
-                          {/* Background Settings Row */}
-                          {layoutBackgroundColorEnabled && (
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Background Color
-                              </Label>
-                              <div className='flex gap-1'>
-                                <Input
-                                  type='color'
-                                  value={layoutBackgroundColor}
-                                  onChange={(e) =>
-                                    setLayoutBackgroundColor(e.target.value)
-                                  }
-                                  className='h-7 w-10 cursor-pointer p-0 border-0'
-                                />
-                                <Input
-                                  type='text'
-                                  value={layoutBackgroundColor}
-                                  onChange={(e) =>
-                                    setLayoutBackgroundColor(e.target.value)
-                                  }
-                                  className='h-7 text-xs flex-1'
-                                  placeholder='#ffffff'
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {layoutBackgroundImageEnabled && (
-                            <>
-                              <div className='space-y-1'>
-                                <Label className='text-[10px] text-zinc-500'>
-                                  Image URL
-                                </Label>
-                                <Input
-                                  type='text'
-                                  value={layoutBackgroundImageUrl}
-                                  onChange={(e) =>
-                                    setLayoutBackgroundImageUrl(e.target.value)
-                                  }
-                                  className='h-7 text-xs'
-                                  placeholder='https://example.com/image.jpg'
-                                />
-                              </div>
-                              <div className='grid grid-cols-2 gap-2'>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Size
-                                  </Label>
-                                  <Select
-                                    value={layoutBackgroundImageSize}
-                                    onValueChange={setLayoutBackgroundImageSize}
-                                  >
-                                    <SelectTrigger className='h-7 text-xs'>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value='fill'>Fill</SelectItem>
-                                      <SelectItem value='fit'>Fit</SelectItem>
-                                      <SelectItem value='original'>
-                                        Original
-                                      </SelectItem>
-                                      <SelectItem value='stretch'>
-                                        Stretch
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Position
-                                  </Label>
-                                  <Select
-                                    value={layoutBackgroundImagePosition}
-                                    onValueChange={
-                                      setLayoutBackgroundImagePosition
-                                    }
-                                  >
-                                    <SelectTrigger className='h-7 text-xs'>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value='top-left'>
-                                        Top Left
-                                      </SelectItem>
-                                      <SelectItem value='top-center'>
-                                        Top Center
-                                      </SelectItem>
-                                      <SelectItem value='top-right'>
-                                        Top Right
-                                      </SelectItem>
-                                      <SelectItem value='center-left'>
-                                        Center Left
-                                      </SelectItem>
-                                      <SelectItem value='center'>
-                                        Center
-                                      </SelectItem>
-                                      <SelectItem value='center-right'>
-                                        Center Right
-                                      </SelectItem>
-                                      <SelectItem value='bottom-left'>
-                                        Bottom Left
-                                      </SelectItem>
-                                      <SelectItem value='bottom-center'>
-                                        Bottom Center
-                                      </SelectItem>
-                                      <SelectItem value='bottom-right'>
-                                        Bottom Right
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <Separator />
-
-                        {/* Layout Order */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Layout Order
-                          </Label>
-                          <Select
-                            value={layoutOrder}
-                            onValueChange={setLayoutOrder}
-                          >
-                            <SelectTrigger className='h-7 text-xs'>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value='header-controls-legend-primary-graphic-footer'>
-                                Header → Controls → Legend → Primary Graphic →
-                                Footer
-                              </SelectItem>
-                              <SelectItem value='primary-graphic-header-controls-footer'>
-                                Primary Graphic → Header → Controls → Footer
-                              </SelectItem>
-                              <SelectItem value='header-primary-graphic-controls-legend-footer'>
-                                Header → Primary Graphic → Controls → Legend →
-                                Footer
-                              </SelectItem>
-                              <SelectItem value='controls-primary-graphic-header-legend-footer'>
-                                Controls → Primary Graphic → Header → Legend →
-                                Footer
-                              </SelectItem>
-                              <SelectItem value='header-controls-primary-graphic-legend-footer'>
-                                Header → Controls → Primary Graphic → Legend →
-                                Footer
-                              </SelectItem>
-                              <SelectItem value='header-legend-primary-graphic-controls-footer'>
-                                Header → Legend → Primary Graphic → Controls →
-                                Footer
-                              </SelectItem>
-                              <SelectItem value='grid-mode-primary-graphic-right'>
-                                Grid Mode: Primary Graphic on Right
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <Separator />
-
-                        {/* Space Between Sections */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Space Between Sections
-                          </Label>
-                          <ButtonGroup className='w-full grid grid-cols-4'>
-                            <Button
-                              variant={
-                                layoutSpaceBetweenSections === 'none'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='h-10 flex flex-col items-center justify-center gap-0.5'
-                              onClick={() =>
-                                setLayoutSpaceBetweenSections('none')
-                              }
-                              title='None'
-                            >
-                              <Minus className='h-3 w-3' />
-                              <span className='text-[9px]'>None</span>
-                            </Button>
-                            <Button
-                              variant={
-                                layoutSpaceBetweenSections === 'tight'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='h-10 flex flex-col items-center justify-center gap-0.5'
-                              onClick={() =>
-                                setLayoutSpaceBetweenSections('tight')
-                              }
-                              title='Tight'
-                            >
-                              <Square className='h-3 w-3' />
-                              <span className='text-[9px]'>Tight</span>
-                            </Button>
-                            <Button
-                              variant={
-                                layoutSpaceBetweenSections === 'loose'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='h-10 flex flex-col items-center justify-center gap-0.5'
-                              onClick={() =>
-                                setLayoutSpaceBetweenSections('loose')
-                              }
-                              title='Loose'
-                            >
-                              <Maximize2 className='h-3 w-3' />
-                              <span className='text-[9px]'>Loose</span>
-                            </Button>
-                            <Button
-                              variant={
-                                layoutSpaceBetweenSections === 'large'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='h-10 flex flex-col items-center justify-center gap-0.5'
-                              onClick={() =>
-                                setLayoutSpaceBetweenSections('large')
-                              }
-                              title='Large'
-                            >
-                              <Maximize className='h-3 w-3' />
-                              <span className='text-[9px]'>Large</span>
-                            </Button>
-                          </ButtonGroup>
-                        </div>
-
-                        <Separator />
-
-                        {/* Margins */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Margins (px)
-                          </Label>
-                          <div className='grid grid-cols-4 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Top
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutMarginTop}
-                                onChange={(e) =>
-                                  setLayoutMarginTop(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Right
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutMarginRight}
-                                onChange={(e) =>
-                                  setLayoutMarginRight(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Bottom
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutMarginBottom}
-                                onChange={(e) =>
-                                  setLayoutMarginBottom(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Left
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutMarginLeft}
-                                onChange={(e) =>
-                                  setLayoutMarginLeft(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Padding Controls */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Padding (px)
-                          </Label>
-                          <div className='grid grid-cols-4 gap-2'>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Top
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutPaddingTop}
-                                onChange={(e) =>
-                                  setLayoutPaddingTop(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Right
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutPaddingRight}
-                                onChange={(e) =>
-                                  setLayoutPaddingRight(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Bottom
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutPaddingBottom}
-                                onChange={(e) =>
-                                  setLayoutPaddingBottom(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                            <div className='space-y-1'>
-                              <Label className='text-[10px] text-zinc-500'>
-                                Left
-                              </Label>
-                              <Input
-                                type='number'
-                                value={layoutPaddingLeft}
-                                onChange={(e) =>
-                                  setLayoutPaddingLeft(Number(e.target.value))
-                                }
-                                className='h-7 text-xs'
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator />
-
-                        {/* Borders */}
-                        <div className='space-y-3'>
-                          <div className='flex items-center justify-between'>
-                            <Label className='text-xs font-medium text-zinc-700'>
-                              Show borders around visualisation
-                            </Label>
-                            <Switch
-                              checked={layoutBorderEnabled}
-                              onCheckedChange={setLayoutBorderEnabled}
-                            />
-                          </div>
-
-                          {layoutBorderEnabled && (
-                            <>
-                              {/* Border Sides */}
-                              <div className='space-y-2'>
-                                <Label className='text-[10px] text-zinc-500'>
-                                  Border Sides
-                                </Label>
-                                <div className='grid grid-cols-4 gap-2'>
-                                  <div className='flex items-center space-x-1'>
-                                    <Switch
-                                      id='border-top'
-                                      checked={layoutBorderTop}
-                                      onCheckedChange={setLayoutBorderTop}
-                                      className='scale-75'
-                                    />
-                                    <Label
-                                      htmlFor='border-top'
-                                      className='text-[10px] text-zinc-600'
-                                    >
-                                      Top
-                                    </Label>
-                                  </div>
-                                  <div className='flex items-center space-x-1'>
-                                    <Switch
-                                      id='border-right'
-                                      checked={layoutBorderRight}
-                                      onCheckedChange={setLayoutBorderRight}
-                                      className='scale-75'
-                                    />
-                                    <Label
-                                      htmlFor='border-right'
-                                      className='text-[10px] text-zinc-600'
-                                    >
-                                      Right
-                                    </Label>
-                                  </div>
-                                  <div className='flex items-center space-x-1'>
-                                    <Switch
-                                      id='border-bottom'
-                                      checked={layoutBorderBottom}
-                                      onCheckedChange={setLayoutBorderBottom}
-                                      className='scale-75'
-                                    />
-                                    <Label
-                                      htmlFor='border-bottom'
-                                      className='text-[10px] text-zinc-600'
-                                    >
-                                      Bottom
-                                    </Label>
-                                  </div>
-                                  <div className='flex items-center space-x-1'>
-                                    <Switch
-                                      id='border-left'
-                                      checked={layoutBorderLeft}
-                                      onCheckedChange={setLayoutBorderLeft}
-                                      className='scale-75'
-                                    />
-                                    <Label
-                                      htmlFor='border-left'
-                                      className='text-[10px] text-zinc-600'
-                                    >
-                                      Left
-                                    </Label>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Border Style and Color */}
-                              <div className='grid grid-cols-2 gap-2'>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Style
-                                  </Label>
-                                  <Select
-                                    value={layoutBorderStyle}
-                                    onValueChange={setLayoutBorderStyle}
-                                  >
-                                    <SelectTrigger className='h-7 text-xs'>
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value='solid'>
-                                        Solid
-                                      </SelectItem>
-                                      <SelectItem value='dashed'>
-                                        Dashed
-                                      </SelectItem>
-                                      <SelectItem value='dotted'>
-                                        Dotted
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Width (px)
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={layoutBorderWidth}
-                                    onChange={(e) =>
-                                      setLayoutBorderWidth(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                              </div>
-
-                              {/* Border Color and Radius */}
-                              <div className='grid grid-cols-2 gap-2'>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Color
-                                  </Label>
-                                  <div className='flex gap-1'>
-                                    <Input
-                                      type='color'
-                                      value={layoutBorderColor}
-                                      onChange={(e) =>
-                                        setLayoutBorderColor(e.target.value)
-                                      }
-                                      className='h-7 w-10 cursor-pointer p-0 border-0'
-                                    />
-                                    <Input
-                                      type='text'
-                                      value={layoutBorderColor}
-                                      onChange={(e) =>
-                                        setLayoutBorderColor(e.target.value)
-                                      }
-                                      className='h-7 text-xs flex-1'
-                                      placeholder='#e4e4e7'
-                                    />
-                                  </div>
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Radius (px)
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={layoutBorderRadius}
-                                    onChange={(e) =>
-                                      setLayoutBorderRadius(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-
-                        <Separator />
-
-                        {/* Read Direction */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Read Direction
-                          </Label>
-                          <ButtonGroup className='w-full'>
-                            <Button
-                              variant={
-                                layoutReadDirection === 'ltr'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='flex-1 text-xs h-8'
-                              onClick={() => setLayoutReadDirection('ltr')}
-                            >
-                              Left to Right
-                            </Button>
-                            <Button
-                              variant={
-                                layoutReadDirection === 'rtl'
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              size='sm'
-                              className='flex-1 text-xs h-8'
-                              onClick={() => setLayoutReadDirection('rtl')}
-                            >
-                              Right to Left
-                            </Button>
-                          </ButtonGroup>
-                        </div>
-                      </div>
+                      <LayoutSettings />
+                    ) : section.value === 'colors' ? (
+                      <ColorsSection />
                     ) : section.value === 'preview' ? (
-                      <div className='space-y-4 pb-4'>
-                        {/* Size Controls */}
-                        <div className='space-y-2'>
-                          <Label className='text-xs font-medium text-zinc-700'>
-                            Size (px)
-                          </Label>
-                          <div className='flex gap-2'>
-                            <Input
-                              type='number'
-                              value={previewWidth}
-                              onChange={(e) =>
-                                setPreviewWidth(Number(e.target.value))
-                              }
-                              className='h-8 text-xs flex-1'
-                              placeholder='Width'
-                            />
-                            <Input
-                              type='number'
-                              value={previewHeight}
-                              onChange={(e) =>
-                                setPreviewHeight(Number(e.target.value))
-                              }
-                              className='h-8 text-xs flex-1'
-                              placeholder='Height'
-                            />
-                            <ButtonGroup className='flex'>
-                              <Button
-                                variant={
-                                  previewDevice === 'mobile'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                size='icon'
-                                onClick={() => {
-                                  setPreviewDevice('mobile');
-                                  setPreviewWidth(375);
-                                  setPreviewHeight(667);
-                                }}
-                              >
-                                <Smartphone className='w-4 h-4' />
-                              </Button>
-                              <Button
-                                variant={
-                                  previewDevice === 'tablet'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                size='icon'
-                                onClick={() => {
-                                  setPreviewDevice('tablet');
-                                  setPreviewWidth(768);
-                                  setPreviewHeight(1024);
-                                }}
-                              >
-                                <Tablet className='w-4 h-4' />
-                              </Button>
-                              <Button
-                                variant={
-                                  previewDevice === 'desktop'
-                                    ? 'default'
-                                    : 'outline'
-                                }
-                                size='icon'
-                                onClick={() => {
-                                  setPreviewDevice('desktop');
-                                  setPreviewWidth(1920);
-                                  setPreviewHeight(1080);
-                                }}
-                              >
-                                <Monitor className='w-4 h-4' />
-                              </Button>
-                            </ButtonGroup>
-                          </div>
-                        </div>
+                      <div className='settings-container'>
+                        <FormSection title='Size (px)'>
+                          <FormRow gap='sm'>
+                            <FormCol span='auto'>
+                              <FormField
+                                type='number'
+                                value={previewWidth}
+                                onChange={setPreviewWidth}
+                                placeholder='Width'
+                              />
+                            </FormCol>
+                            <FormCol span='auto'>
+                              <FormField
+                                type='number'
+                                value={previewHeight}
+                                onChange={setPreviewHeight}
+                                placeholder='Height'
+                              />
+                            </FormCol>
+                            <FormCol span={3}>
+                              <ButtonGroup className='flex'>
+                                <Button
+                                  variant={
+                                    previewDevice === 'mobile'
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='icon'
+                                  onClick={() => {
+                                    setPreviewDevice('mobile');
+                                    setPreviewWidth(375);
+                                    setPreviewHeight(667);
+                                  }}
+                                >
+                                  <Smartphone className='w-4 h-4' />
+                                </Button>
+                                <Button
+                                  variant={
+                                    previewDevice === 'tablet'
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='icon'
+                                  onClick={() => {
+                                    setPreviewDevice('tablet');
+                                    setPreviewWidth(768);
+                                    setPreviewHeight(1024);
+                                  }}
+                                >
+                                  <Tablet className='w-4 h-4' />
+                                </Button>
+                                <Button
+                                  variant={
+                                    previewDevice === 'desktop'
+                                      ? 'default'
+                                      : 'outline'
+                                  }
+                                  size='icon'
+                                  onClick={() => {
+                                    setPreviewDevice('desktop');
+                                    setPreviewWidth(1920);
+                                    setPreviewHeight(1080);
+                                  }}
+                                >
+                                  <Monitor className='w-4 h-4' />
+                                </Button>
+                              </ButtonGroup>
+                            </FormCol>
+                          </FormRow>
+                        </FormSection>
 
-                        {/* Colorblind Check */}
-                        <div className='space-y-2'>
-                          <div className='flex items-center gap-1'>
-                            <Label className='text-xs font-medium text-zinc-700'>
-                              Colorblind check
-                            </Label>
-                            <CircleHelp className='h-3 w-3 text-zinc-400' />
-                          </div>
+                        <Separator />
+
+                        <FormSection title='Colorblind check' helpIcon>
                           <div className='grid grid-cols-5 gap-2'>
                             <Button
                               variant={
@@ -1400,16 +530,11 @@ export function ChartSettings() {
                               </div>
                             </Button>
                           </div>
-                        </div>
+                        </FormSection>
 
-                        {/* Dark Mode */}
-                        <div className='space-y-2'>
-                          <div className='flex items-center gap-1'>
-                            <Label className='text-xs font-medium text-zinc-700'>
-                              Dark Mode
-                            </Label>
-                            <CircleHelp className='h-3 w-3 text-zinc-400' />
-                          </div>
+                        <Separator />
+
+                        <FormSection title='Dark Mode' helpIcon>
                           <div className='grid grid-cols-2 gap-2'>
                             <Button
                               variant={
@@ -1457,272 +582,147 @@ export function ChartSettings() {
                               </svg>
                             </Button>
                           </div>
-                        </div>
+                        </FormSection>
                       </div>
                     ) : section.value === 'legend' ? (
-                      <div className='space-y-4 pb-4'>
-                        {/* Show Legend Toggle */}
-                        <div className='flex items-center justify-between'>
-                          <Label
-                            htmlFor='legend-show'
-                            className='text-xs font-medium text-zinc-700'
-                          >
-                            Show Legend
-                          </Label>
-                          <Switch
-                            id='legend-show'
+                      <div className='settings-container'>
+                        <FormSection title='Show Legend'>
+                          <FormField
+                            type='switch'
                             checked={legendShow}
-                            onCheckedChange={setLegendShow}
+                            onChange={setLegendShow}
                           />
-                        </div>
+                        </FormSection>
 
                         {legendShow && (
                           <>
-                            <div className='flex gap-4'>
-                              {/* Legend Position */}
-                              <div className='space-y-2'>
-                                <Label className='text-xs font-medium text-zinc-700'>
-                                  Position
-                                </Label>
-                                <ButtonGroup className='w-full'>
-                                  <Button
-                                    variant={
-                                      legendPosition === 'top'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='flex-1 h-8'
-                                    onClick={() => setLegendPosition('top')}
-                                    title='Top'
-                                  >
-                                    <ArrowUp className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant={
-                                      legendPosition === 'right'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='flex-1 h-8'
-                                    onClick={() => setLegendPosition('right')}
-                                    title='Right'
-                                  >
-                                    <ArrowRight className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant={
-                                      legendPosition === 'bottom'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='flex-1 h-8'
-                                    onClick={() => setLegendPosition('bottom')}
-                                    title='Bottom'
-                                  >
-                                    <ArrowDown className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant={
-                                      legendPosition === 'left'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='flex-1 h-8'
-                                    onClick={() => setLegendPosition('left')}
-                                    title='Left'
-                                  >
-                                    <ArrowLeft className='h-4 w-4' />
-                                  </Button>
-                                </ButtonGroup>
-                              </div>
+                            <Separator />
 
-                              {/* Legend Alignment */}
-                              <div className='space-y-2'>
-                                <Label className='text-xs font-medium text-zinc-700'>
-                                  Alignment
-                                </Label>
-                                <ButtonGroup className='grid grid-cols-3'>
-                                  <Button
-                                    variant={
-                                      legendAlignment === 'start'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='h-8'
-                                    onClick={() => setLegendAlignment('start')}
-                                    title='Start'
-                                  >
-                                    <AlignLeft className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant={
-                                      legendAlignment === 'center'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='h-8'
-                                    onClick={() => setLegendAlignment('center')}
-                                    title='Center'
-                                  >
-                                    <AlignCenter className='h-4 w-4' />
-                                  </Button>
-                                  <Button
-                                    variant={
-                                      legendAlignment === 'end'
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size='sm'
-                                    className='h-8'
-                                    onClick={() => setLegendAlignment('end')}
-                                    title='End'
-                                  >
-                                    <AlignRight className='h-4 w-4' />
-                                  </Button>
-                                </ButtonGroup>
-                              </div>
-                            </div>
-
-                            {/* Font Size & Gap */}
-                            <div className='space-y-2'>
-                              <Label className='text-xs font-medium text-zinc-700'>
-                                Spacing
-                              </Label>
-                              <div className='grid grid-cols-2 gap-2'>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Size
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendFontSize}
-                                    onChange={(e) =>
-                                      setLegendFontSize(Number(e.target.value))
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0.1}
-                                    max={10.0}
-                                    step={0.1}
+                            <FormSection>
+                              <FormRow gap='md'>
+                                <FormCol span='auto'>
+                                  <FormField
+                                    type='button-group'
+                                    label='Position'
+                                    value={legendPosition}
+                                    onChange={setLegendPosition}
+                                    options={[
+                                      {
+                                        value: 'top',
+                                        icon: <ArrowUp className='h-4 w-4' />,
+                                      },
+                                      {
+                                        value: 'right',
+                                        icon: <ArrowRight className='h-4 w-4' />,
+                                      },
+                                      {
+                                        value: 'bottom',
+                                        icon: <ArrowDown className='h-4 w-4' />,
+                                      },
+                                      {
+                                        value: 'left',
+                                        icon: <ArrowLeft className='h-4 w-4' />,
+                                      },
+                                    ]}
                                   />
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Gap (px)
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendGap}
-                                    onChange={(e) =>
-                                      setLegendGap(Number(e.target.value))
-                                    }
-                                    className='h-7 text-xs'
-                                    min={5}
-                                    max={50}
-                                  />
-                                </div>
-                              </div>
-                            </div>
+                                </FormCol>
 
-                            {/* Show Values Toggle */}
-                            <div className='space-y-2'>
-                              <div className='flex items-center justify-between'>
-                                <div className='space-y-0.5'>
-                                  <Label
-                                    htmlFor='legend-show-values'
-                                    className='text-xs font-medium text-zinc-700'
-                                  >
-                                    Show Values
-                                  </Label>
-                                  <p className='text-[10px] text-zinc-500'>
-                                    Display numeric values next to legend items
-                                  </p>
-                                </div>
-                                <Switch
-                                  id='legend-show-values'
-                                  checked={legendShowValues}
-                                  onCheckedChange={setLegendShowValues}
+                                <FormCol span='auto'>
+                                  <FormField
+                                    type='button-group'
+                                    label='Alignment'
+                                    value={legendAlignment}
+                                    onChange={setLegendAlignment}
+                                    options={[
+                                      {
+                                        value: 'start',
+                                        icon: <AlignLeft className='h-4 w-4' />,
+                                      },
+                                      {
+                                        value: 'center',
+                                        icon: <AlignCenter className='h-4 w-4' />,
+                                      },
+                                      {
+                                        value: 'end',
+                                        icon: <AlignRight className='h-4 w-4' />,
+                                      },
+                                    ]}
+                                  />
+                                </FormCol>
+                              </FormRow>
+                            </FormSection>
+
+                            <Separator />
+
+                            <FormSection title='Spacing'>
+                              <FormGrid columns={2}>
+                                <FormField
+                                  type='number'
+                                  label='Size'
+                                  value={legendFontSize}
+                                  onChange={setLegendFontSize}
+                                  min={0.1}
+                                  max={10.0}
+                                  step={0.1}
                                 />
-                              </div>
-                            </div>
+                                <FormField
+                                  type='number'
+                                  label='Gap (px)'
+                                  value={legendGap}
+                                  onChange={setLegendGap}
+                                  min={5}
+                                  max={50}
+                                />
+                              </FormGrid>
+                            </FormSection>
 
-                            {/* Legend Padding */}
-                            <div className='space-y-2'>
-                              <Label className='text-xs font-medium text-zinc-700'>
-                                Padding (px)
-                              </Label>
-                              <div className='flex gap-2'>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Top
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendPaddingTop}
-                                    onChange={(e) =>
-                                      setLegendPaddingTop(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Right
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendPaddingRight}
-                                    onChange={(e) =>
-                                      setLegendPaddingRight(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Bottom
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendPaddingBottom}
-                                    onChange={(e) =>
-                                      setLegendPaddingBottom(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                                <div className='space-y-1'>
-                                  <Label className='text-[10px] text-zinc-500'>
-                                    Left
-                                  </Label>
-                                  <Input
-                                    type='number'
-                                    value={legendPaddingLeft}
-                                    onChange={(e) =>
-                                      setLegendPaddingLeft(
-                                        Number(e.target.value)
-                                      )
-                                    }
-                                    className='h-7 text-xs'
-                                    min={0}
-                                  />
-                                </div>
-                              </div>
-                            </div>
+                            <Separator />
+
+                            <FormSection title='Show Values'>
+                              <p className='text-xs text-zinc-500 mb-2'>
+                                Display numeric values next to legend items
+                              </p>
+                              <FormField
+                                type='switch'
+                                checked={legendShowValues}
+                                onChange={setLegendShowValues}
+                              />
+                            </FormSection>
+
+                            <Separator />
+
+                            <FormSection title='Padding (px)'>
+                              <FormGrid columns={4}>
+                                <FormField
+                                  type='number'
+                                  label='Top'
+                                  value={legendPaddingTop}
+                                  onChange={setLegendPaddingTop}
+                                  min={0}
+                                />
+                                <FormField
+                                  type='number'
+                                  label='Right'
+                                  value={legendPaddingRight}
+                                  onChange={setLegendPaddingRight}
+                                  min={0}
+                                />
+                                <FormField
+                                  type='number'
+                                  label='Bottom'
+                                  value={legendPaddingBottom}
+                                  onChange={setLegendPaddingBottom}
+                                  min={0}
+                                />
+                                <FormField
+                                  type='number'
+                                  label='Left'
+                                  value={legendPaddingLeft}
+                                  onChange={setLegendPaddingLeft}
+                                  min={0}
+                                />
+                              </FormGrid>
+                            </FormSection>
                           </>
                         )}
                       </div>

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { BarChart3 } from 'lucide-react';
 import { BasicChart } from '@/components/charts/BasicChart';
 import { ChartTitleSection } from '@/components/chart-title-section';
-import { ChartFooter } from '@/components/chart-footer';
+import { ChartFooterSection } from '@/components/chart-footer-section';
 import { ChartLegend } from '@/components/chart-legend';
 import { ChartControls } from '@/components/chart-controls';
 import { ResizeHandle } from '@/components/resize-handle';
@@ -181,7 +181,7 @@ export function ChartCanvas() {
         <BasicChart />
       </div>
     ),
-    footer: <ChartFooter key='footer' />,
+    footer: <ChartFooterSection key='footer' />,
   };
 
   // Check if we're in grid mode

@@ -11,6 +11,7 @@ import {
   inferAllColumnTypes,
   type ColumnTypeInfo,
 } from '@/utils/dataTypeUtils';
+import { indexedDBStorage } from '@/utils/indexedDBStorage';
 
 interface ColumnMapping {
   labels: number | null; // Column index for labels/time
@@ -95,6 +96,19 @@ interface ChartStore {
 
   darkModePreview: 'light' | 'dark';
   setDarkModePreview: (mode: 'light' | 'dark') => void;
+
+  // Color settings
+  colorMode: 'by-column' | 'by-row';
+  setColorMode: (mode: 'by-column' | 'by-row') => void;
+
+  colorPalette: string;
+  setColorPalette: (palette: string) => void;
+
+  colorPaletteExtend: boolean;
+  setColorPaletteExtend: (extend: boolean) => void;
+
+  colorCustomOverrides: string;
+  setColorCustomOverrides: (overrides: string) => void;
 
   // Chart metadata
   chartTitle: string;
@@ -257,6 +271,84 @@ interface ChartStore {
 
   chartFooter: string;
   setChartFooter: (footer: string) => void;
+
+  // Footer settings
+  footerAlignment: 'left' | 'center' | 'right';
+  setFooterAlignment: (alignment: 'left' | 'center' | 'right') => void;
+
+  // Advanced footer styles
+  footerStylesEnabled: boolean;
+  setFooterStylesEnabled: (enabled: boolean) => void;
+
+  footerFont: string;
+  setFooterFont: (font: string) => void;
+
+  footerFontWeight: 'bold' | 'regular';
+  setFooterFontWeight: (weight: 'bold' | 'regular') => void;
+
+  // Source fields
+  footerSourceName: string;
+  setFooterSourceName: (name: string) => void;
+
+  footerSourceUrl: string;
+  setFooterSourceUrl: (url: string) => void;
+
+  footerSourceLabel: string;
+  setFooterSourceLabel: (label: string) => void;
+
+  // Note fields
+  footerNote: string;
+  setFooterNote: (note: string) => void;
+
+  footerNoteSecondary: string;
+  setFooterNoteSecondary: (note: string) => void;
+
+  // Footer logo/image settings
+  footerLogoEnabled: boolean;
+  setFooterLogoEnabled: (enabled: boolean) => void;
+
+  footerLogoImageUrl: string;
+  setFooterLogoImageUrl: (url: string) => void;
+
+  footerLogoImageLink: string;
+  setFooterLogoImageLink: (link: string) => void;
+
+  footerLogoHeight: number;
+  setFooterLogoHeight: (height: number) => void;
+
+  footerLogoAlign: 'footer' | 'main-container';
+  setFooterLogoAlign: (align: 'footer' | 'main-container') => void;
+
+  footerLogoPosition: 'bottom' | 'left' | 'right';
+  setFooterLogoPosition: (position: 'bottom' | 'left' | 'right') => void;
+
+  footerLogoPositionTop: number;
+  setFooterLogoPositionTop: (top: number) => void;
+
+  footerLogoPositionRight: number;
+  setFooterLogoPositionRight: (right: number) => void;
+
+  footerLogoPositionBottom: number;
+  setFooterLogoPositionBottom: (bottom: number) => void;
+
+  footerLogoPositionLeft: number;
+  setFooterLogoPositionLeft: (left: number) => void;
+
+  // Footer border settings
+  footerBorder: 'none' | 'top' | 'bottom' | 'top-bottom';
+  setFooterBorder: (border: 'none' | 'top' | 'bottom' | 'top-bottom') => void;
+
+  footerBorderStyle: 'solid' | 'dashed' | 'dotted';
+  setFooterBorderStyle: (style: 'solid' | 'dashed' | 'dotted') => void;
+
+  footerBorderSpace: number;
+  setFooterBorderSpace: (space: number) => void;
+
+  footerBorderWidth: number;
+  setFooterBorderWidth: (width: number) => void;
+
+  footerBorderColor: string;
+  setFooterBorderColor: (color: string) => void;
 
   // Layout settings
   layoutMainFont: string;
@@ -635,6 +727,20 @@ export const useChartStore = create<ChartStore>()(
       darkModePreview: 'light',
       setDarkModePreview: (mode) => set({ darkModePreview: mode }),
 
+      // Color settings
+      colorMode: 'by-column',
+      setColorMode: (mode) => set({ colorMode: mode }),
+
+      colorPalette: 'default',
+      setColorPalette: (palette) => set({ colorPalette: palette }),
+
+      colorPaletteExtend: false,
+      setColorPaletteExtend: (extend) => set({ colorPaletteExtend: extend }),
+
+      colorCustomOverrides: '',
+      setColorCustomOverrides: (overrides) =>
+        set({ colorCustomOverrides: overrides }),
+
       // Chart metadata
       chartTitle: '',
       setChartTitle: (title) => set({ chartTitle: title }),
@@ -804,6 +910,88 @@ export const useChartStore = create<ChartStore>()(
 
       chartFooter: '',
       setChartFooter: (footer) => set({ chartFooter: footer }),
+
+      // Footer settings
+      footerAlignment: 'left',
+      setFooterAlignment: (alignment) => set({ footerAlignment: alignment }),
+
+      // Advanced footer styles
+      footerStylesEnabled: false,
+      setFooterStylesEnabled: (enabled) =>
+        set({ footerStylesEnabled: enabled }),
+
+      footerFont: 'Same as parent',
+      setFooterFont: (font) => set({ footerFont: font }),
+
+      footerFontWeight: 'regular',
+      setFooterFontWeight: (weight) => set({ footerFontWeight: weight }),
+
+      // Source fields
+      footerSourceName: '',
+      setFooterSourceName: (name) => set({ footerSourceName: name }),
+
+      footerSourceUrl: '',
+      setFooterSourceUrl: (url) => set({ footerSourceUrl: url }),
+
+      footerSourceLabel: '',
+      setFooterSourceLabel: (label) => set({ footerSourceLabel: label }),
+
+      // Note fields
+      footerNote: '',
+      setFooterNote: (note) => set({ footerNote: note }),
+
+      footerNoteSecondary: '',
+      setFooterNoteSecondary: (note) => set({ footerNoteSecondary: note }),
+
+      // Footer logo/image settings
+      footerLogoEnabled: false,
+      setFooterLogoEnabled: (enabled) => set({ footerLogoEnabled: enabled }),
+
+      footerLogoImageUrl: '',
+      setFooterLogoImageUrl: (url) => set({ footerLogoImageUrl: url }),
+
+      footerLogoImageLink: '',
+      setFooterLogoImageLink: (link) => set({ footerLogoImageLink: link }),
+
+      footerLogoHeight: 50,
+      setFooterLogoHeight: (height) => set({ footerLogoHeight: height }),
+
+      footerLogoAlign: 'footer',
+      setFooterLogoAlign: (align) => set({ footerLogoAlign: align }),
+
+      footerLogoPosition: 'bottom',
+      setFooterLogoPosition: (position) => set({ footerLogoPosition: position }),
+
+      footerLogoPositionTop: 0,
+      setFooterLogoPositionTop: (top) => set({ footerLogoPositionTop: top }),
+
+      footerLogoPositionRight: 0,
+      setFooterLogoPositionRight: (right) =>
+        set({ footerLogoPositionRight: right }),
+
+      footerLogoPositionBottom: 0,
+      setFooterLogoPositionBottom: (bottom) =>
+        set({ footerLogoPositionBottom: bottom }),
+
+      footerLogoPositionLeft: 0,
+      setFooterLogoPositionLeft: (left) =>
+        set({ footerLogoPositionLeft: left }),
+
+      // Footer border settings
+      footerBorder: 'none',
+      setFooterBorder: (border) => set({ footerBorder: border }),
+
+      footerBorderStyle: 'solid',
+      setFooterBorderStyle: (style) => set({ footerBorderStyle: style }),
+
+      footerBorderSpace: 10,
+      setFooterBorderSpace: (space) => set({ footerBorderSpace: space }),
+
+      footerBorderWidth: 1,
+      setFooterBorderWidth: (width) => set({ footerBorderWidth: width }),
+
+      footerBorderColor: '#e5e7eb',
+      setFooterBorderColor: (color) => set({ footerBorderColor: color }),
 
       // Layout settings
       layoutMainFont: 'Inter',
@@ -989,7 +1177,7 @@ export const useChartStore = create<ChartStore>()(
     }),
     {
       name: 'claude-charts-storage',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => indexedDBStorage),
       partialize: (state) => ({
         data: state.data,
         columnMapping: state.columnMapping,
@@ -1006,6 +1194,10 @@ export const useChartStore = create<ChartStore>()(
         previewDevice: state.previewDevice,
         colorblindMode: state.colorblindMode,
         darkModePreview: state.darkModePreview,
+        colorMode: state.colorMode,
+        colorPalette: state.colorPalette,
+        colorPaletteExtend: state.colorPaletteExtend,
+        colorCustomOverrides: state.colorCustomOverrides,
         chartTitle: state.chartTitle,
         chartDescription: state.chartDescription,
         headerAlignment: state.headerAlignment,
@@ -1057,6 +1249,30 @@ export const useChartStore = create<ChartStore>()(
         headerLogoPositionBottom: state.headerLogoPositionBottom,
         headerLogoPositionLeft: state.headerLogoPositionLeft,
         chartFooter: state.chartFooter,
+        footerAlignment: state.footerAlignment,
+        footerStylesEnabled: state.footerStylesEnabled,
+        footerFont: state.footerFont,
+        footerFontWeight: state.footerFontWeight,
+        footerSourceName: state.footerSourceName,
+        footerSourceUrl: state.footerSourceUrl,
+        footerSourceLabel: state.footerSourceLabel,
+        footerNote: state.footerNote,
+        footerNoteSecondary: state.footerNoteSecondary,
+        footerLogoEnabled: state.footerLogoEnabled,
+        footerLogoImageUrl: state.footerLogoImageUrl,
+        footerLogoImageLink: state.footerLogoImageLink,
+        footerLogoHeight: state.footerLogoHeight,
+        footerLogoAlign: state.footerLogoAlign,
+        footerLogoPosition: state.footerLogoPosition,
+        footerLogoPositionTop: state.footerLogoPositionTop,
+        footerLogoPositionRight: state.footerLogoPositionRight,
+        footerLogoPositionBottom: state.footerLogoPositionBottom,
+        footerLogoPositionLeft: state.footerLogoPositionLeft,
+        footerBorder: state.footerBorder,
+        footerBorderStyle: state.footerBorderStyle,
+        footerBorderSpace: state.footerBorderSpace,
+        footerBorderWidth: state.footerBorderWidth,
+        footerBorderColor: state.footerBorderColor,
         layoutMainFont: state.layoutMainFont,
         layoutTextColor: state.layoutTextColor,
         layoutBackgroundColorEnabled: state.layoutBackgroundColorEnabled,

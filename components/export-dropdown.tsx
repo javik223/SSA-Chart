@@ -28,7 +28,9 @@ export function ExportDropdown() {
   const chartTitle = useChartStore((state) => state.chartTitle);
   const [isExporting, setIsExporting] = useState(false);
   const [showWidthDialog, setShowWidthDialog] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<'png' | 'jpg' | 'pdf'>('png');
+  const [selectedFormat, setSelectedFormat] = useState<'png' | 'jpg' | 'pdf'>(
+    'png'
+  );
   const [exportWidth, setExportWidth] = useState<number>(1920);
 
   const handleExportClick = (format: ExportFormat) => {
@@ -128,7 +130,9 @@ export function ExportDropdown() {
             <FileImage className='mr-2 h-4 w-4' />
             <div className='flex flex-col'>
               <span className='font-medium'>JPG</span>
-              <span className='text-[10px] text-zinc-500'>Compressed image</span>
+              <span className='text-[10px] text-zinc-500'>
+                Compressed image
+              </span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -186,10 +190,7 @@ export function ExportDropdown() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant='outline'
-              onClick={() => setShowWidthDialog(false)}
-            >
+            <Button variant='outline' onClick={() => setShowWidthDialog(false)}>
               Cancel
             </Button>
             <Button onClick={handleWidthDialogConfirm} disabled={isExporting}>

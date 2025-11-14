@@ -1,18 +1,5 @@
 'use client';
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { ButtonGroup } from '@/components/ui/button-group';
-import { Switch } from '@/components/ui/switch';
-import { ColorPicker } from '@/components/ui/color-picker';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   AlignLeft,
   AlignCenter,
@@ -29,21 +16,24 @@ import {
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
+import { FormField } from '@/components/ui/form-field';
+import { FormSection } from '@/components/ui/form-section';
+import { FormGrid } from '@/components/ui/form-grid';
+import { FormRow } from '@/components/ui/form-row';
+import { FormCol } from '@/components/ui/form-col';
 
 export function HeaderSettingsSection() {
-  const chartTitle = useChartStore((state) => state.chartTitle);
-  const setChartTitle = useChartStore((state) => state.setChartTitle);
-  const chartSubtitle = useChartStore((state) => state.chartSubtitle);
-  const setChartSubtitle = useChartStore((state) => state.setChartSubtitle);
-  const headerText = useChartStore((state) => state.headerText);
-  const setHeaderText = useChartStore((state) => state.setHeaderText);
-
+  // Alignment
   const headerAlignment = useChartStore((state) => state.headerAlignment);
   const setHeaderAlignment = useChartStore((state) => state.setHeaderAlignment);
 
-  // Title settings
+  // Title
+  const chartTitle = useChartStore((state) => state.chartTitle);
+  const setChartTitle = useChartStore((state) => state.setChartTitle);
   const titleStyleEnabled = useChartStore((state) => state.titleStyleEnabled);
-  const setTitleStyleEnabled = useChartStore((state) => state.setTitleStyleEnabled);
+  const setTitleStyleEnabled = useChartStore(
+    (state) => state.setTitleStyleEnabled
+  );
   const titleFont = useChartStore((state) => state.titleFont);
   const setTitleFont = useChartStore((state) => state.setTitleFont);
   const titleFontSize = useChartStore((state) => state.titleFontSize);
@@ -57,890 +47,616 @@ export function HeaderSettingsSection() {
   const titleSpaceAbove = useChartStore((state) => state.titleSpaceAbove);
   const setTitleSpaceAbove = useChartStore((state) => state.setTitleSpaceAbove);
 
-  // Subtitle settings
-  const subtitleStyleEnabled = useChartStore((state) => state.subtitleStyleEnabled);
-  const setSubtitleStyleEnabled = useChartStore((state) => state.setSubtitleStyleEnabled);
+  // Subtitle
+  const chartSubtitle = useChartStore((state) => state.chartSubtitle);
+  const setChartSubtitle = useChartStore((state) => state.setChartSubtitle);
+  const subtitleStyleEnabled = useChartStore(
+    (state) => state.subtitleStyleEnabled
+  );
+  const setSubtitleStyleEnabled = useChartStore(
+    (state) => state.setSubtitleStyleEnabled
+  );
   const subtitleFont = useChartStore((state) => state.subtitleFont);
   const setSubtitleFont = useChartStore((state) => state.setSubtitleFont);
   const subtitleFontSize = useChartStore((state) => state.subtitleFontSize);
-  const setSubtitleFontSize = useChartStore((state) => state.setSubtitleFontSize);
+  const setSubtitleFontSize = useChartStore(
+    (state) => state.setSubtitleFontSize
+  );
   const subtitleFontWeight = useChartStore((state) => state.subtitleFontWeight);
-  const setSubtitleFontWeight = useChartStore((state) => state.setSubtitleFontWeight);
+  const setSubtitleFontWeight = useChartStore(
+    (state) => state.setSubtitleFontWeight
+  );
   const subtitleColor = useChartStore((state) => state.subtitleColor);
   const setSubtitleColor = useChartStore((state) => state.setSubtitleColor);
   const subtitleLineHeight = useChartStore((state) => state.subtitleLineHeight);
-  const setSubtitleLineHeight = useChartStore((state) => state.setSubtitleLineHeight);
+  const setSubtitleLineHeight = useChartStore(
+    (state) => state.setSubtitleLineHeight
+  );
   const subtitleSpaceAbove = useChartStore((state) => state.subtitleSpaceAbove);
-  const setSubtitleSpaceAbove = useChartStore((state) => state.setSubtitleSpaceAbove);
+  const setSubtitleSpaceAbove = useChartStore(
+    (state) => state.setSubtitleSpaceAbove
+  );
 
-  // Header text settings
-  const headerTextStyleEnabled = useChartStore((state) => state.headerTextStyleEnabled);
-  const setHeaderTextStyleEnabled = useChartStore((state) => state.setHeaderTextStyleEnabled);
+  // Header text
+  const headerText = useChartStore((state) => state.headerText);
+  const setHeaderText = useChartStore((state) => state.setHeaderText);
+  const headerTextStyleEnabled = useChartStore(
+    (state) => state.headerTextStyleEnabled
+  );
+  const setHeaderTextStyleEnabled = useChartStore(
+    (state) => state.setHeaderTextStyleEnabled
+  );
   const headerTextFont = useChartStore((state) => state.headerTextFont);
   const setHeaderTextFont = useChartStore((state) => state.setHeaderTextFont);
   const headerTextFontSize = useChartStore((state) => state.headerTextFontSize);
-  const setHeaderTextFontSize = useChartStore((state) => state.setHeaderTextFontSize);
-  const headerTextFontWeight = useChartStore((state) => state.headerTextFontWeight);
-  const setHeaderTextFontWeight = useChartStore((state) => state.setHeaderTextFontWeight);
+  const setHeaderTextFontSize = useChartStore(
+    (state) => state.setHeaderTextFontSize
+  );
+  const headerTextFontWeight = useChartStore(
+    (state) => state.headerTextFontWeight
+  );
+  const setHeaderTextFontWeight = useChartStore(
+    (state) => state.setHeaderTextFontWeight
+  );
   const headerTextColor = useChartStore((state) => state.headerTextColor);
   const setHeaderTextColor = useChartStore((state) => state.setHeaderTextColor);
-  const headerTextLineHeight = useChartStore((state) => state.headerTextLineHeight);
-  const setHeaderTextLineHeight = useChartStore((state) => state.setHeaderTextLineHeight);
-  const headerTextSpaceAbove = useChartStore((state) => state.headerTextSpaceAbove);
-  const setHeaderTextSpaceAbove = useChartStore((state) => state.setHeaderTextSpaceAbove);
+  const headerTextLineHeight = useChartStore(
+    (state) => state.headerTextLineHeight
+  );
+  const setHeaderTextLineHeight = useChartStore(
+    (state) => state.setHeaderTextLineHeight
+  );
+  const headerTextSpaceAbove = useChartStore(
+    (state) => state.headerTextSpaceAbove
+  );
+  const setHeaderTextSpaceAbove = useChartStore(
+    (state) => state.setHeaderTextSpaceAbove
+  );
 
-  // Border settings
+  // Border
   const headerBorder = useChartStore((state) => state.headerBorder);
   const setHeaderBorder = useChartStore((state) => state.setHeaderBorder);
   const headerBorderStyle = useChartStore((state) => state.headerBorderStyle);
-  const setHeaderBorderStyle = useChartStore((state) => state.setHeaderBorderStyle);
+  const setHeaderBorderStyle = useChartStore(
+    (state) => state.setHeaderBorderStyle
+  );
   const headerBorderSpace = useChartStore((state) => state.headerBorderSpace);
-  const setHeaderBorderSpace = useChartStore((state) => state.setHeaderBorderSpace);
+  const setHeaderBorderSpace = useChartStore(
+    (state) => state.setHeaderBorderSpace
+  );
   const headerBorderWidth = useChartStore((state) => state.headerBorderWidth);
-  const setHeaderBorderWidth = useChartStore((state) => state.setHeaderBorderWidth);
+  const setHeaderBorderWidth = useChartStore(
+    (state) => state.setHeaderBorderWidth
+  );
   const headerBorderColor = useChartStore((state) => state.headerBorderColor);
-  const setHeaderBorderColor = useChartStore((state) => state.setHeaderBorderColor);
+  const setHeaderBorderColor = useChartStore(
+    (state) => state.setHeaderBorderColor
+  );
 
-  // Logo/Image settings
+  // Logo/Image
   const headerLogoEnabled = useChartStore((state) => state.headerLogoEnabled);
-  const setHeaderLogoEnabled = useChartStore((state) => state.setHeaderLogoEnabled);
+  const setHeaderLogoEnabled = useChartStore(
+    (state) => state.setHeaderLogoEnabled
+  );
   const headerLogoImageUrl = useChartStore((state) => state.headerLogoImageUrl);
-  const setHeaderLogoImageUrl = useChartStore((state) => state.setHeaderLogoImageUrl);
-  const headerLogoImageLink = useChartStore((state) => state.headerLogoImageLink);
-  const setHeaderLogoImageLink = useChartStore((state) => state.setHeaderLogoImageLink);
+  const setHeaderLogoImageUrl = useChartStore(
+    (state) => state.setHeaderLogoImageUrl
+  );
+  const headerLogoImageLink = useChartStore(
+    (state) => state.headerLogoImageLink
+  );
+  const setHeaderLogoImageLink = useChartStore(
+    (state) => state.setHeaderLogoImageLink
+  );
   const headerLogoHeight = useChartStore((state) => state.headerLogoHeight);
-  const setHeaderLogoHeight = useChartStore((state) => state.setHeaderLogoHeight);
+  const setHeaderLogoHeight = useChartStore(
+    (state) => state.setHeaderLogoHeight
+  );
   const headerLogoAlign = useChartStore((state) => state.headerLogoAlign);
   const setHeaderLogoAlign = useChartStore((state) => state.setHeaderLogoAlign);
   const headerLogoPosition = useChartStore((state) => state.headerLogoPosition);
-  const setHeaderLogoPosition = useChartStore((state) => state.setHeaderLogoPosition);
-  const headerLogoPositionTop = useChartStore((state) => state.headerLogoPositionTop);
-  const setHeaderLogoPositionTop = useChartStore((state) => state.setHeaderLogoPositionTop);
-  const headerLogoPositionRight = useChartStore((state) => state.headerLogoPositionRight);
-  const setHeaderLogoPositionRight = useChartStore((state) => state.setHeaderLogoPositionRight);
-  const headerLogoPositionBottom = useChartStore((state) => state.headerLogoPositionBottom);
-  const setHeaderLogoPositionBottom = useChartStore((state) => state.setHeaderLogoPositionBottom);
-  const headerLogoPositionLeft = useChartStore((state) => state.headerLogoPositionLeft);
-  const setHeaderLogoPositionLeft = useChartStore((state) => state.setHeaderLogoPositionLeft);
+  const setHeaderLogoPosition = useChartStore(
+    (state) => state.setHeaderLogoPosition
+  );
+  const headerLogoPositionTop = useChartStore(
+    (state) => state.headerLogoPositionTop
+  );
+  const setHeaderLogoPositionTop = useChartStore(
+    (state) => state.setHeaderLogoPositionTop
+  );
+  const headerLogoPositionRight = useChartStore(
+    (state) => state.headerLogoPositionRight
+  );
+  const setHeaderLogoPositionRight = useChartStore(
+    (state) => state.setHeaderLogoPositionRight
+  );
+  const headerLogoPositionBottom = useChartStore(
+    (state) => state.headerLogoPositionBottom
+  );
+  const setHeaderLogoPositionBottom = useChartStore(
+    (state) => state.setHeaderLogoPositionBottom
+  );
+  const headerLogoPositionLeft = useChartStore(
+    (state) => state.headerLogoPositionLeft
+  );
+  const setHeaderLogoPositionLeft = useChartStore(
+    (state) => state.setHeaderLogoPositionLeft
+  );
 
   return (
-    <div className='space-y-4 pb-4'>
-      {/* Row 1: Alignment */}
-      <div className='space-y-2'>
-        <Label className='text-xs font-medium text-zinc-700'>
-          Alignment
-        </Label>
-        <ButtonGroup className='w-full'>
-          <Button
-            variant={headerAlignment === 'left' ? 'default' : 'outline'}
-            size='sm'
-            className='flex-1 text-xs h-7'
-            onClick={() => setHeaderAlignment('left')}
-          >
-            <AlignLeft className='h-4 w-4' />
-          </Button>
-          <Button
-            variant={headerAlignment === 'center' ? 'default' : 'outline'}
-            size='sm'
-            className='flex-1 text-xs h-7'
-            onClick={() => setHeaderAlignment('center')}
-          >
-            <AlignCenter className='h-4 w-4' />
-          </Button>
-          <Button
-            variant={headerAlignment === 'right' ? 'default' : 'outline'}
-            size='sm'
-            className='flex-1 text-xs h-7'
-            onClick={() => setHeaderAlignment('right')}
-          >
-            <AlignRight className='h-4 w-4' />
-          </Button>
-        </ButtonGroup>
-      </div>
+    <div className='settings-container'>
+      {/* Alignment */}
+      <FormSection title='Alignment'>
+        <FormField
+          type='button-group'
+          value={headerAlignment}
+          onChange={setHeaderAlignment}
+          options={[
+            { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
+            { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
+            { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
+          ]}
+        />
+      </FormSection>
 
       <Separator />
 
-      {/* Row 2: Title */}
-      <div className='space-y-2'>
-        <Label className='text-xs font-medium text-zinc-700'>
-          Title
-        </Label>
-        <Input
+      {/* Title */}
+      <FormSection title='Title'>
+        <FormField
           type='text'
           value={chartTitle}
-          onChange={(e) => setChartTitle(e.target.value)}
-          className='h-8 text-xs'
+          onChange={setChartTitle}
           placeholder='Enter chart title'
         />
 
-        {/* Title Style Switch */}
-        <div className='flex items-center justify-between'>
-          <Label className='text-[10px] text-zinc-500'>
-            Custom Style
-          </Label>
-          <Switch
-            checked={titleStyleEnabled}
-            onCheckedChange={setTitleStyleEnabled}
-          />
-        </div>
+        <FormField
+          type='switch'
+          label='Custom Style'
+          checked={titleStyleEnabled}
+          onChange={setTitleStyleEnabled}
+        />
 
         {titleStyleEnabled && (
-          <div className='space-y-3 pl-2 border-l-2 border-zinc-200'>
-            {/* Title Font */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Font
-              </Label>
-              <Select
-                value={titleFont}
-                onValueChange={setTitleFont}
-              >
-                <SelectTrigger className='h-7 text-xs'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Same as parent'>Same as parent</SelectItem>
-                  <SelectItem value='Inter'>Inter</SelectItem>
-                  <SelectItem value='Arial'>Arial</SelectItem>
-                  <SelectItem value='Helvetica'>Helvetica</SelectItem>
-                  <SelectItem value='Times New Roman'>Times New Roman</SelectItem>
-                  <SelectItem value='Georgia'>Georgia</SelectItem>
-                  <SelectItem value='Verdana'>Verdana</SelectItem>
-                  <SelectItem value='Roboto'>Roboto</SelectItem>
-                  <SelectItem value='Open Sans'>Open Sans</SelectItem>
-                  <SelectItem value='Lato'>Lato</SelectItem>
-                  <SelectItem value='Montserrat'>Montserrat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Size */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Size
-              </Label>
-              <Input
-                type='number'
-                value={titleFontSize}
-                onChange={(e) => setTitleFontSize(Number(e.target.value))}
-                className='h-7 text-xs'
-                min={0.1}
-                max={5}
-                step={0.1}
-              />
-            </div>
-
-            {/* Weight, Color, Line Height */}
-            <div className='grid grid-cols-3 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Weight
-                </Label>
-                <ButtonGroup className='w-full'>
-                  <Button
-                    variant={titleFontWeight === 'bold' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setTitleFontWeight('bold')}
-                    title='Bold'
-                  >
-                    <Bold className='h-3 w-3' />
-                  </Button>
-                  <Button
-                    variant={titleFontWeight === 'medium' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setTitleFontWeight('medium')}
-                    title='Medium'
-                  >
-                    M
-                  </Button>
-                  <Button
-                    variant={titleFontWeight === 'regular' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setTitleFontWeight('regular')}
-                    title='Regular'
-                  >
-                    <Type className='h-3 w-3' />
-                  </Button>
-                </ButtonGroup>
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Color
-                </Label>
-                <ColorPicker
-                  value={titleColor}
-                  onChange={setTitleColor}
-                  className='h-7 w-full'
+          <div className='settings-nested-section'>
+            <FormRow>
+              <FormCol span='auto'>
+                <FormField
+                  type='select'
+                  label='Font'
+                  value={titleFont}
+                  onChange={setTitleFont}
+                  options={[
+                    { value: 'Same as parent', label: 'Same as parent' },
+                    { value: 'Inter', label: 'Inter' },
+                    { value: 'Arial', label: 'Arial' },
+                    { value: 'Helvetica', label: 'Helvetica' },
+                    { value: 'Times New Roman', label: 'Times New Roman' },
+                    { value: 'Georgia', label: 'Georgia' },
+                    { value: 'Verdana', label: 'Verdana' },
+                    { value: 'Roboto', label: 'Roboto' },
+                    { value: 'Open Sans', label: 'Open Sans' },
+                    { value: 'Lato', label: 'Lato' },
+                    { value: 'Montserrat', label: 'Montserrat' },
+                  ]}
                 />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Line Height
-                </Label>
-                <Input
+              </FormCol>
+
+              <FormCol span={4}>
+                <FormField
                   type='number'
-                  value={titleLineHeight}
-                  onChange={(e) => setTitleLineHeight(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={0.8}
-                  max={3}
+                  label='Size'
+                  value={titleFontSize}
+                  onChange={setTitleFontSize}
+                  min={0.1}
+                  max={5}
                   step={0.1}
                 />
-              </div>
-            </div>
+              </FormCol>
+            </FormRow>
 
-            {/* Space Above */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Space Above
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={titleSpaceAbove === 'slim' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setTitleSpaceAbove('slim')}
-                >
-                  <Minus className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={titleSpaceAbove === 'medium' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setTitleSpaceAbove('medium')}
-                >
-                  <Maximize2 className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={titleSpaceAbove === 'large' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setTitleSpaceAbove('large')}
-                >
-                  <Maximize className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={titleSpaceAbove === 'none' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setTitleSpaceAbove('none')}
-                >
-                  <Square className='h-4 w-4' />
-                </Button>
-              </ButtonGroup>
-            </div>
+            <FormGrid columns={3}>
+              <FormField
+                type='button-group'
+                label='Weight'
+                value={titleFontWeight}
+                onChange={setTitleFontWeight}
+                options={[
+                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
+                  { value: 'medium', label: 'M' },
+                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
+                ]}
+              />
+
+              <FormField
+                type='color'
+                label='Color'
+                value={titleColor}
+                onChange={setTitleColor}
+              />
+
+              <FormField
+                type='number'
+                label='Line Height'
+                value={titleLineHeight}
+                onChange={setTitleLineHeight}
+                min={0.8}
+                max={3}
+                step={0.1}
+              />
+            </FormGrid>
+
+            <FormField
+              type='button-group'
+              label='Space Above'
+              value={titleSpaceAbove}
+              onChange={setTitleSpaceAbove}
+              options={[
+                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
+                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
+                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
+                { value: 'none', icon: <Square className='h-4 w-4' /> },
+              ]}
+            />
           </div>
         )}
-      </div>
+      </FormSection>
 
       <Separator />
 
-      {/* Row 3: Subtitle */}
-      <div className='space-y-2'>
-        <Label className='text-xs font-medium text-zinc-700'>
-          Subtitle
-        </Label>
-        <Input
+      {/* Subtitle */}
+      <FormSection title='Subtitle'>
+        <FormField
           type='text'
           value={chartSubtitle}
-          onChange={(e) => setChartSubtitle(e.target.value)}
-          className='h-8 text-xs'
+          onChange={setChartSubtitle}
           placeholder='Enter chart subtitle'
         />
 
-        {/* Subtitle Style Switch */}
-        <div className='flex items-center justify-between'>
-          <Label className='text-[10px] text-zinc-500'>
-            Custom Style
-          </Label>
-          <Switch
-            checked={subtitleStyleEnabled}
-            onCheckedChange={setSubtitleStyleEnabled}
-          />
-        </div>
-
-        {subtitleStyleEnabled && (
-          <div className='space-y-3 pl-2 border-l-2 border-zinc-200'>
-            {/* Subtitle Font */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Font
-              </Label>
-              <Select
-                value={subtitleFont}
-                onValueChange={setSubtitleFont}
-              >
-                <SelectTrigger className='h-7 text-xs'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Same as parent'>Same as parent</SelectItem>
-                  <SelectItem value='Inter'>Inter</SelectItem>
-                  <SelectItem value='Arial'>Arial</SelectItem>
-                  <SelectItem value='Helvetica'>Helvetica</SelectItem>
-                  <SelectItem value='Times New Roman'>Times New Roman</SelectItem>
-                  <SelectItem value='Georgia'>Georgia</SelectItem>
-                  <SelectItem value='Verdana'>Verdana</SelectItem>
-                  <SelectItem value='Roboto'>Roboto</SelectItem>
-                  <SelectItem value='Open Sans'>Open Sans</SelectItem>
-                  <SelectItem value='Lato'>Lato</SelectItem>
-                  <SelectItem value='Montserrat'>Montserrat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Size */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Size
-              </Label>
-              <Input
-                type='number'
-                value={subtitleFontSize}
-                onChange={(e) => setSubtitleFontSize(Number(e.target.value))}
-                className='h-7 text-xs'
-                min={0.1}
-                max={5}
-                step={0.1}
-              />
-            </div>
-
-            {/* Weight, Color, Line Height */}
-            <div className='grid grid-cols-3 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Weight
-                </Label>
-                <ButtonGroup className='w-full'>
-                  <Button
-                    variant={subtitleFontWeight === 'bold' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setSubtitleFontWeight('bold')}
-                    title='Bold'
-                  >
-                    <Bold className='h-3 w-3' />
-                  </Button>
-                  <Button
-                    variant={subtitleFontWeight === 'medium' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setSubtitleFontWeight('medium')}
-                    title='Medium'
-                  >
-                    M
-                  </Button>
-                  <Button
-                    variant={subtitleFontWeight === 'regular' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setSubtitleFontWeight('regular')}
-                    title='Regular'
-                  >
-                    <Type className='h-3 w-3' />
-                  </Button>
-                </ButtonGroup>
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Color
-                </Label>
-                <ColorPicker
-                  value={subtitleColor}
-                  onChange={setSubtitleColor}
-                  className='h-7 w-full'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Line Height
-                </Label>
-                <Input
-                  type='number'
-                  value={subtitleLineHeight}
-                  onChange={(e) => setSubtitleLineHeight(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={0.8}
-                  max={3}
-                  step={0.1}
-                />
-              </div>
-            </div>
-
-            {/* Space Above */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Space Above
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={subtitleSpaceAbove === 'slim' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setSubtitleSpaceAbove('slim')}
-                >
-                  <Minus className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={subtitleSpaceAbove === 'medium' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setSubtitleSpaceAbove('medium')}
-                >
-                  <Maximize2 className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={subtitleSpaceAbove === 'large' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setSubtitleSpaceAbove('large')}
-                >
-                  <Maximize className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={subtitleSpaceAbove === 'none' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setSubtitleSpaceAbove('none')}
-                >
-                  <Square className='h-4 w-4' />
-                </Button>
-              </ButtonGroup>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* Row 4: Text (Description) */}
-      <div className='space-y-2'>
-        <Label className='text-xs font-medium text-zinc-700'>
-          Text
-        </Label>
-        <textarea
-          value={headerText}
-          onChange={(e) => setHeaderText(e.target.value)}
-          className='w-full h-20 px-3 py-2 text-xs border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none'
-          placeholder='Enter header text or description'
+        <FormField
+          type='switch'
+          label='Custom Style'
+          checked={subtitleStyleEnabled}
+          onChange={setSubtitleStyleEnabled}
         />
 
-        {/* Text Style Switch */}
-        <div className='flex items-center justify-between'>
-          <Label className='text-[10px] text-zinc-500'>
-            Custom Style
-          </Label>
-          <Switch
-            checked={headerTextStyleEnabled}
-            onCheckedChange={setHeaderTextStyleEnabled}
-          />
-        </div>
+        {subtitleStyleEnabled && (
+          <div className='settings-nested-section'>
+            <FormField
+              type='select'
+              label='Font'
+              value={subtitleFont}
+              onChange={setSubtitleFont}
+              options={[
+                { value: 'Same as parent', label: 'Same as parent' },
+                { value: 'Inter', label: 'Inter' },
+                { value: 'Arial', label: 'Arial' },
+                { value: 'Helvetica', label: 'Helvetica' },
+                { value: 'Times New Roman', label: 'Times New Roman' },
+                { value: 'Georgia', label: 'Georgia' },
+                { value: 'Verdana', label: 'Verdana' },
+                { value: 'Roboto', label: 'Roboto' },
+                { value: 'Open Sans', label: 'Open Sans' },
+                { value: 'Lato', label: 'Lato' },
+                { value: 'Montserrat', label: 'Montserrat' },
+              ]}
+            />
 
-        {headerTextStyleEnabled && (
-          <div className='space-y-3 pl-2 border-l-2 border-zinc-200'>
-            {/* Text Font */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Font
-              </Label>
-              <Select
-                value={headerTextFont}
-                onValueChange={setHeaderTextFont}
-              >
-                <SelectTrigger className='h-7 text-xs'>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='Same as parent'>Same as parent</SelectItem>
-                  <SelectItem value='Inter'>Inter</SelectItem>
-                  <SelectItem value='Arial'>Arial</SelectItem>
-                  <SelectItem value='Helvetica'>Helvetica</SelectItem>
-                  <SelectItem value='Times New Roman'>Times New Roman</SelectItem>
-                  <SelectItem value='Georgia'>Georgia</SelectItem>
-                  <SelectItem value='Verdana'>Verdana</SelectItem>
-                  <SelectItem value='Roboto'>Roboto</SelectItem>
-                  <SelectItem value='Open Sans'>Open Sans</SelectItem>
-                  <SelectItem value='Lato'>Lato</SelectItem>
-                  <SelectItem value='Montserrat'>Montserrat</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              type='number'
+              label='Size'
+              value={subtitleFontSize}
+              onChange={setSubtitleFontSize}
+              min={0.1}
+              max={5}
+              step={0.1}
+            />
 
-            {/* Size */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Size
-              </Label>
-              <Input
+            <FormGrid columns={3}>
+              <FormField
+                type='button-group'
+                label='Weight'
+                value={subtitleFontWeight}
+                onChange={setSubtitleFontWeight}
+                options={[
+                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
+                  { value: 'medium', label: 'M' },
+                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
+                ]}
+              />
+
+              <FormField
+                type='color'
+                label='Color'
+                value={subtitleColor}
+                onChange={setSubtitleColor}
+              />
+
+              <FormField
                 type='number'
-                value={headerTextFontSize}
-                onChange={(e) => setHeaderTextFontSize(Number(e.target.value))}
-                className='h-7 text-xs'
-                min={0.1}
-                max={5}
+                label='Line Height'
+                value={subtitleLineHeight}
+                onChange={setSubtitleLineHeight}
+                min={0.8}
+                max={3}
                 step={0.1}
               />
-            </div>
+            </FormGrid>
 
-            {/* Weight, Color, Line Height */}
-            <div className='grid grid-cols-3 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Weight
-                </Label>
-                <ButtonGroup className='w-full'>
-                  <Button
-                    variant={headerTextFontWeight === 'bold' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setHeaderTextFontWeight('bold')}
-                    title='Bold'
-                  >
-                    <Bold className='h-3 w-3' />
-                  </Button>
-                  <Button
-                    variant={headerTextFontWeight === 'medium' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setHeaderTextFontWeight('medium')}
-                    title='Medium'
-                  >
-                    M
-                  </Button>
-                  <Button
-                    variant={headerTextFontWeight === 'regular' ? 'default' : 'outline'}
-                    size='sm'
-                    className='flex-1 text-xs h-7 p-0'
-                    onClick={() => setHeaderTextFontWeight('regular')}
-                    title='Regular'
-                  >
-                    <Type className='h-3 w-3' />
-                  </Button>
-                </ButtonGroup>
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Color
-                </Label>
-                <ColorPicker
-                  value={headerTextColor}
-                  onChange={setHeaderTextColor}
-                  className='h-7 w-full'
+            <FormField
+              type='button-group'
+              label='Space Above'
+              value={subtitleSpaceAbove}
+              onChange={setSubtitleSpaceAbove}
+              options={[
+                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
+                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
+                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
+                { value: 'none', icon: <Square className='h-4 w-4' /> },
+              ]}
+            />
+          </div>
+        )}
+      </FormSection>
+
+      <Separator />
+
+      {/* Header Text */}
+      <FormSection title='Text'>
+        <FormField
+          type='textarea'
+          value={headerText}
+          onChange={setHeaderText}
+          placeholder='Enter header text or description'
+          rows={5}
+        />
+
+        <FormField
+          type='switch'
+          label='Custom Style'
+          checked={headerTextStyleEnabled}
+          onChange={setHeaderTextStyleEnabled}
+        />
+
+        {headerTextStyleEnabled && (
+          <div className='settings-nested-section-enhanced'>
+            <FormRow gap='md' align='start'>
+              <FormCol span='auto'>
+                <FormField
+                  type='select'
+                  label='Font'
+                  value={headerTextFont}
+                  onChange={setHeaderTextFont}
+                  options={[
+                    { value: 'Same as parent', label: 'Same as parent' },
+                    { value: 'Inter', label: 'Inter' },
+                    { value: 'Arial', label: 'Arial' },
+                    { value: 'Helvetica', label: 'Helvetica' },
+                    { value: 'Times New Roman', label: 'Times New Roman' },
+                    { value: 'Georgia', label: 'Georgia' },
+                    { value: 'Verdana', label: 'Verdana' },
+                    { value: 'Roboto', label: 'Roboto' },
+                    { value: 'Open Sans', label: 'Open Sans' },
+                    { value: 'Lato', label: 'Lato' },
+                    { value: 'Montserrat', label: 'Montserrat' },
+                  ]}
                 />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Line Height
-                </Label>
-                <Input
+              </FormCol>
+
+              <FormCol span={4}>
+                <FormField
                   type='number'
-                  value={headerTextLineHeight}
-                  onChange={(e) => setHeaderTextLineHeight(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={0.8}
-                  max={3}
+                  label='Size'
+                  value={headerTextFontSize}
+                  onChange={setHeaderTextFontSize}
+                  min={0.1}
+                  max={5}
                   step={0.1}
                 />
-              </div>
-            </div>
+              </FormCol>
+            </FormRow>
 
-            {/* Space Above */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Space Above
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={headerTextSpaceAbove === 'slim' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderTextSpaceAbove('slim')}
-                >
-                  <Minus className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={headerTextSpaceAbove === 'medium' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderTextSpaceAbove('medium')}
-                >
-                  <Maximize2 className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={headerTextSpaceAbove === 'large' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderTextSpaceAbove('large')}
-                >
-                  <Maximize className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={headerTextSpaceAbove === 'none' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderTextSpaceAbove('none')}
-                >
-                  <Square className='h-4 w-4' />
-                </Button>
-              </ButtonGroup>
-            </div>
+            <FormGrid columns={3}>
+              <FormField
+                type='button-group'
+                label='Weight'
+                value={headerTextFontWeight}
+                onChange={setHeaderTextFontWeight}
+                options={[
+                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
+                  { value: 'medium', label: 'M' },
+                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
+                ]}
+              />
+
+              <FormField
+                type='color'
+                label='Color'
+                value={headerTextColor}
+                onChange={setHeaderTextColor}
+              />
+
+              <FormField
+                type='number'
+                label='Line Height'
+                value={headerTextLineHeight}
+                onChange={setHeaderTextLineHeight}
+                min={0.8}
+                max={3}
+                step={0.1}
+              />
+            </FormGrid>
+
+            <FormField
+              type='button-group'
+              label='Space Above'
+              value={headerTextSpaceAbove}
+              onChange={setHeaderTextSpaceAbove}
+              options={[
+                { value: 'slim', icon: <Minus className='h-4 w-4' /> },
+                { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
+                { value: 'large', icon: <Maximize className='h-4 w-4' /> },
+                { value: 'none', icon: <Square className='h-4 w-4' /> },
+              ]}
+            />
           </div>
         )}
-      </div>
+      </FormSection>
 
       <Separator />
 
-      {/* Row 5: Border */}
-      <div className='space-y-2'>
-        <Label className='text-xs font-medium text-zinc-700'>
-          Border
-        </Label>
-        <Select
+      {/* Border */}
+      <FormSection title='Border'>
+        <FormField
+          type='select'
           value={headerBorder}
-          onValueChange={setHeaderBorder}
-        >
-          <SelectTrigger className='h-7 text-xs'>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value='none'>None</SelectItem>
-            <SelectItem value='top'>Top</SelectItem>
-            <SelectItem value='bottom'>Bottom</SelectItem>
-            <SelectItem value='top-bottom'>Top & Bottom</SelectItem>
-          </SelectContent>
-        </Select>
+          onChange={setHeaderBorder}
+          options={[
+            { value: 'none', label: 'None' },
+            { value: 'top', label: 'Top' },
+            { value: 'bottom', label: 'Bottom' },
+            { value: 'top-bottom', label: 'Top & Bottom' },
+          ]}
+        />
 
         {headerBorder !== 'none' && (
-          <div className='space-y-2 pl-2 border-l-2 border-zinc-200'>
-            {/* Style, Space */}
-            <div className='grid grid-cols-2 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Style
-                </Label>
-                <Select
-                  value={headerBorderStyle}
-                  onValueChange={setHeaderBorderStyle}
-                >
-                  <SelectTrigger className='h-7 text-xs'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='solid'>Solid</SelectItem>
-                    <SelectItem value='dashed'>Dashed</SelectItem>
-                    <SelectItem value='dotted'>Dotted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Space (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerBorderSpace}
-                  onChange={(e) => setHeaderBorderSpace(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={0}
-                  max={50}
-                />
-              </div>
-            </div>
+          <div className='settings-nested-section'>
+            <FormGrid columns={2}>
+              <FormField
+                type='select'
+                label='Style'
+                value={headerBorderStyle}
+                onChange={setHeaderBorderStyle}
+                options={[
+                  { value: 'solid', label: 'Solid' },
+                  { value: 'dashed', label: 'Dashed' },
+                  { value: 'dotted', label: 'Dotted' },
+                ]}
+              />
 
-            {/* Width, Color */}
-            <div className='grid grid-cols-2 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Width (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerBorderWidth}
-                  onChange={(e) => setHeaderBorderWidth(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={1}
-                  max={10}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Color
-                </Label>
-                <ColorPicker
-                  value={headerBorderColor}
-                  onChange={setHeaderBorderColor}
-                  className='h-7 w-full'
-                />
-              </div>
-            </div>
+              <FormField
+                type='number'
+                label='Space (px)'
+                value={headerBorderSpace}
+                onChange={setHeaderBorderSpace}
+                min={0}
+                max={50}
+              />
+
+              <FormField
+                type='number'
+                label='Width (px)'
+                value={headerBorderWidth}
+                onChange={setHeaderBorderWidth}
+                min={1}
+                max={10}
+              />
+
+              <FormField
+                type='color'
+                label='Color'
+                value={headerBorderColor}
+                onChange={setHeaderBorderColor}
+              />
+            </FormGrid>
           </div>
         )}
-      </div>
+      </FormSection>
 
       <Separator />
 
-      {/* Row 6: Logo / Image */}
-      <div className='space-y-2'>
-        <div className='flex items-center justify-between'>
-          <Label className='text-xs font-medium text-zinc-700'>
-            Logo / Image
-          </Label>
-          <Switch
-            checked={headerLogoEnabled}
-            onCheckedChange={setHeaderLogoEnabled}
-          />
-        </div>
+      {/* Logo / Image */}
+      <FormSection title='Logo / Image'>
+        <FormField
+          type='switch'
+          checked={headerLogoEnabled}
+          onChange={setHeaderLogoEnabled}
+        />
 
         {headerLogoEnabled && (
-          <div className='space-y-3 pl-2 border-l-2 border-zinc-200'>
-            {/* Upload Image & Link */}
-            <div className='grid grid-cols-2 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Image URL
-                </Label>
-                <Input
-                  type='text'
-                  value={headerLogoImageUrl}
-                  onChange={(e) => setHeaderLogoImageUrl(e.target.value)}
-                  className='h-7 text-xs'
-                  placeholder='https://...'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Link URL
-                </Label>
-                <Input
-                  type='text'
-                  value={headerLogoImageLink}
-                  onChange={(e) => setHeaderLogoImageLink(e.target.value)}
-                  className='h-7 text-xs'
-                  placeholder='https://...'
-                />
-              </div>
-            </div>
+          <div className='settings-nested-section'>
+            <FormGrid columns={2}>
+              <FormField
+                type='url'
+                label='Image URL'
+                value={headerLogoImageUrl}
+                onChange={setHeaderLogoImageUrl}
+                placeholder='https://...'
+              />
 
-            {/* Height & Align */}
-            <div className='grid grid-cols-2 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Height (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerLogoHeight}
-                  onChange={(e) => setHeaderLogoHeight(Number(e.target.value))}
-                  className='h-7 text-xs'
-                  min={20}
-                  max={200}
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Align
-                </Label>
-                <Select
-                  value={headerLogoAlign}
-                  onValueChange={setHeaderLogoAlign}
-                >
-                  <SelectTrigger className='h-7 text-xs'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value='header'>Header</SelectItem>
-                    <SelectItem value='main-container'>Main Container</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <FormField
+                type='url'
+                label='Link URL'
+                value={headerLogoImageLink}
+                onChange={setHeaderLogoImageLink}
+                placeholder='https://...'
+              />
 
-            {/* Position */}
-            <div className='space-y-1'>
-              <Label className='text-[10px] text-zinc-500'>
-                Position
-              </Label>
-              <ButtonGroup className='w-full'>
-                <Button
-                  variant={headerLogoPosition === 'top' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderLogoPosition('top')}
-                >
-                  <ArrowUp className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={headerLogoPosition === 'left' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderLogoPosition('left')}
-                >
-                  <ArrowLeft className='h-4 w-4' />
-                </Button>
-                <Button
-                  variant={headerLogoPosition === 'right' ? 'default' : 'outline'}
-                  size='sm'
-                  className='flex-1 text-xs h-7'
-                  onClick={() => setHeaderLogoPosition('right')}
-                >
-                  <ArrowRight className='h-4 w-4' />
-                </Button>
-              </ButtonGroup>
-            </div>
+              <FormField
+                type='number'
+                label='Height (px)'
+                value={headerLogoHeight}
+                onChange={setHeaderLogoHeight}
+                min={20}
+                max={200}
+              />
 
-            {/* Position Values */}
-            <div className='grid grid-cols-4 gap-2'>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Top (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerLogoPositionTop}
-                  onChange={(e) => setHeaderLogoPositionTop(Number(e.target.value))}
-                  className='h-7 text-xs'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Right (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerLogoPositionRight}
-                  onChange={(e) => setHeaderLogoPositionRight(Number(e.target.value))}
-                  className='h-7 text-xs'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Bottom (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerLogoPositionBottom}
-                  onChange={(e) => setHeaderLogoPositionBottom(Number(e.target.value))}
-                  className='h-7 text-xs'
-                />
-              </div>
-              <div className='space-y-1'>
-                <Label className='text-[10px] text-zinc-500'>
-                  Left (px)
-                </Label>
-                <Input
-                  type='number'
-                  value={headerLogoPositionLeft}
-                  onChange={(e) => setHeaderLogoPositionLeft(Number(e.target.value))}
-                  className='h-7 text-xs'
-                />
-              </div>
-            </div>
+              <FormField
+                type='select'
+                label='Align'
+                value={headerLogoAlign}
+                onChange={setHeaderLogoAlign}
+                options={[
+                  { value: 'header', label: 'Header' },
+                  { value: 'main-container', label: 'Main Container' },
+                ]}
+              />
+            </FormGrid>
+
+            <FormField
+              type='button-group'
+              label='Position'
+              value={headerLogoPosition}
+              onChange={setHeaderLogoPosition}
+              options={[
+                { value: 'top', icon: <ArrowUp className='h-4 w-4' /> },
+                { value: 'left', icon: <ArrowLeft className='h-4 w-4' /> },
+                { value: 'right', icon: <ArrowRight className='h-4 w-4' /> },
+              ]}
+            />
+
+            <FormGrid columns={4}>
+              <FormField
+                type='number'
+                label='Top (px)'
+                value={headerLogoPositionTop}
+                onChange={setHeaderLogoPositionTop}
+              />
+
+              <FormField
+                type='number'
+                label='Right (px)'
+                value={headerLogoPositionRight}
+                onChange={setHeaderLogoPositionRight}
+              />
+
+              <FormField
+                type='number'
+                label='Bottom (px)'
+                value={headerLogoPositionBottom}
+                onChange={setHeaderLogoPositionBottom}
+              />
+
+              <FormField
+                type='number'
+                label='Left (px)'
+                value={headerLogoPositionLeft}
+                onChange={setHeaderLogoPositionLeft}
+              />
+            </FormGrid>
           </div>
         )}
-      </div>
+      </FormSection>
     </div>
   );
 }

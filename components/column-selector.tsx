@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,6 +38,8 @@ export function ColumnSelector({
   color = "pink",
   compact = false,
 }: ColumnSelectorProps) {
+  const lastClickedIndexRef = useRef<number | null>(null);
+
   const getColumnLabel = (index: number) => {
     return String.fromCharCode(65 + index); // A, B, C, etc.
   };
@@ -46,6 +49,25 @@ export function ColumnSelector({
     if (Array.isArray(selectedColumns)) {
       if (selectedColumns.length === 0) return "";
       if (selectedColumns.length === 1) return getColumnLabel(selectedColumns[0]);
+
+      // Check if columns are consecutive
+      const isConsecutive = selectedColumns.every((val, i, arr) =>
+        i === 0 || val === arr[i - 1] + 1
+      );
+
+      // If consecutive and more than 2 columns, show as range
+      if (isConsecutive && selectedColumns.length > 2) {
+        const first = selectedColumns[0];
+        const last = selectedColumns[selectedColumns.length - 1];
+        return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
+      }
+
+      // Otherwise show individual letters if 5 or fewer
+      if (selectedColumns.length <= 5) {
+        return selectedColumns.map(idx => getColumnLabel(idx)).join(',');
+      }
+
+      // For non-consecutive > 5, still show range with first and last
       const first = selectedColumns[0];
       const last = selectedColumns[selectedColumns.length - 1];
       return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
@@ -57,17 +79,54 @@ export function ColumnSelector({
     onSelect(index);
   };
 
-  const handleMultipleToggle = (index: number) => {
+  const handleMultipleToggle = (index: number, shiftKey: boolean = false) => {
     if (!Array.isArray(selectedColumns)) {
+      lastClickedIndexRef.current = index;
       onSelect([index]);
       return;
     }
 
+    // Handle shift-click range selection
+    if (shiftKey && lastClickedIndexRef.current !== null) {
+      const start = Math.min(lastClickedIndexRef.current, index);
+      const end = Math.max(lastClickedIndexRef.current, index);
+      const rangeIndices = Array.from(
+        { length: end - start + 1 },
+        (_, i) => start + i
+      );
+
+      // Merge with existing selections and remove duplicates
+      const newSelection = Array.from(
+        new Set([...selectedColumns, ...rangeIndices])
+      ).sort();
+
+      onSelect(newSelection);
+      // Don't update lastClickedIndex on shift-click to allow chaining
+      return;
+    }
+
+    // Normal toggle behavior
     if (selectedColumns.includes(index)) {
       onSelect(selectedColumns.filter((i) => i !== index));
     } else {
       onSelect([...selectedColumns, index].sort());
     }
+
+    // Update last clicked index for future shift-clicks
+    lastClickedIndexRef.current = index;
+  };
+
+  const handleSelectAll = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const allIndices = availableColumns.map((_, index) => index);
+    onSelect(allIndices);
+  };
+
+  const handleClearAll = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onSelect([]);
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -83,7 +142,11 @@ export function ColumnSelector({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className={`flex h-7 w-14 items-center justify-center rounded text-sm font-semibold transition-opacity hover:opacity-80 ${colorClasses[color]}`}
+            className={`flex h-7 min-w-14 max-w-32 items-center justify-center rounded px-2 text-sm font-semibold transition-opacity hover:opacity-80 ${colorClasses[color]}`}
+            title={hasSelection ? (mode === 'multiple' && Array.isArray(selectedColumns)
+              ? selectedColumns.map(idx => availableColumns[idx]).join(', ')
+              : availableColumns[selectedColumns as number])
+              : 'Select columns'}
           >
             {selectedLabel || "—"}
           </button>
@@ -109,16 +172,38 @@ export function ColumnSelector({
             ))
           ) : (
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500">
-                Select columns
+              <div className="px-2 py-1.5 flex items-center justify-between">
+                <span className="text-xs font-semibold text-zinc-500">
+                  Select columns
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={(e) => handleSelectAll(e)}
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    All
+                  </button>
+                  <span className="text-xs text-zinc-400">|</span>
+                  <button
+                    onClick={(e) => handleClearAll(e)}
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    None
+                  </button>
+                </div>
               </div>
               <DropdownMenuSeparator />
               {availableColumns.map((column, index) => (
                 <DropdownMenuCheckboxItem
                   key={index}
                   checked={Array.isArray(selectedColumns) && selectedColumns.includes(index)}
-                  onCheckedChange={() => handleMultipleToggle(index)}
-                  className="flex items-center justify-between"
+                  onCheckedChange={() => {}}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleMultipleToggle(index, e.shiftKey);
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                  className="flex items-center justify-between cursor-pointer"
                 >
                   <span>{column}</span>
                   <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
@@ -180,16 +265,38 @@ export function ColumnSelector({
             ))
           ) : (
             <>
-              <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500">
-                Select columns
+              <div className="px-2 py-1.5 flex items-center justify-between">
+                <span className="text-xs font-semibold text-zinc-500">
+                  Select columns
+                </span>
+                <div className="flex gap-1">
+                  <button
+                    onClick={(e) => handleSelectAll(e)}
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    All
+                  </button>
+                  <span className="text-xs text-zinc-400">|</span>
+                  <button
+                    onClick={(e) => handleClearAll(e)}
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    None
+                  </button>
+                </div>
               </div>
               <DropdownMenuSeparator />
               {availableColumns.map((column, index) => (
                 <DropdownMenuCheckboxItem
                   key={index}
                   checked={Array.isArray(selectedColumns) && selectedColumns.includes(index)}
-                  onCheckedChange={() => handleMultipleToggle(index)}
-                  className="flex items-center justify-between"
+                  onCheckedChange={() => {}}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleMultipleToggle(index, e.shiftKey);
+                  }}
+                  onSelect={(e) => e.preventDefault()}
+                  className="flex items-center justify-between cursor-pointer"
                 >
                   <span>{column}</span>
                   <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
