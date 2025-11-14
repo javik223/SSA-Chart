@@ -10,6 +10,8 @@ interface PieChartD3Props {
   innerRadius?: number; // For donut charts, set this to > 0
   width?: number;
   height?: number;
+  colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
   legendShow?: boolean;
   legendPosition?: 'top' | 'right' | 'bottom' | 'left';
   legendAlignment?: 'start' | 'center' | 'end';
@@ -22,7 +24,7 @@ interface PieChartD3Props {
   legendPaddingLeft?: number;
 }
 
-const COLORS = [
+const DEFAULT_COLORS = [
   '#8884d8',
   '#82ca9d',
   '#ffc658',
@@ -42,6 +44,8 @@ export function PieChartD3({
   innerRadius = 0,
   width: propWidth = 800,
   height: propHeight = 600,
+  colors = DEFAULT_COLORS,
+  colorMode = 'by-column',
   legendShow = true,
   legendPosition = 'right',
   legendAlignment = 'start',
@@ -141,7 +145,7 @@ export function PieChartD3({
     arcs
       .append('path')
       .attr('d', arc)
-      .attr('fill', (d, i) => COLORS[i % COLORS.length])
+      .attr('fill', (d, i) => colors[i % colors.length])
       .attr('stroke', 'white')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
@@ -292,7 +296,7 @@ export function PieChartD3({
           .append('rect')
           .attr('width', 15)
           .attr('height', 15)
-          .attr('fill', (d, i) => COLORS[i % COLORS.length]);
+          .attr('fill', (d, i) => colors[i % colors.length]);
 
         legendItems
           .append('text')
@@ -337,7 +341,7 @@ export function PieChartD3({
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
-            .attr('fill', COLORS[i % COLORS.length]);
+            .attr('fill', colors[i % colors.length]);
 
           legendItem
             .append('text')
@@ -374,7 +378,7 @@ export function PieChartD3({
         .style('fill', '#666')
         .text('Total');
     }
-  }, [data, labelKey, valueKeys, innerRadius, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
+  }, [data, labelKey, valueKeys, innerRadius, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
     <div className='relative w-full h-full'>

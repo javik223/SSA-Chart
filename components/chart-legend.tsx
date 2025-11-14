@@ -1,20 +1,17 @@
 'use client';
 
 import { useChartStore } from '@/store/useChartStore';
-import { getColor } from '@/utils/colors';
+import { getColorPalette } from '@/lib/colorPalettes';
 import { cn } from '@/lib/utils';
 import './chart-legend.css';
 
 interface ChartLegendProps {
   valueKeys: string[];
-  colorPalette?: 'default' | 'pastel' | 'vivid';
 }
 
-export function ChartLegend({
-  valueKeys,
-  colorPalette = 'default',
-}: ChartLegendProps) {
+export function ChartLegend({ valueKeys }: ChartLegendProps) {
   const legendShow = useChartStore((state) => state.legendShow);
+  const colorPaletteId = useChartStore((state) => state.colorPalette);
   const legendPosition = useChartStore((state) => state.legendPosition);
   const legendAlignment = useChartStore((state) => state.legendAlignment);
   const legendFontSize = useChartStore((state) => state.legendFontSize);
@@ -39,6 +36,9 @@ export function ChartLegend({
   // General layout padding - applies to all sections
   const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
   const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+
+  // Get colors from the selected palette
+  const palette = getColorPalette(colorPaletteId);
 
   if (!legendShow || valueKeys.length === 0) return null;
 
@@ -79,7 +79,7 @@ export function ChartLegend({
             className='chart-legend-color-box'
             style={
               {
-                '--legend-color': getColor(colorPalette, index),
+                '--legend-color': palette.colors[index % palette.colors.length],
               } as React.CSSProperties
             }
           />

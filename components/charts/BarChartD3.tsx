@@ -9,6 +9,8 @@ interface BarChartD3Props {
   valueKeys: string[];
   width?: number;
   height?: number;
+  colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
   legendShow?: boolean;
   legendPosition?: 'top' | 'right' | 'bottom' | 'left';
   legendAlignment?: 'start' | 'center' | 'end';
@@ -21,7 +23,7 @@ interface BarChartD3Props {
   legendPaddingLeft?: number;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
+const DEFAULT_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
 
 export function BarChartD3({
   data,
@@ -29,6 +31,8 @@ export function BarChartD3({
   valueKeys,
   width: propWidth = 800,
   height: propHeight = 600,
+  colors = DEFAULT_COLORS,
+  colorMode = 'by-column',
   legendShow = true,
   legendPosition = 'right',
   legendAlignment = 'start',
@@ -139,7 +143,7 @@ export function BarChartD3({
         .attr('y', (d) => yScale(Number(d[key]) || 0))
         .attr('width', x1Scale.bandwidth())
         .attr('height', (d) => innerHeight - yScale(Number(d[key]) || 0))
-        .attr('fill', COLORS[index % COLORS.length]);
+        .attr('fill', colors[index % colors.length]);
     });
 
     // Legend
@@ -214,7 +218,7 @@ export function BarChartD3({
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
-            .attr('fill', COLORS[index % COLORS.length]);
+            .attr('fill', colors[index % colors.length]);
 
           legendRow
             .append('text')
@@ -249,7 +253,7 @@ export function BarChartD3({
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
-            .attr('fill', COLORS[index % COLORS.length]);
+            .attr('fill', colors[index % colors.length]);
 
           legendItem
             .append('text')
@@ -264,7 +268,7 @@ export function BarChartD3({
         });
       }
     }
-  }, [data, labelKey, valueKeys, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
+  }, [data, labelKey, valueKeys, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
     <svg ref={svgRef} className='w-full h-full' />

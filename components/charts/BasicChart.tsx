@@ -4,6 +4,7 @@ import { useMemo, memo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
 import { getChart } from '@/lib/chartRegistry';
 import { ChartTransition } from './ChartTransition';
+import { getColorPalette } from '@/lib/colorPalettes';
 
 export const BasicChart = memo(function BasicChart() {
   // Use selective subscription to only re-render when chart-related data changes
@@ -14,6 +15,8 @@ export const BasicChart = memo(function BasicChart() {
   const aggregationMode = useChartStore((state) => state.aggregationMode);
   const previewWidth = useChartStore((state) => state.previewWidth);
   const previewHeight = useChartStore((state) => state.previewHeight);
+  const colorPalette = useChartStore((state) => state.colorPalette);
+  const colorMode = useChartStore((state) => state.colorMode);
 
   // Transform data for chart
   const chartData = useMemo(() => {
@@ -106,12 +109,17 @@ export const BasicChart = memo(function BasicChart() {
   const labelKey = headers[columnMapping.labels!];
   const valueKeys = columnMapping.values.map((idx) => headers[idx]);
 
+  // Get colors from selected palette
+  const palette = getColorPalette(colorPalette);
+
   const chartProps = {
     data: chartData,
     labelKey,
     valueKeys,
     width: previewWidth,
     height: previewHeight,
+    colors: palette.colors,
+    colorMode,
     // Disable embedded legend since we now use a standalone legend component
     legendShow: false,
   };

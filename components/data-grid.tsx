@@ -273,7 +273,7 @@ export const DataGrid = memo(function DataGrid({
         autoColumnSize={false}
         // Performance: Optimized viewport rendering (reduced from 100 to 30)
         viewportRowRenderingOffset={200}
-        viewportColumnRenderingOffset={30}
+        viewportColumnRenderingOffset={100}
         // Performance: Prevent rendering all rows at once
         renderAllRows={false}
         // Performance: Prevent overflow calculations

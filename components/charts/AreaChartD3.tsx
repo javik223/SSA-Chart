@@ -9,6 +9,8 @@ interface AreaChartD3Props {
   valueKeys: string[];
   width?: number;
   height?: number;
+  colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
   legendShow?: boolean;
   legendPosition?: 'top' | 'right' | 'bottom' | 'left';
   legendAlignment?: 'start' | 'center' | 'end';
@@ -21,7 +23,7 @@ interface AreaChartD3Props {
   legendPaddingLeft?: number;
 }
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
+const DEFAULT_COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f'];
 
 export function AreaChartD3({
   data,
@@ -29,6 +31,8 @@ export function AreaChartD3({
   valueKeys,
   width: propWidth = 800,
   height: propHeight = 600,
+  colors = DEFAULT_COLORS,
+  colorMode = 'by-column',
   legendShow = true,
   legendPosition = 'right',
   legendAlignment = 'start',
@@ -130,7 +134,7 @@ export function AreaChartD3({
 
     // Draw areas for each value key
     valueKeys.forEach((key, index) => {
-      const color = COLORS[index % COLORS.length];
+      const color = colors[index % colors.length];
 
       // Area
       g.append('path')
@@ -221,7 +225,7 @@ export function AreaChartD3({
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
-            .attr('fill', COLORS[index % COLORS.length])
+            .attr('fill', colors[index % colors.length])
             .attr('fill-opacity', 0.6);
 
           legendRow
@@ -257,7 +261,7 @@ export function AreaChartD3({
             .append('rect')
             .attr('width', 15)
             .attr('height', 15)
-            .attr('fill', COLORS[index % COLORS.length])
+            .attr('fill', colors[index % colors.length])
             .attr('fill-opacity', 0.6);
 
           legendItem
@@ -273,7 +277,7 @@ export function AreaChartD3({
         });
       }
     }
-  }, [data, labelKey, valueKeys, propWidth, propHeight, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
+  }, [data, labelKey, valueKeys, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft]);
 
   return (
     <svg ref={svgRef} className='w-full h-full' />

@@ -9,6 +9,8 @@ interface DonutChartD3Props {
   innerRadiusRatio?: number; // Ratio of inner radius to outer radius (0-1), default 0.5
   width?: number;
   height?: number;
+  colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
   legendShow?: boolean;
   legendPosition?: 'top' | 'right' | 'bottom' | 'left';
   legendAlignment?: 'start' | 'center' | 'end';
@@ -32,6 +34,8 @@ export function DonutChartD3({
   innerRadiusRatio = 0.5,
   width,
   height,
+  colors,
+  colorMode,
   legendShow,
   legendPosition,
   legendAlignment,
@@ -51,6 +55,8 @@ export function DonutChartD3({
       innerRadius={innerRadiusRatio}
       width={width}
       height={height}
+      colors={colors}
+      colorMode={colorMode}
       legendShow={legendShow}
       legendPosition={legendPosition}
       legendAlignment={legendAlignment}
