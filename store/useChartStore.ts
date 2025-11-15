@@ -13,7 +13,7 @@ import {
 } from '@/utils/dataTypeUtils';
 import { indexedDBStorage } from '@/utils/indexedDBStorage';
 
-interface ColumnMapping {
+export interface ColumnMapping {
   labels: number | null; // Column index for labels/time
   values: number[]; // Column indices for values
   chartsGrid: number | null;
@@ -27,10 +27,10 @@ interface ChartStore {
   setDataTable: (data: DataTable | null) => void;
 
   // Spreadsheet data (raw 2D array)
-  data: any[][];
-  setData: (data: any[][]) => void;
-  replaceData: (data: any[][]) => void;
-  mergeData: (data: any[][]) => void;
+  data: unknown[][];
+  setData: (data: unknown[][]) => void;
+  replaceData: (data: unknown[][]) => void;
+  mergeData: (data: unknown[][]) => void;
   addRows: (count: number) => void;
 
   // Column mapping
@@ -39,8 +39,8 @@ interface ChartStore {
   autoSetColumns: () => void;
 
   // Available columns from data
-  availableColumns: string[];
-  setAvailableColumns: (columns: string[]) => void;
+  availableColumns: unknown[];
+  setAvailableColumns: (columns: unknown[]) => void;
 
   // Column type information
   columnTypes: ColumnTypeInfo[];
@@ -531,54 +531,90 @@ export const useChartStore = create<ChartStore>()(
         ];
         return initialData;
       })(),
-      setData: (data) => {
+      setData: (data, deletedColumnInfo) => {
         // Clean data to remove empty rows and columns
         const cleanedData = cleanData(data);
         set({ data: cleanedData });
 
         // Extract column names from first row
         if (cleanedData.length > 0 && cleanedData[0]) {
-          const columnNames = cleanedData[0].map((col: any) =>
-            String(col || '')
-          );
+          const columnNames = cleanedData[0].map((col) => String(col || ''));
           set({ availableColumns: columnNames });
 
           // Infer column types
           const types = inferAllColumnTypes(cleanedData);
           set({ columnTypes: types });
 
-          // Update column mapping if columns were deleted
+          // Update column mapping
           const { columnMapping } = get();
-          const maxIndex = columnNames.length - 1;
+          let newMapping = { ...columnMapping };
 
-          // Filter out column indices that no longer exist
-          const newMapping = {
-            labels:
-              columnMapping.labels !== null && columnMapping.labels <= maxIndex
-                ? columnMapping.labels
-                : null,
-            values: columnMapping.values.filter((idx) => idx <= maxIndex),
-            chartsGrid:
-              columnMapping.chartsGrid !== null &&
-              columnMapping.chartsGrid <= maxIndex
-                ? columnMapping.chartsGrid
-                : null,
-            rowFilter:
-              columnMapping.rowFilter !== null &&
-              columnMapping.rowFilter <= maxIndex
-                ? columnMapping.rowFilter
-                : null,
-            customPopups:
-              columnMapping.customPopups !== null &&
-              columnMapping.customPopups <= maxIndex
-                ? columnMapping.customPopups
-                : null,
-          };
+          if (deletedColumnInfo) {
+            const { index: deletedIndex, count: deletedCount } = deletedColumnInfo;
+            const deletedEndIndex = deletedIndex + deletedCount;
+
+            // Helper to adjust single index
+            const adjustIndex = (oldIndex: number | null) => {
+              if (oldIndex === null) return null;
+              if (oldIndex >= deletedIndex && oldIndex < deletedEndIndex) {
+                return null; // Mapped column was deleted
+              }
+              if (oldIndex >= deletedEndIndex) {
+                return oldIndex - deletedCount; // Mapped column shifted left
+              }
+              return oldIndex; // Mapped column unaffected
+            };
+
+            newMapping = {
+              labels: adjustIndex(columnMapping.labels),
+              chartsGrid: adjustIndex(columnMapping.chartsGrid),
+              rowFilter: adjustIndex(columnMapping.rowFilter),
+              customPopups: adjustIndex(columnMapping.customPopups),
+              values: columnMapping.values
+                .filter((idx) => !(idx >= deletedIndex && idx < deletedEndIndex)) // Remove deleted values
+                .map((idx) => (idx >= deletedEndIndex ? idx - deletedCount : idx)), // Adjust remaining values
+            };
+          } else {
+            // Fallback for when deletedColumnInfo is not provided (e.g., initial load or other data changes)
+            // This logic ensures indices are within bounds after general data changes
+            const maxIndex = columnNames.length - 1;
+            newMapping = {
+              labels:
+                columnMapping.labels !== null && columnMapping.labels <= maxIndex
+                  ? columnMapping.labels
+                  : null,
+              values: columnMapping.values.filter((idx) => idx <= maxIndex),
+              chartsGrid:
+                columnMapping.chartsGrid !== null &&
+                columnMapping.chartsGrid <= maxIndex
+                  ? columnMapping.chartsGrid
+                  : null,
+              rowFilter:
+                columnMapping.rowFilter !== null &&
+                columnMapping.rowFilter <= maxIndex
+                  ? columnMapping.rowFilter
+                  : null,
+              customPopups:
+                columnMapping.customPopups !== null &&
+                columnMapping.customPopups <= maxIndex
+                  ? columnMapping.customPopups
+                  : null,
+            };
+          }
 
           set({ columnMapping: newMapping });
         } else {
           set({ availableColumns: [] });
           set({ columnTypes: [] });
+          set({
+            columnMapping: {
+              labels: null,
+              values: [],
+              chartsGrid: null,
+              rowFilter: null,
+              customPopups: null,
+            },
+          });
         }
       },
       replaceData: (newData) => {
@@ -588,7 +624,7 @@ export const useChartStore = create<ChartStore>()(
 
         // Extract column names from first row
         if (cleanedData.length > 0) {
-          const columnNames = cleanedData[0].map((col: any) => String(col));
+          const columnNames = cleanedData[0].map((col) => col);
           set({ availableColumns: columnNames });
 
           // Infer column types
@@ -764,13 +800,16 @@ export const useChartStore = create<ChartStore>()(
       setTitleFontSize: (size) => set({ titleFontSize: size }),
 
       titleBaseFontSizeMobile: 24,
-      setTitleBaseFontSizeMobile: (size) => set({ titleBaseFontSizeMobile: size }),
+      setTitleBaseFontSizeMobile: (size) =>
+        set({ titleBaseFontSizeMobile: size }),
 
       titleBaseFontSizeTablet: 28,
-      setTitleBaseFontSizeTablet: (size) => set({ titleBaseFontSizeTablet: size }),
+      setTitleBaseFontSizeTablet: (size) =>
+        set({ titleBaseFontSizeTablet: size }),
 
       titleBaseFontSizeDesktop: 32,
-      setTitleBaseFontSizeDesktop: (size) => set({ titleBaseFontSizeDesktop: size }),
+      setTitleBaseFontSizeDesktop: (size) =>
+        set({ titleBaseFontSizeDesktop: size }),
 
       titleFontWeight: 'bold',
       setTitleFontWeight: (weight) => set({ titleFontWeight: weight }),
@@ -799,13 +838,16 @@ export const useChartStore = create<ChartStore>()(
       setSubtitleFontSize: (size) => set({ subtitleFontSize: size }),
 
       subtitleBaseFontSizeMobile: 18,
-      setSubtitleBaseFontSizeMobile: (size) => set({ subtitleBaseFontSizeMobile: size }),
+      setSubtitleBaseFontSizeMobile: (size) =>
+        set({ subtitleBaseFontSizeMobile: size }),
 
       subtitleBaseFontSizeTablet: 20,
-      setSubtitleBaseFontSizeTablet: (size) => set({ subtitleBaseFontSizeTablet: size }),
+      setSubtitleBaseFontSizeTablet: (size) =>
+        set({ subtitleBaseFontSizeTablet: size }),
 
       subtitleBaseFontSizeDesktop: 22,
-      setSubtitleBaseFontSizeDesktop: (size) => set({ subtitleBaseFontSizeDesktop: size }),
+      setSubtitleBaseFontSizeDesktop: (size) =>
+        set({ subtitleBaseFontSizeDesktop: size }),
 
       subtitleFontWeight: 'regular',
       setSubtitleFontWeight: (weight) => set({ subtitleFontWeight: weight }),
@@ -835,13 +877,16 @@ export const useChartStore = create<ChartStore>()(
       setHeaderTextFontSize: (size) => set({ headerTextFontSize: size }),
 
       headerTextBaseFontSizeMobile: 14,
-      setHeaderTextBaseFontSizeMobile: (size) => set({ headerTextBaseFontSizeMobile: size }),
+      setHeaderTextBaseFontSizeMobile: (size) =>
+        set({ headerTextBaseFontSizeMobile: size }),
 
       headerTextBaseFontSizeTablet: 15,
-      setHeaderTextBaseFontSizeTablet: (size) => set({ headerTextBaseFontSizeTablet: size }),
+      setHeaderTextBaseFontSizeTablet: (size) =>
+        set({ headerTextBaseFontSizeTablet: size }),
 
       headerTextBaseFontSizeDesktop: 16,
-      setHeaderTextBaseFontSizeDesktop: (size) => set({ headerTextBaseFontSizeDesktop: size }),
+      setHeaderTextBaseFontSizeDesktop: (size) =>
+        set({ headerTextBaseFontSizeDesktop: size }),
 
       headerTextFontWeight: 'regular',
       setHeaderTextFontWeight: (weight) =>
@@ -960,7 +1005,8 @@ export const useChartStore = create<ChartStore>()(
       setFooterLogoAlign: (align) => set({ footerLogoAlign: align }),
 
       footerLogoPosition: 'bottom',
-      setFooterLogoPosition: (position) => set({ footerLogoPosition: position }),
+      setFooterLogoPosition: (position) =>
+        set({ footerLogoPosition: position }),
 
       footerLogoPositionTop: 0,
       setFooterLogoPositionTop: (top) => set({ footerLogoPositionTop: top }),
@@ -1178,143 +1224,20 @@ export const useChartStore = create<ChartStore>()(
     {
       name: 'claude-charts-storage',
       storage: createJSONStorage(() => indexedDBStorage),
-      partialize: (state) => ({
-        data: state.data,
-        columnMapping: state.columnMapping,
-        availableColumns: state.availableColumns,
-        columnTypes: state.columnTypes,
-        chartType: state.chartType,
-        chartConfig: state.chartConfig,
-        theme: state.theme,
-        gridMode: state.gridMode,
-        heightMode: state.heightMode,
-        aggregationMode: state.aggregationMode,
-        previewWidth: state.previewWidth,
-        previewHeight: state.previewHeight,
-        previewDevice: state.previewDevice,
-        colorblindMode: state.colorblindMode,
-        darkModePreview: state.darkModePreview,
-        colorMode: state.colorMode,
-        colorPalette: state.colorPalette,
-        colorPaletteExtend: state.colorPaletteExtend,
-        colorCustomOverrides: state.colorCustomOverrides,
-        chartTitle: state.chartTitle,
-        chartDescription: state.chartDescription,
-        headerAlignment: state.headerAlignment,
-        titleStyleEnabled: state.titleStyleEnabled,
-        titleFont: state.titleFont,
-        titleFontSize: state.titleFontSize,
-        titleBaseFontSizeMobile: state.titleBaseFontSizeMobile,
-        titleBaseFontSizeTablet: state.titleBaseFontSizeTablet,
-        titleBaseFontSizeDesktop: state.titleBaseFontSizeDesktop,
-        titleFontWeight: state.titleFontWeight,
-        titleColor: state.titleColor,
-        titleLineHeight: state.titleLineHeight,
-        titleSpaceAbove: state.titleSpaceAbove,
-        chartSubtitle: state.chartSubtitle,
-        subtitleStyleEnabled: state.subtitleStyleEnabled,
-        subtitleFont: state.subtitleFont,
-        subtitleFontSize: state.subtitleFontSize,
-        subtitleBaseFontSizeMobile: state.subtitleBaseFontSizeMobile,
-        subtitleBaseFontSizeTablet: state.subtitleBaseFontSizeTablet,
-        subtitleBaseFontSizeDesktop: state.subtitleBaseFontSizeDesktop,
-        subtitleFontWeight: state.subtitleFontWeight,
-        subtitleColor: state.subtitleColor,
-        subtitleLineHeight: state.subtitleLineHeight,
-        subtitleSpaceAbove: state.subtitleSpaceAbove,
-        headerText: state.headerText,
-        headerTextStyleEnabled: state.headerTextStyleEnabled,
-        headerTextFont: state.headerTextFont,
-        headerTextFontSize: state.headerTextFontSize,
-        headerTextBaseFontSizeMobile: state.headerTextBaseFontSizeMobile,
-        headerTextBaseFontSizeTablet: state.headerTextBaseFontSizeTablet,
-        headerTextBaseFontSizeDesktop: state.headerTextBaseFontSizeDesktop,
-        headerTextFontWeight: state.headerTextFontWeight,
-        headerTextColor: state.headerTextColor,
-        headerTextLineHeight: state.headerTextLineHeight,
-        headerTextSpaceAbove: state.headerTextSpaceAbove,
-        headerBorder: state.headerBorder,
-        headerBorderStyle: state.headerBorderStyle,
-        headerBorderSpace: state.headerBorderSpace,
-        headerBorderWidth: state.headerBorderWidth,
-        headerBorderColor: state.headerBorderColor,
-        headerLogoEnabled: state.headerLogoEnabled,
-        headerLogoImageUrl: state.headerLogoImageUrl,
-        headerLogoImageLink: state.headerLogoImageLink,
-        headerLogoHeight: state.headerLogoHeight,
-        headerLogoAlign: state.headerLogoAlign,
-        headerLogoPosition: state.headerLogoPosition,
-        headerLogoPositionTop: state.headerLogoPositionTop,
-        headerLogoPositionRight: state.headerLogoPositionRight,
-        headerLogoPositionBottom: state.headerLogoPositionBottom,
-        headerLogoPositionLeft: state.headerLogoPositionLeft,
-        chartFooter: state.chartFooter,
-        footerAlignment: state.footerAlignment,
-        footerStylesEnabled: state.footerStylesEnabled,
-        footerFont: state.footerFont,
-        footerFontWeight: state.footerFontWeight,
-        footerSourceName: state.footerSourceName,
-        footerSourceUrl: state.footerSourceUrl,
-        footerSourceLabel: state.footerSourceLabel,
-        footerNote: state.footerNote,
-        footerNoteSecondary: state.footerNoteSecondary,
-        footerLogoEnabled: state.footerLogoEnabled,
-        footerLogoImageUrl: state.footerLogoImageUrl,
-        footerLogoImageLink: state.footerLogoImageLink,
-        footerLogoHeight: state.footerLogoHeight,
-        footerLogoAlign: state.footerLogoAlign,
-        footerLogoPosition: state.footerLogoPosition,
-        footerLogoPositionTop: state.footerLogoPositionTop,
-        footerLogoPositionRight: state.footerLogoPositionRight,
-        footerLogoPositionBottom: state.footerLogoPositionBottom,
-        footerLogoPositionLeft: state.footerLogoPositionLeft,
-        footerBorder: state.footerBorder,
-        footerBorderStyle: state.footerBorderStyle,
-        footerBorderSpace: state.footerBorderSpace,
-        footerBorderWidth: state.footerBorderWidth,
-        footerBorderColor: state.footerBorderColor,
-        layoutMainFont: state.layoutMainFont,
-        layoutTextColor: state.layoutTextColor,
-        layoutBackgroundColorEnabled: state.layoutBackgroundColorEnabled,
-        layoutBackgroundImageEnabled: state.layoutBackgroundImageEnabled,
-        layoutBackgroundColor: state.layoutBackgroundColor,
-        layoutBackgroundImageUrl: state.layoutBackgroundImageUrl,
-        layoutBackgroundImageSize: state.layoutBackgroundImageSize,
-        layoutBackgroundImagePosition: state.layoutBackgroundImagePosition,
-        layoutOrder: state.layoutOrder,
-        layoutSpaceBetweenSections: state.layoutSpaceBetweenSections,
-        layoutMarginTop: state.layoutMarginTop,
-        layoutMarginRight: state.layoutMarginRight,
-        layoutMarginBottom: state.layoutMarginBottom,
-        layoutMarginLeft: state.layoutMarginLeft,
-        layoutPaddingTop: state.layoutPaddingTop,
-        layoutPaddingRight: state.layoutPaddingRight,
-        layoutPaddingBottom: state.layoutPaddingBottom,
-        layoutPaddingLeft: state.layoutPaddingLeft,
-        layoutBorderEnabled: state.layoutBorderEnabled,
-        layoutBorderTop: state.layoutBorderTop,
-        layoutBorderRight: state.layoutBorderRight,
-        layoutBorderBottom: state.layoutBorderBottom,
-        layoutBorderLeft: state.layoutBorderLeft,
-        layoutBorderStyle: state.layoutBorderStyle,
-        layoutBorderColor: state.layoutBorderColor,
-        layoutBorderWidth: state.layoutBorderWidth,
-        layoutBorderRadius: state.layoutBorderRadius,
-        layoutReadDirection: state.layoutReadDirection,
-        legendShow: state.legendShow,
-        legendPosition: state.legendPosition,
-        legendAlignment: state.legendAlignment,
-        legendFontSize: state.legendFontSize,
-        legendBaseFontSizeMobile: state.legendBaseFontSizeMobile,
-        legendBaseFontSizeTablet: state.legendBaseFontSizeTablet,
-        legendBaseFontSizeDesktop: state.legendBaseFontSizeDesktop,
-        legendShowValues: state.legendShowValues,
-        legendGap: state.legendGap,
-        legendPaddingTop: state.legendPaddingTop,
-        legendPaddingRight: state.legendPaddingRight,
-        legendPaddingBottom: state.legendPaddingBottom,
-        legendPaddingLeft: state.legendPaddingLeft,
-      }),
+      partialize: (state) => {
+        const nonPersistedKeys = [
+          'dataTable',
+          'chartData',
+          'isDataPanelOpen',
+          'isConfigPanelOpen',
+          'isExporting',
+        ];
+        const persistedState = { ...state };
+        nonPersistedKeys.forEach((key) => {
+          delete persistedState[key as keyof ChartStore];
+        });
+        return persistedState;
+      },
     }
   )
 );

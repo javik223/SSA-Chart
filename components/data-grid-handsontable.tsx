@@ -20,7 +20,7 @@ interface DataGridProps {
   onNavigated?: () => void;
 }
 
-// Helper function to convert column index to Excel-style letter (outside component)
+// Helper function to convert column index to Excel-style letter
 const getColumnLetter = (index: number): string => {
   let letter = '';
   let num = index;
@@ -41,10 +41,64 @@ export const DataGrid = memo(function DataGrid({
   const columnMapping = useChartStore((state) => state.columnMapping);
   const autoSetColumns = useChartStore((state) => state.autoSetColumns);
   const columnTypes = useChartStore((state) => state.columnTypes);
+
   const hasAutoSet = useRef(false);
-  const hotRef = useRef<HotTableRef>(null);
+  const hotRef = useRef<HotTableRef | null>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
+  // --- Header logic: detect if first row looks like a header row in your data.
+  // If so, extract it and pass the rest of the rows to Handsontable.
+  const { hotData, colHeaderRenderer } = useMemo(() => {
+    if (!data || data.length === 0) {
+      return {
+        hotData: data,
+        colHeaderRenderer: null as null | ((col: number) => string),
+      };
+    }
+
+    const firstRow = data[0];
+    const isHeaderRow =
+      Array.isArray(firstRow) &&
+      firstRow.length > 0 &&
+      firstRow.every((cell) => typeof cell === 'string');
+
+    if (isHeaderRow) {
+      // Use the first row as header labels while still showing your icon + type string
+      const headerLabels = firstRow as string[];
+      const renderer = (col: number) => {
+        const label = headerLabels[col] ?? '';
+        const type = columnTypes[col]?.type || 'text';
+        const icon = getColumnTypeIcon(type);
+        const letter = getColumnLetter(col);
+        // return HTML — allowHtml must be true in HotTable
+        return `
+          <div class="flex gap-1.5 w-full justify-start -ml-5 text-ellipsis ">
+            <div class="rounded bg-violet-100 px-1 py-0.5 text-[13px] font-mono font-medium text-slate-500 scale-75" title="${type}">${icon}</div>
+            <span class="text-sm text-slate-700 font-bold">${
+              label || letter
+            }</span>
+          </div>
+        `;
+      };
+      return { hotData: data.slice(1), colHeaderRenderer: renderer };
+    } else {
+      // No header row detected — use default column header renderer (letters + icon)
+      const renderer = (col: number) => {
+        const type = columnTypes[col]?.type || 'text';
+        const icon = getColumnTypeIcon(type);
+        const letter = getColumnLetter(col);
+        return `
+          <div class="flex items-center justify-center gap-1.5">
+            <span class="inline-flex items-center justify-center rounded bg-violet-100 px-1 py-0.5 text-[12px] font-mono font-medium text-slate-500 scale-75" title="${type}">${icon}</span>
+            <span class="text-sm text-slate-700 font-mono">${letter}</span>
+          </div>
+        `;
+      };
+      return { hotData: data, colHeaderRenderer: renderer };
+    }
+  }, [data, columnTypes]);
+
+  // Row header uses HTML (allowHtml true)
   const rowHeaderFunction = useCallback((row: number) => {
     return `
         <div class="flex items-center justify-center gap-1.5">
@@ -53,140 +107,90 @@ export const DataGrid = memo(function DataGrid({
       `;
   }, []);
 
-  // Memoize column header function to prevent recreation on every render
-  const colHeaderFunction = useCallback(
-    (col: number) => {
-      const type = columnTypes[col]?.type || 'text';
-      const icon = getColumnTypeIcon(type);
-      const letter = getColumnLetter(col);
-
-      return `
-        <div class="flex items-center justify-center gap-1.5">
-          <span class="inline-flex items-center justify-center rounded bg-violet-100 px-1 py-0.5 text-[12px] font-mono font-medium text-slate-500 scale-75" title="${type}">${icon}</span>
-          <span class="text-sm text-slate-700 font-mono">${letter}</span>
-        </div>
-      `;
-    },
-    [columnTypes]
-  );
-
-  useEffect(() => {
-    if (!data || data.length === 0) {
-      return;
+  // Small optimization: convert searchResults to a Set for O(1) cell lookup
+  const searchResultSet = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of searchResults) {
+      s.add(`${r.row}:${r.col}`);
     }
-    // Auto-set columns on first load
-    if (!hasAutoSet.current && data.length > 0) {
-      autoSetColumns();
-      hasAutoSet.current = true;
-    }
-  }, [data, autoSetColumns]);
+    return s;
+  }, [searchResults]);
 
-  // Performance-optimized search with batching
+  // --- Perform the custom search & hide non-matching rows (uses hiddenRows plugin safely)
   useEffect(() => {
     const performSearch = () => {
-      const hotInstance = hotRef.current?.hotInstance;
-      if (!hotInstance) return;
+              const hotInstance: Handsontable = hotRef.current?.hotInstance;      if (!hotInstance) return;
 
-      const hiddenRowsPlugin = hotInstance.getPlugin('hiddenRows');
+      const hiddenRowsPlugin = hotInstance.getPlugin?.('hiddenRows');
+      // if plugin not available, bail out (we configured plugin in props, so it should be there)
       if (!hiddenRowsPlugin) return;
 
-      // Calculate data row count (excluding header row 0)
-      const dataRowCount = data.length - 1;
+      // data passed to handsontable (hotData) may not include the original header row, adjust indices accordingly
+      // we assume hotData is the data the table is rendering (no header row)
+      const tableData = hotInstance.getData() as unknown[][];
+      const rowCount = Array.isArray(tableData) ? tableData.length : 0;
 
-      // Use batch operation to minimize renders
       hotInstance.batch(() => {
         if (searchQuery) {
-          // Use optimized search function with max 100 results for highlighting
           const results = searchData(data, searchQuery, 100);
           setSearchResults(results);
 
-          // First, show all rows to reset (skip row 0 which is header)
-          const allDataRows = Array.from(
-            { length: dataRowCount },
-            (_, i) => i + 1
-          );
-          hiddenRowsPlugin.showRows(allDataRows);
+          // show all rows first
+          const allRows = Array.from({ length: rowCount }, (_, i) => i);
+          hiddenRowsPlugin.showRows(allRows);
 
-          // Find rows that match the search (excluding header row)
           const normalizedQuery = searchQuery.toLowerCase().trim();
           const matchingRows = new Set<number>();
 
-          // Check each data row (starting from index 1 because 0 is header)
-          for (let row = 1; row < data.length; row++) {
-            const rowData = data[row];
-            const hasMatch = rowData?.some(
-              (cell: unknown) =>
-                cell != null &&
-                String(cell).toLowerCase().includes(normalizedQuery)
-            );
+          // scan tableData (which corresponds to rendered rows)
+          for (let row = 0; row < tableData.length; row++) {
+            const rowData = tableData[row];
+            const hasMatch =
+              Array.isArray(rowData) &&
+              rowData.some(
+                (cell) =>
+                  cell != null &&
+                  String(cell).toLowerCase().includes(normalizedQuery)
+              );
             if (hasMatch) {
               matchingRows.add(row);
             }
           }
 
-          // Hide rows that don't match (skip row 0)
+          // hide rows that are not matching
           const rowsToHide: number[] = [];
-          for (let i = 1; i <= dataRowCount; i++) {
-            if (!matchingRows.has(i)) {
-              rowsToHide.push(i);
-            }
+          for (let i = 0; i < rowCount; i++) {
+            if (!matchingRows.has(i)) rowsToHide.push(i);
           }
-
-          if (rowsToHide.length > 0) {
-            hiddenRowsPlugin.hideRows(rowsToHide);
-          }
+          if (rowsToHide.length > 0) hiddenRowsPlugin.hideRows(rowsToHide);
         } else {
-          // Clear search and show all rows (skip row 0)
+          // clear search
           setSearchResults([]);
-          // hiddenRowsPlugin.showRows(allDataRows);
+          // show all rows
+          const allRows = Array.from({ length: rowCount }, (_, i) => i);
+          hiddenRowsPlugin.showRows(allRows);
         }
       });
     };
 
-    // Small delay to ensure Handsontable is fully initialized
-    const timeoutId = setTimeout(performSearch, 0);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery, data]);
+    // schedule after next tick to ensure hotInstance is present
+    const id = setTimeout(performSearch, 0);
+    return () => clearTimeout(id);
+    // note: include `data` in deps because searchData uses it
+  }, [searchQuery, data, hotData]);
 
-  // Performance-optimized re-render when search results change
+  // When search results change, deselect if nothing to navigate to
   useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (hotInstance) {
-      // Batch operations to minimize renders
+            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (hotInstance) {
       hotInstance.batch(() => {
         if (searchResults.length === 0 && !searchQuery) {
-          hotInstance.deselectCell();
+          hotInstance.deselectCell?.();
         }
       });
     }
   }, [searchResults, searchQuery]);
 
-  // Performance-optimized re-render when column mapping changes
-  useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (hotInstance) {
-      // Use batch to minimize renders
-      hotInstance.batch(() => {
-        // Render will be called automatically after batch
-      });
-    }
-  }, [columnMapping]);
-
-  // Handle navigation to first result (only when Enter is pressed)
-  useEffect(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (shouldNavigate && hotInstance && searchResults.length > 0) {
-      const firstResult = searchResults[0];
-      // Navigate to the cell directly
-      hotInstance.selectCell(firstResult.row, firstResult.col);
-      hotInstance.scrollViewportTo(firstResult.row, firstResult.col);
-
-      // Notify parent that navigation is complete
-      onNavigated?.();
-    }
-  }, [shouldNavigate, onNavigated, searchResults]);
-
-  // Debounced data update to batch rapid changes (Performance optimization)
+  // Keep a debounced setter but ensure cleanup on unmount
   const debouncedSetData = useMemo(
     () =>
       debounce((newData: unknown[][]) => {
@@ -195,61 +199,52 @@ export const DataGrid = memo(function DataGrid({
     [setData]
   );
 
-  // Optimized data change handler with batching
-  const handleDataChange = useCallback(
-    (
-      changes: Handsontable.CellChange[] | null
-    ) => {
-      if (changes) {
-        const hotInstance = hotRef.current?.hotInstance;
-        if (!hotInstance) return;
+  useEffect(() => {
+    return () => {
+      // cancel any pending debounced calls on unmount
+      debouncedSetData.cancel();
+    };
+  }, [debouncedSetData]);
 
-        // Use batch operation to minimize renders
-        hotInstance.batch(() => {
-          const newData = hotInstance.getData();
-          // changes.forEach(([row, col, , newValue]) => {
-          //   if (!newData[row]) {
-          //     newData[row] = [];
-          //   }
-          //   newData[row][col as number] = newValue;
-          // });
-          debouncedSetData(newData);
-        });
-      }
+  // Data change handler - read full table data and update store debounced
+  const handleDataChange = useCallback(
+    (changes: Handsontable.CellChange[] | null) => {
+      if (!changes) return;
+              const hotInstance: Handsontable = hotRef.current?.hotInstance;      if (!hotInstance) return;
+
+      hotInstance.batch(() => {
+        const newData = hotInstance.getData();
+        debouncedSetData(newData);
+      });
     },
     [debouncedSetData]
   );
 
-  // Handle row removal
+  // after rows removed — sync immediately (non-debounced)
   const handleAfterRowRemove = useCallback(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (!hotInstance) return;
-
-    // Get the current data from Handsontable after the rows have been removed
+            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (!hotInstance) return;
     const currentHandsontableData = hotInstance.getData();
-
-    const newData = currentHandsontableData;
-
-    // Update the Zustand store
-    setData(newData);
+    setData(currentHandsontableData);
   }, [setData]);
 
-  // Optimized cells callback with memoization
+  const updateData = useCallback(() => {
+            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (!hotInstance) return;
+    hotInstance.batch(() => {
+      const newData = hotInstance.getData();
+      setData(newData);
+    });
+  }, [setData]);
+
+  // Optimize cells callback: avoid expensive .some(...) calls by using a Set lookup
   const handleCells = useCallback(
     (row: number, col: number) => {
       const cellProperties: Partial<Handsontable.CellProperties> = {};
-
-      // Build className array for better management
       const classNames: string[] = [];
 
-      // Style header row (row 0)
-      if (row === 0) {
-        classNames.push('htMiddle', 'font-semibold', 'sticky', 'top-0');
-        cellProperties.readOnly = false; // Allow editing headers
-      }
-
-      // Apply cell styling for column mapping (skip header row)
-      if (row > 0) {
+      // header styling: HOT's header is separate; rows shown here are table rows
+      // if you still want a visual sticky header inside the data, you can add rules; by default we don't treat row 0 as header
+      // apply mapping colors for data rows only
+      if (row >= 0) {
         if (col === columnMapping.labels) {
           classNames.push('bg-pink-100');
         } else if (columnMapping.values.includes(col)) {
@@ -257,63 +252,85 @@ export const DataGrid = memo(function DataGrid({
         }
       }
 
-      // Check for search highlights
-      const isSearchResult = searchResults.some(
-        (result) => result.row === row && result.col === col
-      );
-      if (isSearchResult) {
+      // Highlight search results using Set
+      if (searchResultSet.has(`${row}:${col}`)) {
         classNames.push('bg-yellow-200');
       }
 
-      // Set the final className
       if (classNames.length > 0) {
         cellProperties.className = classNames.join(' ');
       }
 
       return cellProperties;
     },
-    [columnMapping, searchResults]
+    [columnMapping, searchResultSet]
   );
 
+  // Navigate to first result when requested (note: hotData indices are used)
+  useEffect(() => {
+            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (shouldNavigate && hotInstance && searchResults.length > 0) {
+      const first = searchResults[0];
+      // If original data had a header row, the plugin sees rows shifted by -1; we used hotData = data.slice(1) earlier,
+      // but `searchData` returned positions relative to full original `data`. Adjust if needed:
+      // Detect if we removed header row
+      const headerWasPresent =
+        Array.isArray(data) &&
+        data.length > 0 &&
+        data[0].every?.((c: unknown) => typeof c === 'string');
+      const targetRow = headerWasPresent ? first.row - 1 : first.row;
+      hotInstance.selectCell(targetRow, first.col);
+      hotInstance.scrollViewportTo(targetRow, first.col);
+      onNavigated?.();
+    }
+  }, [shouldNavigate, onNavigated, searchResults, data, hotData]);
+
+  const handleAfterColumnRemove = useCallback(
+    (index: number, amount: number) => {
+      // 1. Update data (remove column from each row)
+      const newData = data.map((row) =>
+        row.filter(
+          (_, colIndex) => !(colIndex >= index && colIndex < index + amount)
+        )
+      );
+
+      // 2. Push updates - setData will handle columnTypes and columnMapping
+      setData(newData, { index, count: amount });
+    },
+    [data, setData]
+  );
+
+  // ----- HotTable props: cleaned / fixed -----
   return (
     <div className='w-full h-full overflow-hidden'>
       <HotTable
         ref={hotRef}
         themeName='ht-theme-main'
         className='w-full h-full'
-        // Performance: Fixed dimensions prevent recalculation
+        // data (hotData excludes header row if we extracted it)
+        data={hotData}
+        // Allow HTML in headers because our header renderers output HTML
+        allowHtml={true}
+        // Row headers (we keep a small formatted row header)
+        rowHeaders={rowHeaderFunction}
+        // Column headers: either function based on detected header row or default renderer
+        colHeaders={colHeaderRenderer ?? undefined}
+        // layout / performance
         colWidths={120}
         rowHeights={28}
-        // Performance: Disable auto-sizing for faster rendering
         autoRowSize={false}
         autoColumnSize={false}
-        // Performance: Optimized viewport rendering (reduced from 100 to 30)
-        viewportRowRenderingOffset={100}
-        viewportRowRenderingThreshold={'auto'}
-        viewportColumnRenderingOffset={100}
+        // reasonable viewport offsets to avoid rendering too many rows
+        viewportRowRenderingOffset={30}
+        viewportColumnRenderingOffset={10}
         bindRowsWithHeaders={true}
-        // Performance: Prevent rendering all rows at once
         renderAllRows={false}
-        // Performance: Prevent overflow calculations
         preventOverflow='horizontal'
-        // Performance: Enable fragment selection for faster rendering
-        fragmentSelection={true}
-        // Performance: Disable unnecessary calculations
-        autoWrapRow={true}
-        autoWrapCol={true}
-        allowHtml={false} // Core settings
-        data={data}
-        rowHeaders={rowHeaderFunction}
-        colHeaders={colHeaderFunction}
-        height='100%'
-        width='100%'
-        // Features
+        // standard selection settings
+        selectionMode='multiple'
+        // features & plugins — avoid conflicting built-in search since we do our own
+        contextMenu={true}
         collapsibleColumns={true}
         navigableHeaders={true}
-        contextMenu={true}
-        // minSpareRows={0}
-        // stretchH='all'
-        licenseKey='non-commercial-and-evaluation'
         manualColumnResize={true}
         manualRowResize={true}
         manualColumnMove={true}
@@ -324,30 +341,23 @@ export const DataGrid = memo(function DataGrid({
         textEllipsis={true}
         wordWrap={true}
         manualColumnFreeze={true}
-        loading={true}
-        // fixedColumnsLeft={1}
-        // fixedRowsTop={1}
-        hiddenRows={true}
-        tabMoves={{
-          col: 1,
-          row: 0,
-        }}
-        selectionMode='multiple'
-        trimRows={true}
-        // Performance: Pagination for large datasets
-        pagination={{
-          pageSize: 1000,
-        }}
-        // Performance: Use memoized callbacks
-        beforeColumnSort={() => {
-          // Disable sorting to prevent header row from being sorted
-          return false;
-        }}
+        // correct hiddenRows config (object)
+        hiddenRows={{ indicators: false }}
+        // tab navigation
+        tabMoves={{ col: 1, row: 0 }}
+        trimRows={false}
+        // removed: search={true} (conflicts with custom search)
         columnSorting={true}
         cells={handleCells}
         afterChange={handleDataChange}
         afterRemoveRow={handleAfterRowRemove}
-        search={true}
+        afterColumnMove={updateData}
+        beforeColumnSort={() => false}
+        afterColumnSort={updateData}
+        afterRowMove={updateData}
+        licenseKey='non-commercial-and-evaluation'
+        afterRemoveCol={handleAfterColumnRemove}
+        pagination={true}
       />
     </div>
   );
