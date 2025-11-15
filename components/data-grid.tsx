@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  useMemo,
-  memo,
-} from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo, memo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
 import {
   useReactTable,
@@ -35,10 +28,17 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  Trash2,
 } from 'lucide-react';
 import './data-grid.css';
 
@@ -122,7 +122,7 @@ function EditableHeaderCell({
   if (!isEditing) {
     return (
       <div
-        className="data-grid-cell-display"
+        className='data-grid-cell-display'
         onClick={onStartEdit}
         onDoubleClick={onStartEdit}
       >
@@ -138,7 +138,7 @@ function EditableHeaderCell({
       onChange={onChange}
       onBlur={onBlur}
       onKeyDown={onKeyDown}
-      className="data-grid-cell-input"
+      className='data-grid-cell-input'
     />
   );
 }
@@ -219,7 +219,7 @@ function EditableCell({
   if (!isEditing) {
     return (
       <div
-        className="data-grid-cell-display"
+        className='data-grid-cell-display'
         onClick={onStartEdit}
         onDoubleClick={onStartEdit}
       >
@@ -235,7 +235,7 @@ function EditableCell({
       onChange={onChange}
       onBlur={onBlur}
       onKeyDown={onKeyDown}
-      className="data-grid-cell-input"
+      className='data-grid-cell-input'
     />
   );
 }
@@ -245,8 +245,11 @@ export const DataGrid = memo(function DataGrid({
   shouldNavigate = false,
   onNavigated,
 }: DataGridProps) {
-  const { data, setData, columnMapping, autoSetColumns, columnTypes } =
-    useChartStore();
+  const data = useChartStore((state) => state.data);
+  const setData = useChartStore((state) => state.setData);
+  const columnMapping = useChartStore((state) => state.columnMapping);
+  const autoSetColumns = useChartStore((state) => state.autoSetColumns);
+  const columnTypes = useChartStore((state) => state.columnTypes);
   const hasAutoSet = useRef(false);
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -262,6 +265,7 @@ export const DataGrid = memo(function DataGrid({
     rowIndex: number;
     colIndex: number;
   } | null>(null);
+  const [rowSelection, setRowSelection] = useState({}); // New
 
   useEffect(() => {
     if (!data || data.length === 0) {
@@ -278,8 +282,8 @@ export const DataGrid = memo(function DataGrid({
   const debouncedSetData = useMemo(
     () =>
       debounce((newData: unknown[][]) => {
-        setData(newData);
-      }, 150),
+        setData(newData as string[][]);
+      }, 10),
     [setData]
   );
 
@@ -292,7 +296,7 @@ export const DataGrid = memo(function DataGrid({
       const newData = data.map((row, index) => {
         if (index === actualRowIndex) {
           const newRow = [...row];
-          newRow[colIndex] = value;
+          newRow[colIndex] = value as string;
           return newRow;
         }
         return row;
@@ -308,7 +312,7 @@ export const DataGrid = memo(function DataGrid({
       const newData = data.map((row, index) => {
         if (index === 0) {
           const newRow = [...row];
-          newRow[colIndex] = value;
+          newRow[colIndex] = value as string;
           return newRow;
         }
         return row;
@@ -316,6 +320,36 @@ export const DataGrid = memo(function DataGrid({
       debouncedSetData(newData);
     },
     [data, debouncedSetData]
+  );
+
+  const deleteSelectedRows = useCallback(() => {
+    const selectedRowIndices = Object.keys(table.getState().rowSelection).map(
+      (id) => parseInt(id)
+    );
+
+    // Filter out selected rows from dataRows
+    const newDataRows = dataRows.filter(
+      (_, index) => !selectedRowIndices.includes(index)
+    );
+
+    // Combine headerRow and newDataRows
+    const newData = [headerRow, ...newDataRows];
+
+    // Update Zustand store
+    setData(newData);
+
+    // Clear row selection
+    table.toggleAllRowsSelected(false);
+  }, [dataRows, headerRow, setData, table]);
+
+  const deleteColumn = useCallback(
+    (colIndex: number) => {
+      const newData = data.map((row) =>
+        row.filter((_, index) => index !== colIndex)
+      );
+      setData(newData, { index: colIndex, count: 1 });
+    },
+    [data, setData]
   );
 
   // Search functionality (skip header row 0)
@@ -379,29 +413,62 @@ export const DataGrid = memo(function DataGrid({
 
     const columnCount = data[0]?.length || 0;
 
-    return Array.from({ length: columnCount }, (_, index) => ({
-      id: String(index),
-      accessorFn: (row: unknown[]) => row[index],
-      header: () => {
-        const type = columnTypes[index]?.type || 'text';
-        const icon = getColumnTypeIcon(type);
-        const letter = getColumnLetter(index);
-
-        return (
-          <div className="data-grid-column-header">
-            <span className="data-grid-column-icon" title={type}>
-              {icon}
-            </span>
-            <span className="data-grid-column-letter">{letter}</span>
-          </div>
-        );
+    return [
+      {
+        id: 'select',
+        header: ({ table }) => (
+          <input
+            type='checkbox'
+            checked={table.getIsAllRowsSelected()}
+            onChange={table.getToggleAllRowsSelectedHandler()}
+            className='h-4 w-4'
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type='checkbox'
+            checked={row.getIsSelected()}
+            onChange={row.getToggleSelectedHandler()}
+            className='h-4 w-4'
+          />
+        ),
+        size: 30,
+        enableResizing: false,
+        enableSorting: false,
       },
-      cell: EditableCell,
-      size: 120,
-      minSize: 60,
-      maxSize: 500,
-    }));
-  }, [data, columnTypes]);
+      ...Array.from({ length: columnCount }, (_, index) => ({
+        id: String(index),
+        accessorFn: (row: unknown[]) => row[index],
+              header: () => {
+                const type = columnTypes[index]?.type || 'text';
+                const icon = getColumnTypeIcon(type);
+                const letter = getColumnLetter(index);
+        
+                return (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className='data-grid-column-header'>
+                        <span className='data-grid-column-icon' title={type}>
+                          {icon}
+                        </span>
+                        <span className='data-grid-column-letter'>{letter}</span>
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align='start'>
+                      <DropdownMenuItem onClick={() => deleteColumn(index)}>
+                        <Trash2 className='mr-2 h-4 w-4' />
+                        <span>Delete Column</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              },        cell: EditableCell,
+        size: 120,
+        minSize: 60,
+        maxSize: 500,
+      })),
+    ];
+  }, [data, columnTypes, deleteColumn]);
 
   const startEditing = useCallback((rowIndex: number, colIndex: number) => {
     setEditingCell({ rowIndex, colIndex });
@@ -422,12 +489,15 @@ export const DataGrid = memo(function DataGrid({
       sorting,
       columnSizing,
       pagination,
+      rowSelection, // New
     },
     onSortingChange: setSorting,
     onColumnSizingChange: setColumnSizing,
     onPaginationChange: setPagination,
+    onRowSelectionChange: setRowSelection, // New
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
+    enableRowSelection: true, // New
     meta: {
       updateData,
       editingCell,
@@ -475,43 +545,46 @@ export const DataGrid = memo(function DataGrid({
 
   if (!data || data.length === 0) {
     return (
-      <div className="data-grid-empty">
-        <p className="data-grid-empty-text">No data available</p>
+      <div className='data-grid-empty'>
+        <p className='data-grid-empty-text'>No data available</p>
       </div>
     );
   }
 
   return (
-    <div className="data-grid-container">
-      <div ref={tableContainerRef} className="data-grid-table-wrapper">
-        <div className="data-grid-table-inner" style={{ height: `${totalSize}px` }}>
+    <div className='data-grid-container'>
+      <div ref={tableContainerRef} className='data-grid-table-wrapper'>
+        <div
+          className='data-grid-table-inner'
+          style={{ height: `${totalSize}px` }}
+        >
           <table
-            className="data-grid-table"
+            className='data-grid-table'
             style={{
               width: table.getCenterTotalSize(),
             }}
           >
-            <thead className="data-grid-thead">
+            <thead className='data-grid-thead'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
-                  <TableHead className="data-grid-th data-grid-th-row-number">
-                    #
+                  <TableHead className='data-grid-th data-grid-th-row-number'>
+                    {/* Empty for selection checkbox column */}
                   </TableHead>
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className="data-grid-th"
+                      className='data-grid-th'
                       style={{ width: header.getSize() }}
                     >
                       <div
-                        className="data-grid-th-content"
+                        className='data-grid-th-content'
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
-                        <span className="data-grid-sort-indicator">
+                        <span className='data-grid-sort-indicator'>
                           {{
                             asc: '↑',
                             desc: '↓',
@@ -523,29 +596,30 @@ export const DataGrid = memo(function DataGrid({
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
                         data-resizing={header.column.getIsResizing()}
-                        className="data-grid-resize-handle"
+                        className='data-grid-resize-handle'
                       />
                     </TableHead>
                   ))}
                 </tr>
               ))}
             </thead>
-            <tbody className="data-grid-tbody">
+            <tbody className='data-grid-tbody'>
               {/* Always render header row first (row 0) */}
-              <TableRow className="data-grid-tr data-grid-tr-header">
-                <TableCell className="data-grid-td data-grid-td-row-number">
-                  1
+              <TableRow className='data-grid-tr data-grid-tr-header'>
+                <TableCell className='data-grid-td data-grid-td-row-number'>
+                  {/* Empty for selection checkbox column */}
                 </TableCell>
                 {columns.map((column, colIndex) => {
                   const cellValue = headerRow[colIndex];
                   const isHeaderEditing =
-                    editingCell?.rowIndex === 0 && editingCell?.colIndex === colIndex;
+                    editingCell?.rowIndex === 0 &&
+                    editingCell?.colIndex === colIndex;
                   return (
                     <TableCell
                       key={column.id}
                       data-row={0}
                       data-col={colIndex}
-                      className="data-grid-td data-grid-td-header"
+                      className='data-grid-td data-grid-td-header'
                       style={{ width: column.size }}
                     >
                       <EditableHeaderCell
@@ -576,8 +650,8 @@ export const DataGrid = memo(function DataGrid({
                 const actualRowIndex = row.index + 1;
 
                 return (
-                  <TableRow key={row.id} className="data-grid-tr">
-                    <TableCell className="data-grid-td data-grid-td-row-number">
+                  <TableRow key={row.id} className='data-grid-tr'>
+                    <TableCell className='data-grid-td data-grid-td-row-number'>
                       {actualRowIndex + 1}
                     </TableCell>
                     {row.getVisibleCells().map((cell) => {
@@ -596,7 +670,7 @@ export const DataGrid = memo(function DataGrid({
                           data-label={isLabelColumn}
                           data-value={isValueColumn}
                           data-highlighted={isHighlighted}
-                          className="data-grid-td"
+                          className='data-grid-td'
                           style={{ width: cell.column.getSize() }}
                         >
                           {flexRender(
@@ -620,19 +694,19 @@ export const DataGrid = memo(function DataGrid({
       </div>
 
       {/* Pagination controls */}
-      <div className="data-grid-pagination">
-        <div className="data-grid-pagination-left">
-          <span className="data-grid-pagination-label">Rows per page:</span>
+      <div className='data-grid-pagination'>
+        <div className='data-grid-pagination-left'>
+          <span className='data-grid-pagination-label'>Rows per page:</span>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value));
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className='h-8 w-[70px]'>
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
-            <SelectContent side="top">
+            <SelectContent side='top'>
               {[10, 20, 50, 100, 200].map((pageSize) => (
                 <SelectItem key={pageSize} value={`${pageSize}`}>
                   {pageSize}
@@ -640,49 +714,58 @@ export const DataGrid = memo(function DataGrid({
               ))}
             </SelectContent>
           </Select>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={deleteSelectedRows}
+            disabled={Object.keys(table.getState().rowSelection).length === 0}
+            className='ml-4 h-8'
+          >
+            Delete Selected Rows
+          </Button>
         </div>
 
-        <div className="data-grid-pagination-right">
-          <span className="data-grid-pagination-info">
+        <div className='data-grid-pagination-right'>
+          <span className='data-grid-pagination-info'>
             Page {table.getState().pagination.pageIndex + 1} of{' '}
             {table.getPageCount()}
           </span>
-          <div className="data-grid-pagination-buttons">
+          <div className='data-grid-pagination-buttons'>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
-              className="h-8 w-8 p-0"
+              className='h-8 w-8 p-0'
             >
-              <ChevronsLeft className="h-4 w-4" />
+              <ChevronsLeft className='h-4 w-4' />
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
-              className="h-8 w-8 p-0"
+              className='h-8 w-8 p-0'
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className='h-4 w-4' />
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
-              className="h-8 w-8 p-0"
+              className='h-8 w-8 p-0'
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className='h-4 w-4' />
             </Button>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
-              className="h-8 w-8 p-0"
+              className='h-8 w-8 p-0'
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className='h-4 w-4' />
             </Button>
           </div>
         </div>
