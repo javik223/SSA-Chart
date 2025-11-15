@@ -36,12 +36,14 @@ export const DataGrid = memo(function DataGrid({
   shouldNavigate = false,
   onNavigated,
 }: DataGridProps) {
-  const { data, setData, columnMapping, autoSetColumns, columnTypes } =
-    useChartStore();
+  const data = useChartStore((state) => state.data);
+  const setData = useChartStore((state) => state.setData);
+  const columnMapping = useChartStore((state) => state.columnMapping);
+  const autoSetColumns = useChartStore((state) => state.autoSetColumns);
+  const columnTypes = useChartStore((state) => state.columnTypes);
   const hasAutoSet = useRef(false);
   const hotRef = useRef<HotTableRef>(null);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const batchUpdateRef = useRef<NodeJS.Timeout | null>(null);
 
   const rowHeaderFunction = useCallback((row: number) => {
     return `
@@ -136,10 +138,6 @@ export const DataGrid = memo(function DataGrid({
         } else {
           // Clear search and show all rows (skip row 0)
           setSearchResults([]);
-          const allDataRows = Array.from(
-            { length: dataRowCount },
-            (_, i) => i + 1
-          );
           // hiddenRowsPlugin.showRows(allDataRows);
         }
       });
@@ -192,8 +190,8 @@ export const DataGrid = memo(function DataGrid({
   const debouncedSetData = useMemo(
     () =>
       debounce((newData: unknown[][]) => {
-        setData(newData);
-      }, 10),
+        setData(newData as string[][]);
+      }, 36),
     [setData]
   );
 
@@ -221,6 +219,26 @@ export const DataGrid = memo(function DataGrid({
       }
     },
     [data, debouncedSetData]
+  );
+
+  // Handle column removal
+  const handleAfterColumnRemove = useCallback(
+    () => {
+      const hotInstance = hotRef.current?.hotInstance;
+      if (!hotInstance) return;
+
+      // Get the current data from Handsontable after the columns have been removed
+      const currentHandsontableData = hotInstance.getData();
+
+      // Convert to string[][] as expected by setData
+      const newData = currentHandsontableData.map((row) =>
+        row.map((cell) => String(cell))
+      );
+
+      // Update the Zustand store
+      setData(newData);
+    },
+    [setData]
   );
 
   // Optimized cells callback with memoization
@@ -335,6 +353,7 @@ export const DataGrid = memo(function DataGrid({
         columnSorting={true}
         cells={handleCells}
         afterChange={handleDataChange}
+        afterColumnRemove={handleAfterColumnRemove}
         search={true}
       />
     </div>
