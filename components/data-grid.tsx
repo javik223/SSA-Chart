@@ -352,6 +352,36 @@ export const DataGrid = memo(function DataGrid({
     [data, setData]
   );
 
+  const deleteSelectedRows = useCallback(() => {
+    const selectedRowIndices = Object.keys(table.getState().rowSelection).map(
+      (id) => parseInt(id)
+    );
+
+    // Filter out selected rows from dataRows
+    const newDataRows = dataRows.filter(
+      (_, index) => !selectedRowIndices.includes(index)
+    );
+
+    // Combine headerRow and newDataRows
+    const newData = [headerRow, ...newDataRows];
+
+    // Update Zustand store
+    setData(newData);
+
+    // Clear row selection
+    table.toggleAllRowsSelected(false);
+  }, [dataRows, headerRow, setData, table]);
+
+  const deleteColumn = useCallback(
+    (colIndex: number) => {
+      const newData = data.map((row) =>
+        row.filter((_, index) => index !== colIndex)
+      );
+      setData(newData, { index: colIndex, count: 1 });
+    },
+    [data, setData]
+  );
+
   // Search functionality (skip header row 0)
   useEffect(() => {
     if (!searchQuery || !data) {
