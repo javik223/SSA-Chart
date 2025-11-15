@@ -119,7 +119,8 @@ export const DataGrid = memo(function DataGrid({
   // --- Perform the custom search & hide non-matching rows (uses hiddenRows plugin safely)
   useEffect(() => {
     const performSearch = () => {
-              const hotInstance: Handsontable = hotRef.current?.hotInstance;      if (!hotInstance) return;
+      const hotInstance: Handsontable = hotRef.current?.hotInstance;
+      if (!hotInstance) return;
 
       const hiddenRowsPlugin = hotInstance.getPlugin?.('hiddenRows');
       // if plugin not available, bail out (we configured plugin in props, so it should be there)
@@ -181,7 +182,8 @@ export const DataGrid = memo(function DataGrid({
 
   // When search results change, deselect if nothing to navigate to
   useEffect(() => {
-            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (hotInstance) {
+    const hotInstance: Handsontable = hotRef.current?.hotInstance;
+    if (hotInstance) {
       hotInstance.batch(() => {
         if (searchResults.length === 0 && !searchQuery) {
           hotInstance.deselectCell?.();
@@ -210,7 +212,8 @@ export const DataGrid = memo(function DataGrid({
   const handleDataChange = useCallback(
     (changes: Handsontable.CellChange[] | null) => {
       if (!changes) return;
-              const hotInstance: Handsontable = hotRef.current?.hotInstance;      if (!hotInstance) return;
+      const hotInstance: Handsontable = hotRef.current?.hotInstance;
+      if (!hotInstance) return;
 
       hotInstance.batch(() => {
         const newData = hotInstance.getData();
@@ -222,13 +225,15 @@ export const DataGrid = memo(function DataGrid({
 
   // after rows removed — sync immediately (non-debounced)
   const handleAfterRowRemove = useCallback(() => {
-            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (!hotInstance) return;
+    const hotInstance: Handsontable = hotRef.current?.hotInstance;
+    if (!hotInstance) return;
     const currentHandsontableData = hotInstance.getData();
     setData(currentHandsontableData);
   }, [setData]);
 
   const updateData = useCallback(() => {
-            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (!hotInstance) return;
+    const hotInstance: Handsontable = hotRef.current?.hotInstance;
+    if (!hotInstance) return;
     hotInstance.batch(() => {
       const newData = hotInstance.getData();
       setData(newData);
@@ -268,7 +273,8 @@ export const DataGrid = memo(function DataGrid({
 
   // Navigate to first result when requested (note: hotData indices are used)
   useEffect(() => {
-            const hotInstance: Handsontable = hotRef.current?.hotInstance;    if (shouldNavigate && hotInstance && searchResults.length > 0) {
+    const hotInstance: Handsontable = hotRef.current?.hotInstance;
+    if (shouldNavigate && hotInstance && searchResults.length > 0) {
       const first = searchResults[0];
       // If original data had a header row, the plugin sees rows shifted by -1; we used hotData = data.slice(1) earlier,
       // but `searchData` returned positions relative to full original `data`. Adjust if needed:
@@ -348,16 +354,18 @@ export const DataGrid = memo(function DataGrid({
         trimRows={false}
         // removed: search={true} (conflicts with custom search)
         columnSorting={true}
+        fixedRowsTop={1} // Treat the first row as a fixed header
         cells={handleCells}
         afterChange={handleDataChange}
         afterRemoveRow={handleAfterRowRemove}
         afterColumnMove={updateData}
-        beforeColumnSort={() => false}
-        afterColumnSort={updateData}
+        afterColumnSort={updateData} // Keep afterColumnSort to update data after sorting
         afterRowMove={updateData}
         licenseKey='non-commercial-and-evaluation'
         afterRemoveCol={handleAfterColumnRemove}
-        pagination={true}
+        pagination={{
+          pageSize: 200,
+        }}
       />
     </div>
   );
