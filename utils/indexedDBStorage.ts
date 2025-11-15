@@ -13,6 +13,9 @@ const DB_VERSION = 1;
  * Opens or creates the IndexedDB database
  */
 function openDB(): Promise<IDBDatabase> {
+  if (typeof indexedDB === 'undefined') {
+    return Promise.reject(new Error('IndexedDB is not supported in this environment.'));
+  }
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -39,6 +42,9 @@ function openDB(): Promise<IDBDatabase> {
  * Get item from IndexedDB
  */
 async function getItem(key: string): Promise<string | null> {
+  if (typeof indexedDB === 'undefined') {
+    return null;
+  }
   try {
     const db = await openDB();
 
@@ -65,6 +71,9 @@ async function getItem(key: string): Promise<string | null> {
  * Set item in IndexedDB
  */
 async function setItem(key: string, value: string): Promise<void> {
+  if (typeof indexedDB === 'undefined') {
+    return;
+  }
   try {
     const db = await openDB();
 
@@ -90,6 +99,9 @@ async function setItem(key: string, value: string): Promise<void> {
  * Remove item from IndexedDB
  */
 async function removeItem(key: string): Promise<void> {
+  if (typeof indexedDB === 'undefined') {
+    return;
+  }
   try {
     const db = await openDB();
 
@@ -115,6 +127,9 @@ async function removeItem(key: string): Promise<void> {
  * Clear all items from the store
  */
 export async function clearStore(): Promise<void> {
+  if (typeof indexedDB === 'undefined') {
+    return;
+  }
   try {
     const db = await openDB();
 
@@ -140,6 +155,9 @@ export async function clearStore(): Promise<void> {
  * Get all keys from the store
  */
 export async function getAllKeys(): Promise<string[]> {
+  if (typeof indexedDB === 'undefined') {
+    return [];
+  }
   try {
     const db = await openDB();
 

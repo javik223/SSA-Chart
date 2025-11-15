@@ -95,7 +95,7 @@ export function ExportDropdown() {
             className='h-9 w-9'
             disabled={isExporting}
           >
-            <Download className='h-4 w-4' />
+            <Download className='h-4 w-4' aria-hidden='true' />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-48'>
@@ -105,7 +105,7 @@ export function ExportDropdown() {
             onClick={() => handleExportClick('svg')}
             disabled={isExporting}
           >
-            <FileDown className='mr-2 h-4 w-4' />
+            <FileDown className='mr-2 h-4 w-4' aria-hidden='true' />
             <div className='flex flex-col'>
               <span className='font-medium'>SVG</span>
               <span className='text-[10px] text-zinc-500'>Vector graphics</span>
@@ -115,7 +115,7 @@ export function ExportDropdown() {
             onClick={() => handleExportClick('png')}
             disabled={isExporting}
           >
-            <Image className='mr-2 h-4 w-4' />
+            <Image className='mr-2 h-4 w-4' alt='' />
             <div className='flex flex-col'>
               <span className='font-medium'>PNG</span>
               <span className='text-[10px] text-zinc-500'>
@@ -127,7 +127,7 @@ export function ExportDropdown() {
             onClick={() => handleExportClick('jpg')}
             disabled={isExporting}
           >
-            <FileImage className='mr-2 h-4 w-4' />
+            <FileImage className='mr-2 h-4 w-4' aria-hidden='true' />
             <div className='flex flex-col'>
               <span className='font-medium'>JPG</span>
               <span className='text-[10px] text-zinc-500'>
@@ -139,7 +139,7 @@ export function ExportDropdown() {
             onClick={() => handleExportClick('pdf')}
             disabled={isExporting}
           >
-            <FileText className='mr-2 h-4 w-4' />
+            <FileText className='mr-2 h-4 w-4' aria-hidden='true' />
             <div className='flex flex-col'>
               <span className='font-medium'>PDF</span>
               <span className='text-[10px] text-zinc-500'>Document format</span>
