@@ -147,7 +147,7 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
   return (
     <div
       style={{
-        // paddingLeft: `${layoutPaddingLeft}px`,
+        paddingLeft: `${layoutPaddingLeft}px`,
         paddingRight: `${layoutPaddingRight}px`,
         paddingBottom: '8px',
       }}
@@ -160,7 +160,10 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
           onBlur={saveEdit}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full text-sm text-zinc-600',
+            'w-full',
+            headerTextStyleEnabled ? 'chart-header-text' : 'text-xs md:text-sm',
+            headerTextStyleEnabled ? getFontWeightClass() : '',
+            headerTextStyleEnabled ? '' : 'text-zinc-600',
             'border-2 border-blue-500 rounded px-2 py-1',
             'focus:outline-none resize-none overflow-hidden'
           )}

@@ -133,7 +133,7 @@ export const ChartTitle = memo(function ChartTitle() {
   return (
     <div
       style={{
-        // paddingLeft: `${layoutPaddingLeft}px`,
+        paddingLeft: `${layoutPaddingLeft}px`,
         paddingRight: `${layoutPaddingRight}px`,
         paddingBottom: '8px',
       }}
@@ -146,7 +146,10 @@ export const ChartTitle = memo(function ChartTitle() {
           onBlur={saveEdit}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full text-2xl font-bold text-zinc-900',
+            'w-full',
+            titleStyleEnabled ? 'chart-title' : 'text-2xl md:text-3xl',
+            titleStyleEnabled ? getFontWeightClass() : 'font-bold',
+            titleStyleEnabled ? '' : 'text-zinc-900',
             'border-2 border-blue-500 rounded px-2 py-1',
             'focus:outline-none resize-none overflow-hidden'
           )}

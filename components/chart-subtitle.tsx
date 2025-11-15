@@ -141,7 +141,7 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
   return (
     <div
       style={{
-        // paddingLeft: `${layoutPaddingLeft}px`,
+        paddingLeft: `${layoutPaddingLeft}px`,
         paddingRight: `${layoutPaddingRight}px`,
         paddingBottom: '4px',
       }}
@@ -154,7 +154,10 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
           onBlur={saveEdit}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-full text-lg text-zinc-700',
+            'w-full',
+            subtitleStyleEnabled ? 'chart-subtitle' : 'text-lg md:text-xl',
+            subtitleStyleEnabled ? getFontWeightClass() : 'font-semibold',
+            subtitleStyleEnabled ? '' : 'text-zinc-700',
             'border-2 border-blue-500 rounded px-2 py-1',
             'focus:outline-none resize-none overflow-hidden'
           )}
