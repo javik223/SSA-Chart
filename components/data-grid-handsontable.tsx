@@ -239,24 +239,21 @@ export const DataGrid = memo(function DataGrid({
   }, [setData]);
 
   // Handle row removal
-  const handleAfterRowRemove = useCallback(
-    () => {
-      const hotInstance = hotRef.current?.hotInstance;
-      if (!hotInstance) return;
+  const handleAfterRowRemove = useCallback(() => {
+    const hotInstance = hotRef.current?.hotInstance;
+    if (!hotInstance) return;
 
-      // Get the current data from Handsontable after the rows have been removed
-      const currentHandsontableData = hotInstance.getData();
+    // Get the current data from Handsontable after the rows have been removed
+    const currentHandsontableData = hotInstance.getData();
 
-      // Convert to string[][] as expected by setData
-      const newData = currentHandsontableData.map((row) =>
-        row.map((cell: unknown) => String(cell))
-      );
+    // Convert to string[][] as expected by setData
+    const newData = currentHandsontableData.map((row) =>
+      row.map((cell: unknown) => String(cell))
+    );
 
-      // Update the Zustand store
-      setData(newData);
-    },
-    [setData]
-  );
+    // Update the Zustand store
+    setData(newData);
+  }, [setData]);
 
   // Optimized cells callback with memoization
   const handleCells = useCallback(
@@ -370,7 +367,6 @@ export const DataGrid = memo(function DataGrid({
         columnSorting={true}
         cells={handleCells}
         afterChange={handleDataChange}
-        afterColumnRemove={handleAfterColumnRemove}
         afterRemoveRow={handleAfterRowRemove}
         search={true}
       />
