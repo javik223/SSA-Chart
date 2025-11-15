@@ -39,7 +39,7 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editableRef = useRef<HTMLParagraphElement>(null);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -63,30 +63,25 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
     } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       saveEdit();
-    }
-  };
-
-  const autoGrowTextarea = () => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height =
-        textareaRef.current.scrollHeight + 'px';
+    } else if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent new line in contenteditable
     }
   };
 
   useEffect(() => {
     if (isEditing) {
-      textareaRef.current?.focus();
-      textareaRef.current?.select();
-      setTimeout(autoGrowTextarea, 0);
+      editableRef.current?.focus();
+      // Place caret at the end
+      const range = document.createRange();
+      const selection = window.getSelection();
+      if (editableRef.current && selection) {
+        range.selectNodeContents(editableRef.current);
+        range.collapse(false); // Collapse to the end
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     }
   }, [isEditing]);
-
-  useEffect(() => {
-    if (isEditing) {
-      autoGrowTextarea();
-    }
-  }, [tempValue, isEditing]);
 
   if (!headerText && !isEditing) return null;
 
@@ -152,40 +147,28 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
         paddingBottom: '8px',
       }}
     >
-      {isEditing ? (
-        <textarea
-          ref={textareaRef}
-          value={tempValue}
-          onChange={(e) => setTempValue(e.target.value)}
-          onBlur={saveEdit}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            'w-full',
-            headerTextStyleEnabled ? 'chart-header-text' : 'text-xs md:text-sm',
-            headerTextStyleEnabled ? getFontWeightClass() : '',
-            headerTextStyleEnabled ? '' : 'text-zinc-600',
-            'border-2 border-blue-500 rounded px-2 py-1',
-            'focus:outline-none resize-none overflow-hidden'
-          )}
-          placeholder='Enter header text (Cmd/Ctrl+Enter to save)'
-          style={{ minHeight: '2rem', ...customStyles }}
-        />
-      ) : (
-        <p
-          className={cn(
-            headerTextStyleEnabled ? 'chart-header-text' : 'text-xs md:text-sm',
-            headerTextStyleEnabled ? getFontWeightClass() : '',
-            headerTextStyleEnabled ? '' : 'text-zinc-600',
-            'cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-            'transition-colors whitespace-pre-wrap'
-          )}
-          style={customStyles}
-          onDoubleClick={handleDoubleClick}
-          title='Double-click to edit'
-        >
-          {headerText}
-        </p>
-      )}
+      <p
+        ref={editableRef}
+        contentEditable={isEditing}
+        suppressContentEditableWarning={true}
+        onInput={(e) => setTempValue(e.currentTarget.innerText)}
+        onBlur={saveEdit}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          headerTextStyleEnabled ? 'chart-header-text' : 'text-xs md:text-sm',
+          headerTextStyleEnabled ? getFontWeightClass() : '',
+          headerTextStyleEnabled ? '' : 'text-zinc-600',
+          isEditing
+            ? 'border-2 border-blue-500 rounded px-2 py-1 focus:outline-none'
+            : 'cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
+          'transition-colors whitespace-pre-wrap'
+        )}
+        style={customStyles}
+        onDoubleClick={handleDoubleClick}
+        title='Double-click to edit'
+      >
+        {isEditing ? tempValue : headerText}
+      </p>
     </div>
   );
 });
