@@ -198,45 +198,27 @@ export const DataGrid = memo(function DataGrid({
   // Optimized data change handler with batching
   const handleDataChange = useCallback(
     (
-      changes: Handsontable.CellChange[] | null,
-      source: Handsontable.ChangeSource
+      changes: Handsontable.CellChange[] | null
     ) => {
-      if (changes && source !== 'loadData') {
+      if (changes) {
         const hotInstance = hotRef.current?.hotInstance;
         if (!hotInstance) return;
 
         // Use batch operation to minimize renders
         hotInstance.batch(() => {
-          const newData = [...data];
-          changes.forEach(([row, col, , newValue]) => {
-            if (!newData[row]) {
-              newData[row] = [];
-            }
-            newData[row][col as number] = newValue;
-          });
+          const newData = hotInstance.getData();
+          // changes.forEach(([row, col, , newValue]) => {
+          //   if (!newData[row]) {
+          //     newData[row] = [];
+          //   }
+          //   newData[row][col as number] = newValue;
+          // });
           debouncedSetData(newData);
         });
       }
     },
-    [data, debouncedSetData]
+    [debouncedSetData]
   );
-
-  // Handle column removal
-  const handleAfterColumnRemove = useCallback(() => {
-    const hotInstance = hotRef.current?.hotInstance;
-    if (!hotInstance) return;
-
-    // Get the current data from Handsontable after the columns have been removed
-    const currentHandsontableData = hotInstance.getData();
-
-    // Convert to string[][] as expected by setData
-    const newData = currentHandsontableData.map((row) =>
-      row.map((cell: unknown) => String(cell))
-    );
-
-    // Update the Zustand store
-    setData(newData);
-  }, [setData]);
 
   // Handle row removal
   const handleAfterRowRemove = useCallback(() => {
@@ -246,10 +228,7 @@ export const DataGrid = memo(function DataGrid({
     // Get the current data from Handsontable after the rows have been removed
     const currentHandsontableData = hotInstance.getData();
 
-    // Convert to string[][] as expected by setData
-    const newData = currentHandsontableData.map((row) =>
-      row.map((cell: unknown) => String(cell))
-    );
+    const newData = currentHandsontableData;
 
     // Update the Zustand store
     setData(newData);

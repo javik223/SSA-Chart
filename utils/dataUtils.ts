@@ -5,21 +5,21 @@
 /**
  * Check if a value is empty (null, undefined, empty string, or whitespace)
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   return value === null || value === undefined || String(value).trim() === '';
 }
 
 /**
  * Check if a row is completely empty
  */
-export function isRowEmpty(row: any[]): boolean {
+export function isRowEmpty(row: unknown[]): boolean {
   return row.every(isEmpty);
 }
 
 /**
  * Check if a column is completely empty
  */
-export function isColumnEmpty(data: any[][], colIndex: number): boolean {
+export function isColumnEmpty(data: unknown[][], colIndex: number): boolean {
   return data.every((row) => isEmpty(row[colIndex]));
 }
 
@@ -27,7 +27,7 @@ export function isColumnEmpty(data: any[][], colIndex: number): boolean {
  * Remove trailing empty rows and columns from data
  * Preserves at least the header row
  */
-export function cleanData(data: any[][]): any[][] {
+export function cleanData(data: unknown[][]): unknown[][] {
   if (!data || data.length === 0) {
     return data;
   }
@@ -36,7 +36,10 @@ export function cleanData(data: any[][]): any[][] {
   let cleanedData = [...data.map((row) => [...row])];
 
   // Remove trailing empty rows (keep at least header row)
-  while (cleanedData.length > 1 && isRowEmpty(cleanedData[cleanedData.length - 1])) {
+  while (
+    cleanedData.length > 1 &&
+    isRowEmpty(cleanedData[cleanedData.length - 1])
+  ) {
     cleanedData.pop();
   }
 
@@ -45,24 +48,26 @@ export function cleanData(data: any[][]): any[][] {
     return [[]];
   }
 
-  // Remove trailing empty columns
+  // Identify all empty columns
+  const emptyColumnIndices: number[] = [];
   if (cleanedData.length > 0) {
-    let maxNonEmptyCol = -1;
-
-    // Find the rightmost non-empty column
     for (let colIndex = 0; colIndex < cleanedData[0].length; colIndex++) {
-      if (!isColumnEmpty(cleanedData, colIndex)) {
-        maxNonEmptyCol = colIndex;
+      if (isColumnEmpty(cleanedData, colIndex)) {
+        emptyColumnIndices.push(colIndex);
       }
     }
+  }
 
-    // Trim all rows to remove empty columns
-    if (maxNonEmptyCol >= 0) {
-      cleanedData = cleanedData.map((row) => row.slice(0, maxNonEmptyCol + 1));
-    } else {
-      // All columns are empty, keep just one column
-      cleanedData = cleanedData.map(() => ['']);
-    }
+  // Filter out empty columns from all rows
+  if (emptyColumnIndices.length > 0) {
+    cleanedData = cleanedData.map((row) =>
+      row.filter((_, colIndex) => !emptyColumnIndices.includes(colIndex))
+    );
+  }
+
+  // If after removing empty columns, all columns are gone, ensure at least one empty column remains
+  if (cleanedData.length > 0 && cleanedData[0].length === 0) {
+    cleanedData = cleanedData.map(() => ['']);
   }
 
   return cleanedData;
@@ -71,7 +76,7 @@ export function cleanData(data: any[][]): any[][] {
 /**
  * Remove all empty rows from data (except header)
  */
-export function removeEmptyRows(data: any[][]): any[][] {
+export function removeEmptyRows(data: string[][]): string[][] {
   if (!data || data.length === 0) {
     return data;
   }
