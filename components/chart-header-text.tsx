@@ -38,23 +38,24 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
   );
 
   const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState('');
   const editableRef = useRef<HTMLParagraphElement>(null);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
-    setTempValue(headerText);
   };
 
   const saveEdit = () => {
-    setHeaderText(tempValue);
+    if (editableRef.current) {
+      setHeaderText(editableRef.current.innerText);
+    }
     setIsEditing(false);
-    setTempValue('');
   };
 
   const cancelEdit = () => {
+    if (editableRef.current) {
+      editableRef.current.innerText = headerText; // Revert to original
+    }
     setIsEditing(false);
-    setTempValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -151,7 +152,6 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
         ref={editableRef}
         contentEditable={isEditing}
         suppressContentEditableWarning={true}
-        onInput={(e) => setTempValue(e.currentTarget.innerText)}
         onBlur={saveEdit}
         onKeyDown={handleKeyDown}
         className={cn(
@@ -167,7 +167,7 @@ export const ChartHeaderText = memo(function ChartHeaderText() {
         onDoubleClick={handleDoubleClick}
         title='Double-click to edit'
       >
-        {isEditing ? tempValue : headerText}
+        {headerText}
       </p>
     </div>
   );

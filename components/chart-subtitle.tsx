@@ -32,23 +32,24 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
   const subtitleSpaceAbove = useChartStore((state) => state.subtitleSpaceAbove);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState('');
   const editableRef = useRef<HTMLHeadingElement>(null);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
-    setTempValue(chartSubtitle);
   };
 
   const saveEdit = () => {
-    setChartSubtitle(tempValue);
+    if (editableRef.current) {
+      setChartSubtitle(editableRef.current.innerText);
+    }
     setIsEditing(false);
-    setTempValue('');
   };
 
   const cancelEdit = () => {
+    if (editableRef.current) {
+      editableRef.current.innerText = chartSubtitle; // Revert to original
+    }
     setIsEditing(false);
-    setTempValue('');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -145,7 +146,6 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
         ref={editableRef}
         contentEditable={isEditing}
         suppressContentEditableWarning={true}
-        onInput={(e) => setTempValue(e.currentTarget.innerText)}
         onBlur={saveEdit}
         onKeyDown={handleKeyDown}
         className={cn(
@@ -161,7 +161,7 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
         onDoubleClick={handleDoubleClick}
         title='Double-click to edit'
       >
-        {isEditing ? tempValue : chartSubtitle}
+        {chartSubtitle}
       </h3>
     </div>
   );
