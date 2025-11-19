@@ -2,8 +2,6 @@
 
 import * as React from "react"
 
-import "./table.css"
-
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div data-slot="table-container">

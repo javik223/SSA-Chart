@@ -74,7 +74,7 @@ export function ChartLegend({ valueKeys }: ChartLegendProps) {
       }
     >
       {valueKeys.map((key, index) => (
-        <div key={key} className='chart-legend-item'>
+        <div key={`legend-${index}-${key ?? 'empty'}`} className='chart-legend-item'>
           <div
             className='chart-legend-color-box'
             style={

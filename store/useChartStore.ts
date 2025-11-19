@@ -13,6 +13,38 @@ import {
 } from '@/utils/dataTypeUtils';
 import { indexedDBStorage } from '@/utils/indexedDBStorage';
 
+// Custom storage wrapper that handles BigInt serialization
+const bigIntSafeStorage = {
+  getItem: async (name: string) => {
+    const value = await indexedDBStorage.getItem(name);
+    if (!value) return null;
+    try {
+      return JSON.parse(value, (key, val) => {
+        // Convert back to BigInt if it was serialized as such
+        if (val && typeof val === 'object' && val.__type === 'bigint') {
+          return BigInt(val.value);
+        }
+        return val;
+      });
+    } catch {
+      return null;
+    }
+  },
+  setItem: async (name: string, value: unknown) => {
+    const serialized = JSON.stringify(value, (key, val) => {
+      // Convert BigInt to string with special marker
+      if (typeof val === 'bigint') {
+        return { __type: 'bigint', value: val.toString() };
+      }
+      return val;
+    });
+    await indexedDBStorage.setItem(name, serialized);
+  },
+  removeItem: async (name: string) => {
+    await indexedDBStorage.removeItem(name);
+  },
+};
+
 export interface ColumnMapping {
   labels: number | null; // Column index for labels/time
   values: number[]; // Column indices for values
@@ -22,13 +54,17 @@ export interface ColumnMapping {
 }
 
 interface ChartStore {
+  // Data storage mode
+  useDuckDB: boolean;
+  setUseDuckDB: (use: boolean) => void;
+
   // Data state
   dataTable: DataTable | null;
   setDataTable: (data: DataTable | null) => void;
 
-  // Spreadsheet data (raw 2D array)
+  // Spreadsheet data (raw 2D array) - Used when useDuckDB is false
   data: unknown[][];
-  setData: (data: unknown[][]) => void;
+  setData: (data: unknown[][], deletedColumnInfo?: { index: number; count: number }) => void;
   replaceData: (data: unknown[][]) => void;
   mergeData: (data: unknown[][]) => void;
   addRows: (count: number) => void;
@@ -39,12 +75,40 @@ interface ChartStore {
   autoSetColumns: () => void;
 
   // Available columns from data
-  availableColumns: unknown[];
-  setAvailableColumns: (columns: unknown[]) => void;
+  availableColumns: string[];
+  setAvailableColumns: (columns: string[]) => void;
 
   // Column type information
   columnTypes: ColumnTypeInfo[];
   setColumnTypes: (types: ColumnTypeInfo[]) => void;
+
+  // Data metadata (for DuckDB mode)
+  dataRowCount: number;
+  setDataRowCount: (count: number) => void;
+
+  dataColCount: number;
+  setDataColCount: (count: number) => void;
+
+  // Pagination state (for DuckDB mode)
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+
+  pageSize: number;
+  setPageSize: (size: number) => void;
+
+  // Filtering state (for DuckDB mode)
+  filterColumn: number | null;
+  setFilterColumn: (col: number | null) => void;
+
+  filterValue: string;
+  setFilterValue: (value: string) => void;
+
+  // Sorting state (for DuckDB mode)
+  sortColumn: number | null;
+  setSortColumn: (col: number | null) => void;
+
+  sortDirection: 'asc' | 'desc' | null;
+  setSortDirection: (dir: 'asc' | 'desc' | null) => void;
 
   // Chart state
   chartType: ChartType;
@@ -516,6 +580,10 @@ interface ChartStore {
 export const useChartStore = create<ChartStore>()(
   persist(
     (set, get) => ({
+      // Data storage mode - always use DuckDB
+      useDuckDB: true,
+      setUseDuckDB: () => {}, // No-op, always use DuckDB
+
       // Initial data state
       dataTable: null,
       setDataTable: (data) => set({ dataTable: data }),
@@ -624,7 +692,7 @@ export const useChartStore = create<ChartStore>()(
 
         // Extract column names from first row
         if (cleanedData.length > 0) {
-          const columnNames = cleanedData[0].map((col) => col);
+          const columnNames = cleanedData[0].map((col) => String(col));
           set({ availableColumns: columnNames });
 
           // Infer column types
@@ -707,6 +775,34 @@ export const useChartStore = create<ChartStore>()(
         return inferAllColumnTypes(initialData);
       })(),
       setColumnTypes: (types) => set({ columnTypes: types }),
+
+      // Data metadata (for DuckDB mode)
+      dataRowCount: 4, // Initial data has 4 data rows (excluding header)
+      setDataRowCount: (count) => set({ dataRowCount: count }),
+
+      dataColCount: 5, // Initial data has 5 columns
+      setDataColCount: (count) => set({ dataColCount: count }),
+
+      // Pagination state (for DuckDB mode)
+      currentPage: 0,
+      setCurrentPage: (page) => set({ currentPage: page }),
+
+      pageSize: 1000, // Load 1000 rows at a time
+      setPageSize: (size) => set({ pageSize: size }),
+
+      // Filtering state (for DuckDB mode)
+      filterColumn: null,
+      setFilterColumn: (col) => set({ filterColumn: col }),
+
+      filterValue: '',
+      setFilterValue: (value) => set({ filterValue: value }),
+
+      // Sorting state (for DuckDB mode)
+      sortColumn: null,
+      setSortColumn: (col) => set({ sortColumn: col }),
+
+      sortDirection: null,
+      setSortDirection: (dir) => set({ sortDirection: dir }),
 
       // Initial chart state
       chartType: 'bar',
@@ -1223,8 +1319,12 @@ export const useChartStore = create<ChartStore>()(
     }),
     {
       name: 'claude-charts-storage',
-      storage: createJSONStorage(() => indexedDBStorage),
+      storage: createJSONStorage(() => bigIntSafeStorage),
       partialize: (state) => {
+        // Note: We ALWAYS persist 'data' even in DuckDB mode because:
+        // - DuckDB runs in-memory and is cleared on page reload
+        // - Zustand's IndexedDB persistence is the source of truth
+        // - On page load, we reload persisted data into DuckDB
         const nonPersistedKeys = [
           'dataTable',
           'chartData',
@@ -1232,6 +1332,7 @@ export const useChartStore = create<ChartStore>()(
           'isConfigPanelOpen',
           'isExporting',
         ];
+
         const persistedState = { ...state };
         nonPersistedKeys.forEach((key) => {
           delete persistedState[key as keyof ChartStore];

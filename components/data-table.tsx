@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-import { DataGrid } from '@/components/data-grid-handsontable';
+import { DataGridTanstack } from '@/components/data-grid-tanstack';
 import { DataSidebar } from '@/components/data-sidebar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,13 +15,21 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Plus, Search, X, Loader2 } from 'lucide-react';
+import { Plus, Search, X, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useChartStore } from '@/store/useChartStore';
+import { useDataSync } from '@/hooks/useDataSync';
+import { useVirtualData } from '@/hooks/useVirtualData';
 import debounce from 'lodash.debounce';
 import './data-table.css';
 
 export function DataTable() {
-  const { addRows } = useChartStore();
+  // Enable initial data load into DuckDB
+  useDataSync();
+
+  // Virtual data operations for DuckDB mode
+  const virtualData = useVirtualData();
+
+  const { addRows, dataRowCount, currentPage, pageSize, setCurrentPage, setFilterValue } = useChartStore();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -38,11 +46,13 @@ export function DataTable() {
   const debouncedSearch = useMemo(
     () =>
       debounce((query: string) => {
-        setSearchQuery(query);
+        // Set filter value to trigger SQL query in DuckDB
+        setFilterValue(query);
+        setCurrentPage(0); // Reset to first page when searching
         setIsSearching(false);
         setShouldNavigate(false);
       }, 300),
-    []
+    [setFilterValue, setCurrentPage]
   );
 
   const handleSearch = useCallback(
@@ -65,7 +75,8 @@ export function DataTable() {
     setSearchQuery('');
     setShouldNavigate(false);
     setIsSearching(false);
-  }, []);
+    setFilterValue('');
+  }, [setFilterValue]);
 
   return (
     <div className='data-table-container'>
@@ -77,10 +88,11 @@ export function DataTable() {
             <div className='data-table-grid-area'>
               {/* Data Grid - fills available space */}
               <div className='data-table-grid-wrapper'>
-                <DataGrid
+                <DataGridTanstack
                   searchQuery={searchQuery}
                   shouldNavigate={shouldNavigate}
                   onNavigated={() => setShouldNavigate(false)}
+                  virtualData={virtualData}
                 />
               </div>
 
@@ -99,6 +111,30 @@ export function DataTable() {
                     onChange={(e) => setRowCount(parseInt(e.target.value) || 1)}
                     className='data-table-row-count-input'
                   />
+                </div>
+
+                {/* Pagination controls */}
+                <div className='flex items-center gap-1'>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                  >
+                    <ChevronLeft className='h-4 w-4' />
+                  </Button>
+                  <span className='text-xs text-zinc-500 px-2'>
+                    Page {currentPage + 1} of {Math.ceil(dataRowCount / pageSize) || 1}
+                    {' '}({dataRowCount.toLocaleString()} rows)
+                  </span>
+                  <Button
+                    variant='ghost'
+                    size='sm'
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={(currentPage + 1) * pageSize >= dataRowCount}
+                  >
+                    <ChevronRight className='h-4 w-4' />
+                  </Button>
                 </div>
 
                 <Popover open={searchOpen} onOpenChange={setSearchOpen}>

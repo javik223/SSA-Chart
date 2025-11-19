@@ -30,10 +30,10 @@ export const BasicChart = memo(function BasicChart() {
     const valueIndices = columnMapping.values;
 
     // Get label column name
-    const labelKey = headers[labelIndex];
+    const labelKey = String(headers[labelIndex] || 'label');
 
     // Get value column names
-    const valueKeys = valueIndices.map((idx) => headers[idx]);
+    const valueKeys = valueIndices.map((idx) => String(headers[idx] || `value${idx}`));
 
     // Transform data rows
     const rows = data.slice(1);
@@ -41,12 +41,11 @@ export const BasicChart = memo(function BasicChart() {
     if (aggregationMode === 'none') {
       // No aggregation - use data as is
       return rows.map((row) => {
-        const item: Record<string, string | number> = {
-          [labelKey]: row[labelIndex] || '',
-        };
+        const item: Record<string, string | number> = {};
+        item[labelKey] = String(row[labelIndex] || '');
 
         valueIndices.forEach((idx, i) => {
-          const value = parseFloat(row[idx]);
+          const value = parseFloat(String(row[idx] || '0'));
           item[valueKeys[i]] = isNaN(value) ? 0 : value;
         });
 
@@ -66,7 +65,7 @@ export const BasicChart = memo(function BasicChart() {
         }
 
         valueIndices.forEach((idx, i) => {
-          const value = parseFloat(row[idx]);
+          const value = parseFloat(String(row[idx]));
           if (!isNaN(value)) {
             aggregated[label][valueKeys[i]].push(value);
           }
@@ -75,7 +74,8 @@ export const BasicChart = memo(function BasicChart() {
 
       // Calculate aggregation
       return Object.entries(aggregated).map(([label, values]) => {
-        const item: Record<string, string | number> = { [labelKey]: label };
+        const item: Record<string, string | number> = {};
+        item[labelKey] = label;
 
         valueKeys.forEach((key) => {
           const nums = values[key];
@@ -106,8 +106,8 @@ export const BasicChart = memo(function BasicChart() {
   }
 
   const headers = data[0];
-  const labelKey = headers[columnMapping.labels!];
-  const valueKeys = columnMapping.values.map((idx) => headers[idx]);
+  const labelKey = String(headers[columnMapping.labels!] || 'label');
+  const valueKeys = columnMapping.values.map((idx) => String(headers[idx] || `value${idx}`));
 
   // Get colors from selected palette
   const palette = getColorPalette(colorPalette);

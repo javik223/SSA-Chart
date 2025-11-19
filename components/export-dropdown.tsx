@@ -115,7 +115,7 @@ export function ExportDropdown() {
             onClick={() => handleExportClick('png')}
             disabled={isExporting}
           >
-            <Image className='mr-2 h-4 w-4' alt='' />
+            <Image className='mr-2 h-4 w-4' />
             <div className='flex flex-col'>
               <span className='font-medium'>PNG</span>
               <span className='text-[10px] text-zinc-500'>
