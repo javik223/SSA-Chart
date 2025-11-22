@@ -16,6 +16,58 @@ export const COLOR_PALETTES = [
       '#F44336',
       '#9E9E9E',
       '#424242',
+      // Extended colors
+      '#3F51B5', // Indigo
+      '#CDDC39', // Lime
+      '#8BC34A', // Light Green
+      '#795548', // Brown
+      '#607D8B', // Blue Grey
+      '#00BCD4', // Cyan
+      '#673AB7', // Deep Purple
+      '#FFEB3B', // Yellow
+      // Further extended colors
+      '#E91E63', // Pink
+      '#9C27B0', // Purple
+      '#3F51B5', // Indigo
+      '#2196F3', // Blue
+      '#03A9F4', // Light Blue
+      '#00BCD4', // Cyan
+      '#009688', // Teal
+      '#8BC34A', // Light Green
+      '#CDDC39', // Lime
+      '#FFC107', // Amber
+    ],
+  },
+  {
+    id: 'corporate',
+    name: 'Corporate',
+    colors: [
+      '#1A237E', // Indigo 900
+      '#0D47A1', // Blue 900
+      '#01579B', // Light Blue 900
+      '#006064', // Cyan 900
+      '#263238', // Blue Grey 900
+      '#37474F', // Blue Grey 800
+      '#455A64', // Blue Grey 700
+      '#546E7A', // Blue Grey 600
+      '#1565C0', // Blue 800
+      '#283593', // Indigo 800
+    ],
+  },
+  {
+    id: 'warm',
+    name: 'Warm',
+    colors: [
+      '#B71C1C', // Red 900
+      '#C62828', // Red 800
+      '#D32F2F', // Red 700
+      '#E64A19', // Deep Orange 600
+      '#F57C00', // Orange 700
+      '#FFA000', // Amber 700
+      '#FFB300', // Amber 600
+      '#FFCA28', // Amber 400
+      '#FF7043', // Deep Orange 400
+      '#FF5252', // Red Accent 200
     ],
   },
   {

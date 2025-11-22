@@ -10,123 +10,135 @@ import { FormCol } from '@/components/ui/form-col';
 
 export function LayoutSettings() {
   // Typography
-  const layoutMainFont = useChartStore((state) => state.layoutMainFont);
-  const setLayoutMainFont = useChartStore((state) => state.setLayoutMainFont);
-  const layoutTextColor = useChartStore((state) => state.layoutTextColor);
-  const setLayoutTextColor = useChartStore((state) => state.setLayoutTextColor);
+  const layoutMainFont = useChartStore( ( state ) => state.layoutMainFont );
+  const setLayoutMainFont = useChartStore( ( state ) => state.setLayoutMainFont );
+  const layoutTextColor = useChartStore( ( state ) => state.layoutTextColor );
+  const setLayoutTextColor = useChartStore( ( state ) => state.setLayoutTextColor );
 
   // Background
   const layoutBackgroundColorEnabled = useChartStore(
-    (state) => state.layoutBackgroundColorEnabled
+    ( state ) => state.layoutBackgroundColorEnabled
   );
   const setLayoutBackgroundColorEnabled = useChartStore(
-    (state) => state.setLayoutBackgroundColorEnabled
+    ( state ) => state.setLayoutBackgroundColorEnabled
   );
   const layoutBackgroundImageEnabled = useChartStore(
-    (state) => state.layoutBackgroundImageEnabled
+    ( state ) => state.layoutBackgroundImageEnabled
   );
   const setLayoutBackgroundImageEnabled = useChartStore(
-    (state) => state.setLayoutBackgroundImageEnabled
+    ( state ) => state.setLayoutBackgroundImageEnabled
   );
   const layoutBackgroundColor = useChartStore(
-    (state) => state.layoutBackgroundColor
+    ( state ) => state.layoutBackgroundColor
   );
   const setLayoutBackgroundColor = useChartStore(
-    (state) => state.setLayoutBackgroundColor
+    ( state ) => state.setLayoutBackgroundColor
   );
   const layoutBackgroundImageUrl = useChartStore(
-    (state) => state.layoutBackgroundImageUrl
+    ( state ) => state.layoutBackgroundImageUrl
   );
   const setLayoutBackgroundImageUrl = useChartStore(
-    (state) => state.setLayoutBackgroundImageUrl
+    ( state ) => state.setLayoutBackgroundImageUrl
   );
   const layoutBackgroundImageSize = useChartStore(
-    (state) => state.layoutBackgroundImageSize
+    ( state ) => state.layoutBackgroundImageSize
   );
   const setLayoutBackgroundImageSize = useChartStore(
-    (state) => state.setLayoutBackgroundImageSize
+    ( state ) => state.setLayoutBackgroundImageSize
   );
   const layoutBackgroundImagePosition = useChartStore(
-    (state) => state.layoutBackgroundImagePosition
+    ( state ) => state.layoutBackgroundImagePosition
   );
   const setLayoutBackgroundImagePosition = useChartStore(
-    (state) => state.setLayoutBackgroundImagePosition
+    ( state ) => state.setLayoutBackgroundImagePosition
   );
 
   // Margins
-  const layoutMarginTop = useChartStore((state) => state.layoutMarginTop);
-  const setLayoutMarginTop = useChartStore((state) => state.setLayoutMarginTop);
-  const layoutMarginRight = useChartStore((state) => state.layoutMarginRight);
+  const layoutMarginTop = useChartStore( ( state ) => state.layoutMarginTop );
+  const setLayoutMarginTop = useChartStore( ( state ) => state.setLayoutMarginTop );
+  const layoutMarginRight = useChartStore( ( state ) => state.layoutMarginRight );
   const setLayoutMarginRight = useChartStore(
-    (state) => state.setLayoutMarginRight
+    ( state ) => state.setLayoutMarginRight
   );
-  const layoutMarginBottom = useChartStore((state) => state.layoutMarginBottom);
+  const layoutMarginBottom = useChartStore( ( state ) => state.layoutMarginBottom );
   const setLayoutMarginBottom = useChartStore(
-    (state) => state.setLayoutMarginBottom
+    ( state ) => state.setLayoutMarginBottom
   );
-  const layoutMarginLeft = useChartStore((state) => state.layoutMarginLeft);
+  const layoutMarginLeft = useChartStore( ( state ) => state.layoutMarginLeft );
   const setLayoutMarginLeft = useChartStore(
-    (state) => state.setLayoutMarginLeft
+    ( state ) => state.setLayoutMarginLeft
   );
 
   // Padding
-  const layoutPaddingTop = useChartStore((state) => state.layoutPaddingTop);
+  const layoutPaddingTop = useChartStore( ( state ) => state.layoutPaddingTop );
   const setLayoutPaddingTop = useChartStore(
-    (state) => state.setLayoutPaddingTop
+    ( state ) => state.setLayoutPaddingTop
   );
-  const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+  const layoutPaddingRight = useChartStore( ( state ) => state.layoutPaddingRight );
   const setLayoutPaddingRight = useChartStore(
-    (state) => state.setLayoutPaddingRight
+    ( state ) => state.setLayoutPaddingRight
   );
   const layoutPaddingBottom = useChartStore(
-    (state) => state.layoutPaddingBottom
+    ( state ) => state.layoutPaddingBottom
   );
   const setLayoutPaddingBottom = useChartStore(
-    (state) => state.setLayoutPaddingBottom
+    ( state ) => state.setLayoutPaddingBottom
   );
-  const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
+  const layoutPaddingLeft = useChartStore( ( state ) => state.layoutPaddingLeft );
   const setLayoutPaddingLeft = useChartStore(
-    (state) => state.setLayoutPaddingLeft
+    ( state ) => state.setLayoutPaddingLeft
   );
 
   // Border
-  const layoutBorderTop = useChartStore((state) => state.layoutBorderTop);
-  const setLayoutBorderTop = useChartStore((state) => state.setLayoutBorderTop);
-  const layoutBorderRight = useChartStore((state) => state.layoutBorderRight);
+  const layoutBorderTop = useChartStore( ( state ) => state.layoutBorderTop );
+  const setLayoutBorderTop = useChartStore( ( state ) => state.setLayoutBorderTop );
+  const layoutBorderRight = useChartStore( ( state ) => state.layoutBorderRight );
   const setLayoutBorderRight = useChartStore(
-    (state) => state.setLayoutBorderRight
+    ( state ) => state.setLayoutBorderRight
   );
-  const layoutBorderBottom = useChartStore((state) => state.layoutBorderBottom);
+  const layoutBorderBottom = useChartStore( ( state ) => state.layoutBorderBottom );
   const setLayoutBorderBottom = useChartStore(
-    (state) => state.setLayoutBorderBottom
+    ( state ) => state.setLayoutBorderBottom
   );
-  const layoutBorderLeft = useChartStore((state) => state.layoutBorderLeft);
+  const layoutBorderLeft = useChartStore( ( state ) => state.layoutBorderLeft );
   const setLayoutBorderLeft = useChartStore(
-    (state) => state.setLayoutBorderLeft
+    ( state ) => state.setLayoutBorderLeft
   );
-  const layoutBorderStyle = useChartStore((state) => state.layoutBorderStyle);
+  const layoutBorderStyle = useChartStore( ( state ) => state.layoutBorderStyle );
   const setLayoutBorderStyle = useChartStore(
-    (state) => state.setLayoutBorderStyle
+    ( state ) => state.setLayoutBorderStyle
   );
-  const layoutBorderColor = useChartStore((state) => state.layoutBorderColor);
+  const layoutBorderColor = useChartStore( ( state ) => state.layoutBorderColor );
   const setLayoutBorderColor = useChartStore(
-    (state) => state.setLayoutBorderColor
+    ( state ) => state.setLayoutBorderColor
   );
-  const layoutBorderWidth = useChartStore((state) => state.layoutBorderWidth);
+  const layoutBorderWidth = useChartStore( ( state ) => state.layoutBorderWidth );
   const setLayoutBorderWidth = useChartStore(
-    (state) => state.setLayoutBorderWidth
+    ( state ) => state.setLayoutBorderWidth
   );
-  const layoutBorderRadius = useChartStore((state) => state.layoutBorderRadius);
+  const layoutBorderRadius = useChartStore( ( state ) => state.layoutBorderRadius );
   const setLayoutBorderRadius = useChartStore(
-    (state) => state.setLayoutBorderRadius
+    ( state ) => state.setLayoutBorderRadius
   );
 
   // Read direction
   const layoutReadDirection = useChartStore(
-    (state) => state.layoutReadDirection
+    ( state ) => state.layoutReadDirection
   );
   const setLayoutReadDirection = useChartStore(
-    (state) => state.setLayoutReadDirection
+    ( state ) => state.setLayoutReadDirection
+  );
+
+  // Layout Order
+  const layoutOrder = useChartStore( ( state ) => state.layoutOrder );
+  const setLayoutOrder = useChartStore( ( state ) => state.setLayoutOrder );
+
+  // Space Between Sections
+  const layoutSpaceBetweenSections = useChartStore(
+    ( state ) => state.layoutSpaceBetweenSections
+  );
+  const setLayoutSpaceBetweenSections = useChartStore(
+    ( state ) => state.setLayoutSpaceBetweenSections
   );
 
   const fontOptions = [
@@ -144,267 +156,325 @@ export function LayoutSettings() {
 
   return (
     <div className='settings-container'>
-      {/* Typography */}
+      {/* Typography */ }
       <FormSection title='Typography'>
-        <FormGrid columns={2}>
+        <FormGrid columns={ 2 }>
           <FormField
             type='select'
             label='Main Font'
-            value={layoutMainFont}
-            onChange={setLayoutMainFont}
-            options={fontOptions}
+            value={ layoutMainFont }
+            onChange={ setLayoutMainFont }
+            options={ fontOptions }
           />
           <FormField
             type='color'
             label='Text Color'
-            value={layoutTextColor}
-            onChange={setLayoutTextColor}
+            value={ layoutTextColor }
+            onChange={ setLayoutTextColor }
           />
         </FormGrid>
       </FormSection>
 
       <Separator />
 
-      {/* Background */}
+      {/* Background */ }
       <FormSection title='Background'>
-        <FormGrid columns={2}>
+        <FormGrid columns={ 2 }>
           <FormField
             type='button-group'
             label='Color'
-            value={layoutBackgroundColorEnabled ? 'on' : 'off'}
-            onChange={(value) =>
-              setLayoutBackgroundColorEnabled(value === 'on')
+            value={ layoutBackgroundColorEnabled ? 'on' : 'off' }
+            onChange={ ( value ) =>
+              setLayoutBackgroundColorEnabled( value === 'on' )
             }
-            options={[
+            options={ [
               { value: 'on', label: 'On' },
               { value: 'off', label: 'Off' },
-            ]}
+            ] }
           />
           <FormField
             type='button-group'
             label='Image'
-            value={layoutBackgroundImageEnabled ? 'on' : 'off'}
-            onChange={(value) =>
-              setLayoutBackgroundImageEnabled(value === 'on')
+            value={ layoutBackgroundImageEnabled ? 'on' : 'off' }
+            onChange={ ( value ) =>
+              setLayoutBackgroundImageEnabled( value === 'on' )
             }
-            options={[
+            options={ [
               { value: 'on', label: 'On' },
               { value: 'off', label: 'Off' },
-            ]}
+            ] }
           />
         </FormGrid>
 
-        {layoutBackgroundColorEnabled && (
+        { layoutBackgroundColorEnabled && (
           <FormField
             type='color'
             label='Background Color'
-            value={layoutBackgroundColor}
-            onChange={setLayoutBackgroundColor}
+            value={ layoutBackgroundColor }
+            onChange={ setLayoutBackgroundColor }
           />
-        )}
+        ) }
 
-        {layoutBackgroundImageEnabled && (
+        { layoutBackgroundImageEnabled && (
           <>
             <FormField
               type='url'
               label='Image URL'
-              value={layoutBackgroundImageUrl}
-              onChange={setLayoutBackgroundImageUrl}
+              value={ layoutBackgroundImageUrl }
+              onChange={ setLayoutBackgroundImageUrl }
               placeholder='https://example.com/image.jpg'
             />
-            <FormGrid columns={2}>
+            <FormGrid columns={ 2 }>
               <FormField
                 type='select'
                 label='Size'
-                value={layoutBackgroundImageSize}
-                onChange={setLayoutBackgroundImageSize}
-                options={[
+                value={ layoutBackgroundImageSize }
+                onChange={ setLayoutBackgroundImageSize }
+                options={ [
                   { value: 'fill', label: 'Fill' },
                   { value: 'fit', label: 'Fit' },
                   { value: 'original', label: 'Original' },
                   { value: 'stretch', label: 'Stretch' },
-                ]}
+                ] }
               />
               <FormField
                 type='select'
                 label='Position'
-                value={layoutBackgroundImagePosition}
-                onChange={setLayoutBackgroundImagePosition}
-                options={[
+                value={ layoutBackgroundImagePosition }
+                onChange={ setLayoutBackgroundImagePosition }
+                options={ [
                   { value: 'center', label: 'Center' },
                   { value: 'top', label: 'Top' },
                   { value: 'bottom', label: 'Bottom' },
                   { value: 'left', label: 'Left' },
                   { value: 'right', label: 'Right' },
-                ]}
+                ] }
               />
             </FormGrid>
           </>
-        )}
+        ) }
       </FormSection>
 
       <Separator />
 
-      {/* Margins */}
+      {/* Margins */ }
       <FormSection title='Margins (px)'>
-        <FormGrid columns={4}>
+        <FormGrid columns={ 4 }>
           <FormField
             type='number'
             label='Top'
-            value={layoutMarginTop}
-            onChange={setLayoutMarginTop}
+            value={ layoutMarginTop }
+            onChange={ ( v ) => setLayoutMarginTop( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Right'
-            value={layoutMarginRight}
-            onChange={setLayoutMarginRight}
+            value={ layoutMarginRight }
+            onChange={ ( v ) => setLayoutMarginRight( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Bottom'
-            value={layoutMarginBottom}
-            onChange={setLayoutMarginBottom}
+            value={ layoutMarginBottom }
+            onChange={ ( v ) => setLayoutMarginBottom( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Left'
-            value={layoutMarginLeft}
-            onChange={setLayoutMarginLeft}
+            value={ layoutMarginLeft }
+            onChange={ ( v ) => setLayoutMarginLeft( v ?? 0 ) }
           />
         </FormGrid>
       </FormSection>
 
       <Separator />
 
-      {/* Padding */}
+      {/* Padding */ }
       <FormSection title='Padding (px)'>
-        <FormGrid columns={4}>
+        <FormGrid columns={ 4 }>
           <FormField
             type='number'
             label='Top'
-            value={layoutPaddingTop}
-            onChange={setLayoutPaddingTop}
+            value={ layoutPaddingTop }
+            onChange={ ( v ) => setLayoutPaddingTop( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Right'
-            value={layoutPaddingRight}
-            onChange={setLayoutPaddingRight}
+            value={ layoutPaddingRight }
+            onChange={ ( v ) => setLayoutPaddingRight( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Bottom'
-            value={layoutPaddingBottom}
-            onChange={setLayoutPaddingBottom}
+            value={ layoutPaddingBottom }
+            onChange={ ( v ) => setLayoutPaddingBottom( v ?? 0 ) }
           />
           <FormField
             type='number'
             label='Left'
-            value={layoutPaddingLeft}
-            onChange={setLayoutPaddingLeft}
+            value={ layoutPaddingLeft }
+            onChange={ ( v ) => setLayoutPaddingLeft( v ?? 0 ) }
           />
         </FormGrid>
       </FormSection>
 
       <Separator />
 
-      {/* Border */}
+      {/* Border */ }
       <FormSection title='Border'>
         <FormRow gap='md'>
           <FormCol span='auto'>
             <FormField
               type='switch'
               label='Top'
-              checked={layoutBorderTop}
-              onChange={setLayoutBorderTop}
+              checked={ layoutBorderTop }
+              onChange={ setLayoutBorderTop }
             />
           </FormCol>
           <FormCol span='auto'>
             <FormField
               type='switch'
               label='Right'
-              checked={layoutBorderRight}
-              onChange={setLayoutBorderRight}
+              checked={ layoutBorderRight }
+              onChange={ setLayoutBorderRight }
             />
           </FormCol>
           <FormCol span='auto'>
             <FormField
               type='switch'
               label='Bottom'
-              checked={layoutBorderBottom}
-              onChange={setLayoutBorderBottom}
+              checked={ layoutBorderBottom }
+              onChange={ setLayoutBorderBottom }
             />
           </FormCol>
           <FormCol span='auto'>
             <FormField
               type='switch'
               label='Left'
-              checked={layoutBorderLeft}
-              onChange={setLayoutBorderLeft}
+              checked={ layoutBorderLeft }
+              onChange={ setLayoutBorderLeft }
             />
           </FormCol>
         </FormRow>
 
-        {(layoutBorderTop ||
+        { ( layoutBorderTop ||
           layoutBorderRight ||
           layoutBorderBottom ||
-          layoutBorderLeft) && (
-          <div className='settings-nested-section'>
-            <FormGrid columns={2}>
-              <FormField
-                type='select'
-                label='Style'
-                value={layoutBorderStyle}
-                onChange={setLayoutBorderStyle}
-                options={[
-                  { value: 'solid', label: 'Solid' },
-                  { value: 'dashed', label: 'Dashed' },
-                  { value: 'dotted', label: 'Dotted' },
-                ]}
-              />
-              <FormField
-                type='color'
-                label='Color'
-                value={layoutBorderColor}
-                onChange={setLayoutBorderColor}
-              />
-            </FormGrid>
+          layoutBorderLeft ) && (
+            <div className='settings-nested-section'>
+              <FormGrid columns={ 2 }>
+                <FormField
+                  type='select'
+                  label='Style'
+                  value={ layoutBorderStyle }
+                  onChange={ setLayoutBorderStyle }
+                  options={ [
+                    { value: 'solid', label: 'Solid' },
+                    { value: 'dashed', label: 'Dashed' },
+                    { value: 'dotted', label: 'Dotted' },
+                  ] }
+                />
+                <FormField
+                  type='color'
+                  label='Color'
+                  value={ layoutBorderColor }
+                  onChange={ setLayoutBorderColor }
+                />
+              </FormGrid>
 
-            <FormGrid columns={2}>
-              <FormField
-                type='number'
-                label='Width (px)'
-                value={layoutBorderWidth}
-                onChange={setLayoutBorderWidth}
-                min={1}
-                max={20}
-              />
-              <FormField
-                type='number'
-                label='Radius (px)'
-                value={layoutBorderRadius}
-                onChange={setLayoutBorderRadius}
-                min={0}
-                max={50}
-              />
-            </FormGrid>
-          </div>
-        )}
+              <FormGrid columns={ 2 }>
+                <FormField
+                  type='number'
+                  label='Width (px)'
+                  value={ layoutBorderWidth }
+                  onChange={ ( v ) => setLayoutBorderWidth( v ?? 1 ) }
+                  min={ 1 }
+                  max={ 20 }
+                />
+                <FormField
+                  type='number'
+                  label='Radius (px)'
+                  value={ layoutBorderRadius }
+                  onChange={ ( v ) => setLayoutBorderRadius( v ?? 0 ) }
+                  min={ 0 }
+                  max={ 50 }
+                />
+              </FormGrid>
+            </div>
+          ) }
       </FormSection>
 
       <Separator />
 
-      {/* Read Direction */}
+      {/* Read Direction */ }
       <FormSection title='Read direction'>
         <FormField
           type='button-group'
-          value={layoutReadDirection}
-          onChange={setLayoutReadDirection}
-          options={[
+          value={ layoutReadDirection }
+          onChange={ setLayoutReadDirection }
+          options={ [
             { value: 'ltr', label: 'LTR' },
             { value: 'rtl', label: 'RTL' },
-          ]}
+          ] }
+        />
+      </FormSection>
+
+      <Separator />
+
+      {/* Layout Order */ }
+      <FormSection title='Layout Order'>
+        <FormField
+          type='select'
+          value={ layoutOrder }
+          onChange={ setLayoutOrder }
+          options={ [
+            {
+              value: 'header-controls-legend-primary-graphic-footer',
+              label: 'Header → Controls → Legend → Primary Graphic → Footer',
+            },
+            {
+              value: 'primary-graphic-header-controls-footer',
+              label: 'Primary Graphic → Header → Controls → Footer',
+            },
+            {
+              value: 'header-primary-graphic-controls-legend-footer',
+              label: 'Header → Primary Graphic → Controls → Legend → Footer',
+            },
+            {
+              value: 'controls-primary-graphic-header-legend-footer',
+              label: 'Controls → Primary Graphic → Header → Legend → Footer',
+            },
+            {
+              value: 'header-controls-primary-graphic-legend-footer',
+              label: 'Header → Controls → Primary Graphic → Legend → Footer',
+            },
+            {
+              value: 'header-legend-primary-graphic-controls-footer',
+              label: 'Header → Legend → Primary Graphic → Controls → Footer',
+            },
+            {
+              value: 'grid-mode-primary-graphic-right',
+              label: 'Grid Mode: Primary Graphic on Right',
+            },
+          ] }
+        />
+      </FormSection>
+
+      <Separator />
+
+      {/* Space Between Sections */ }
+      <FormSection title='Space Between Sections'>
+        <FormField
+          type='button-group'
+          value={ layoutSpaceBetweenSections }
+          onChange={ setLayoutSpaceBetweenSections }
+          options={ [
+            { value: 'none', label: 'None' },
+            { value: 'tight', label: 'Tight' },
+            { value: 'loose', label: 'Loose' },
+            { value: 'large', label: 'Large' },
+          ] }
         />
       </FormSection>
     </div>

@@ -280,11 +280,27 @@ async function deleteRows(rowIndices: number[], tableName: string = DEFAULT_TABL
   }
 
   try {
-    // DuckDB ROWID is 1-based
-    const rowIds = rowIndices.map(idx => idx + 1).join(', ');
-    await conn.query(`DELETE FROM ${tableName} WHERE ROWID IN (${rowIds})`);
+    // Get all ROWIDs in order
+    const rowidsResult = await conn.query(`SELECT ROWID as rid FROM ${tableName}`);
+    const rowidsArray = rowidsResult.toArray();
+    const rowids = rowidsArray.map((r: any) => r.rid);
 
-    return { success: true, deletedCount: rowIndices.length };
+    // Map array indices to ROWIDs
+    const targetRowIds: number[] = [];
+    for (const idx of rowIndices) {
+      if (idx >= 0 && idx < rowids.length) {
+        targetRowIds.push(rowids[idx]);
+      }
+    }
+
+    if (targetRowIds.length === 0) {
+      return { success: true, deletedCount: 0 };
+    }
+
+    const rowIdsStr = targetRowIds.join(', ');
+    await conn.query(`DELETE FROM ${tableName} WHERE ROWID IN (${rowIdsStr})`);
+
+    return { success: true, deletedCount: targetRowIds.length };
   } catch (error) {
     console.error('Failed to delete rows:', error);
     throw error;

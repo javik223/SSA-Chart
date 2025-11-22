@@ -12,7 +12,7 @@
  * 5. Syncs cell edits back to DuckDB
  */
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useRef, useState } from 'react';
 import { useChartStore } from '@/store/useChartStore';
 import { useDuckDB } from './useDuckDB';
 import debounce from 'lodash.debounce';
@@ -65,6 +65,9 @@ export function useVirtualData() {
   // Refs to prevent infinite loops
   const isLoadingRef = useRef(false);
   const isUpdatingRef = useRef(false);
+
+  // Track initial load
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   /**
    * Export full data from DuckDB and persist to Zustand for IndexedDB persistence
@@ -143,7 +146,14 @@ export function useVirtualData() {
 
     try {
       // Get table info first
-      const tableInfo = await duckdb.getTableInfo();
+      let tableInfo;
+      try {
+        tableInfo = await duckdb.getTableInfo();
+      } catch (error) {
+        console.error('[VirtualData] Failed to get table info:', error);
+        isLoadingRef.current = false;
+        return;
+      }
 
       if (!tableInfo.exists || !tableInfo.rowCount) {
         console.log('[VirtualData] No data in DuckDB');
@@ -197,6 +207,7 @@ export function useVirtualData() {
       console.error('[VirtualData] Failed to load page:', error);
     } finally {
       isLoadingRef.current = false;
+      setHasLoaded(true);
     }
   }, [
     duckdb.isInitialized,
@@ -357,5 +368,6 @@ export function useVirtualData() {
     deleteRows,
     insertRows,
     syncToDuckDB,
+    hasLoaded,
   };
 }

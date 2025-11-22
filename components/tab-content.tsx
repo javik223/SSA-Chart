@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, Activity } from 'react';
+import { memo } from 'react';
 import { ChartPreview } from '@/components/chart-preview';
 import { DataTable } from '@/components/data-table';
 
@@ -9,38 +9,32 @@ interface TabContentProps {
 }
 
 // Memoize individual tab panels to prevent re-renders
-const PreviewPanel = memo(function PreviewPanel() {
-  return <ChartPreview />;
-});
+const PreviewPanel = memo( function PreviewPanel( { isVisible }: { isVisible: boolean; } ) {
+  return <ChartPreview isVisible={ isVisible } />;
+} );
 
-const DataPanel = memo(function DataPanel() {
+const DataPanel = memo( function DataPanel() {
   return <DataTable />;
-});
+} );
 
-export const TabContent = memo(function TabContent({
+export const TabContent = memo( function TabContent( {
   activeTab,
-}: TabContentProps) {
+}: TabContentProps ) {
   return (
-    <div className='flex-1 relative'>
-      <Activity mode={activeTab === 'preview' ? 'visible' : 'hidden'}>
-        <div
-          className={`absolute inset-0 ${
-            activeTab === 'preview' ? '' : 'pointer-events-none'
-          }`}
-        >
-          <PreviewPanel />
-        </div>
-      </Activity>
+    <div className='w-full h-full flex-1 relative'>
+      <div
+        className={ `absolute inset-0 w-full h-full ${ activeTab === 'preview' ? 'z-10' : 'z-0 invisible'
+          }` }
+      >
+        <PreviewPanel isVisible={ activeTab === 'preview' } />
+      </div>
 
-      <Activity mode={activeTab === 'data' ? 'visible' : 'hidden'}>
-        <div
-          className={`absolute inset-0 ${
-            activeTab === 'data' ? '' : 'pointer-events-none'
-          }`}
-        >
-          <DataPanel />
-        </div>
-      </Activity>
+      <div
+        className={ `absolute inset-0 w-full h-full ${ activeTab === 'data' ? 'z-10' : 'z-0 invisible'
+          }` }
+      >
+        <DataPanel />
+      </div>
     </div>
   );
-});
+} );

@@ -8,14 +8,14 @@ import { initializeCharts } from '@/lib/chartRegistrations';
  * This ensures charts are registered before any components try to use them
  */
 export function ChartInitializer() {
-  const initialized = useRef(false);
+  const initialized = useRef( false );
 
-  useEffect(() => {
-    if (!initialized.current) {
+  useEffect( () => {
+    if ( !initialized.current ) {
       initializeCharts();
       initialized.current = true;
     }
-  }, []);
+  }, [] );
 
   return null;
 }

@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+
+/* AG Grid Data Grid Styles */
+
+/* Data Type Badge */
+.data-grid-type-badge {
+  @apply rounded bg-violet-100 px-1 py-0.5 text-[10px] font-mono font-medium text-slate-500 shrink-0;
+}
+
+.data-grid-type-badge svg {
+  width: 10px;
+  height: 10px;
+  color: rgb(100 116 139); /* slate-500 */
+}
+
+/* Custom header styling for better integration */
+.ag-header-cell-comp-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Label and Value column highlights */
+.bg-pink-50 {
+  background-color: rgb(253 242 248);
+}
+
+.bg-purple-50 {
+  background-color: rgb(250 245 255);
+}
+
+/* Context menu separators */
+.ag-menu-separator {
+  height: 4px !important;
+  background-color: black;
+  padding: 0 !important;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ag-menu-separator > * {
+  display: none;
+}
+
+.ag-menu-separator:hover {
+  background-color: #e5e7eb !important;
+}
+
+/* Row Numbers Styling */
+.ag-row-number-cell {
+  font-family: monospace !important;
+  font-size: 12px !important;
+  color: #6b7280 !important; /* gray-500 */
+  font-weight: normal !important;
+}
+
+/* Cell Font Weight - Light */
+.ag-cell {
+  font-weight: 100 !important;
+}
+
+/* Header Font Weight - Bold */
+.ag-header-cell-text {
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5x;
+}

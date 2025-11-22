@@ -1,29 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PageHeader } from '@/components/page-header';
 import { TabContent } from '@/components/tab-content';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useState } from 'react';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('preview');
+  const [ activeTab, setActiveTab ] = useState( 'data' );
 
   return (
     <main className='flex flex-col h-screen'>
       <PageHeader />
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className='flex-1 bg-slate-100'>
-        <TabsList className='w-100 self-center my-2 bg-slate-100'>
-          <TabsTrigger value='preview' className='font-light'>
+      <div className='w-full'>
+        <ToggleGroup
+          className=' bg-slate-50 w-full py-4 flex justify-center'
+          variant='outline'
+          type='single'
+          onValueChange={ ( value ) => {
+            if ( value ) setActiveTab( value );
+          } }
+        >
+          <ToggleGroupItem className='min-w-60 bg-white' value='preview'>
             Preview
-          </TabsTrigger>
-          <TabsTrigger value='data' className='font-light'>
+          </ToggleGroupItem>
+          <ToggleGroupItem className='min-w-60 bg-white' value='data'>
             Data
-          </TabsTrigger>
-        </TabsList>
-
-        <TabContent activeTab={activeTab} />
-      </Tabs>
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+      <TabContent activeTab={ activeTab } />
     </main>
   );
 }

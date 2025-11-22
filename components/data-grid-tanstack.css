@@ -1,0 +1,439 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '../styles/settings.css';
+@import '../styles/theme.css';
+/* Data Grid Tanstack Styles */
+
+/* ===== Table Base Styles ===== */
+[data-slot='table-container'] {
+  @apply relative w-full overflow-auto;
+}
+
+[data-slot='table'] {
+  @apply w-full border-collapse table-fixed caption-bottom;
+}
+
+[data-slot='table-header'] {
+  @apply sticky top-0 z-50 block bg-white;
+}
+
+[data-slot='table-body'] {
+  @apply block relative;
+}
+
+[data-slot='table-body']:has(.data-grid-cell-selected) {
+  @apply overflow-visible;
+}
+
+[data-slot='table-footer'] {
+  @apply bg-muted font-medium;
+}
+
+[data-slot='table-row'] {
+  @apply flex border-b transition-colors duration-100 ease-out hover:bg-muted;
+}
+
+[data-slot='table-row']:has(.data-grid-cell-selected) {
+  @apply overflow-visible;
+}
+
+[data-slot='table-row'][data-state='selected'] {
+  @apply bg-muted;
+}
+
+[data-slot='table-head'] {
+  @apply p-0 text-left align-middle font-medium text-muted-foreground border-r shrink-0;
+}
+
+[data-slot='table-head']:last-child {
+  @apply border-r-0;
+}
+
+[data-slot='table-cell'] {
+  @apply p-0 align-middle border-r shrink-0 select-none relative text-sm flex;
+}
+
+[data-slot='table-cell'] > div:not(.data-grid-row-number) {
+  @apply flex-1;
+}
+
+[data-slot='table-cell']:has(.data-grid-cell-selected) {
+  @apply overflow-visible;
+}
+
+[data-slot='table-cell']:last-child {
+  @apply border-r-0;
+}
+
+[data-slot='table-caption'] {
+  @apply mt-4 text-sm text-muted-foreground;
+}
+
+/* ===== Context Menu ===== */
+[data-slot='context-menu-sub-trigger'] {
+  @apply flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none gap-2;
+}
+
+[data-slot='context-menu-sub-trigger']:focus,
+[data-slot='context-menu-sub-trigger'][data-state='open'] {
+  @apply bg-accent text-accent-foreground;
+}
+
+[data-slot='context-menu-sub-trigger'][data-inset='true'] {
+  @apply pl-8;
+}
+
+[data-slot='context-menu-sub-trigger'] svg:not([class*='text-']) {
+  @apply text-muted-foreground;
+}
+
+[data-slot='context-menu-sub-trigger'] svg {
+  @apply pointer-events-none shrink-0 size-4;
+}
+
+[data-slot='context-menu-sub-content'],
+[data-slot='context-menu-content'] {
+  @apply z-50 min-w-32 overflow-hidden rounded-md border border-border bg-popover text-popover-foreground p-1 shadow-lg;
+}
+
+[data-slot='context-menu-content'] {
+  @apply max-h-(--radix-context-menu-content-available-height) overflow-x-hidden overflow-y-auto;
+}
+
+[data-slot='context-menu-item'] {
+  @apply relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none;
+}
+
+[data-slot='context-menu-item']:focus {
+  @apply bg-accent text-accent-foreground;
+}
+
+[data-slot='context-menu-item'][data-disabled] {
+  @apply pointer-events-none opacity-50;
+}
+
+[data-slot='context-menu-item'][data-inset='true'] {
+  @apply pl-8;
+}
+
+[data-slot='context-menu-item'][data-variant='destructive'] {
+  @apply text-destructive;
+}
+
+[data-slot='context-menu-item'][data-variant='destructive']:focus {
+  @apply bg-[rgb(239_68_68/0.1)] text-destructive;
+}
+
+[data-slot='context-menu-item'] svg:not([class*='text-']) {
+  @apply text-muted-foreground;
+}
+
+[data-slot='context-menu-item'] svg {
+  @apply pointer-events-none shrink-0 size-4;
+}
+
+[data-slot='context-menu-checkbox-item'],
+[data-slot='context-menu-radio-item'] {
+  @apply relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-none select-none;
+}
+
+[data-slot='context-menu-checkbox-item']:focus,
+[data-slot='context-menu-radio-item']:focus {
+  @apply bg-accent text-accent-foreground;
+}
+
+[data-slot='context-menu-checkbox-item'][data-disabled],
+[data-slot='context-menu-radio-item'][data-disabled] {
+  @apply pointer-events-none opacity-50;
+}
+
+[data-slot='context-menu-label'] {
+  @apply px-2 py-1.5 text-sm font-medium text-foreground;
+}
+
+[data-slot='context-menu-label'][data-inset='true'] {
+  @apply pl-8;
+}
+
+[data-slot='context-menu-separator'] {
+  @apply my-1 -mx-1 h-px bg-border;
+}
+
+[data-slot='context-menu-shortcut'] {
+  @apply ml-auto text-xs tracking-wider text-muted-foreground;
+}
+
+/* ===== Data Grid Container ===== */
+.data-grid-container {
+  @apply w-full h-full flex flex-col;
+}
+
+/* ===== Toolbar ===== */
+.data-grid-toolbar {
+  @apply flex items-center justify-between px-4 py-2 border-b border-border bg-gray-50;
+}
+
+.data-grid-toolbar-left,
+.data-grid-toolbar-right {
+  @apply flex items-center gap-2;
+}
+
+.data-grid-toolbar-selection-text {
+  @apply text-sm text-gray-600;
+}
+
+/* ===== Table Container ===== */
+.data-grid-table-container {
+  @apply flex-1 overflow-auto relative outline-none;
+}
+
+.data-grid-table-container:has(.data-grid-cell-selected) {
+  @apply pr-3 pb-3;
+}
+
+/* ===== Loading Overlay ===== */
+.data-grid-loading-overlay {
+  @apply absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center;
+}
+
+.data-grid-loading-content {
+  @apply flex flex-col items-center gap-3;
+}
+
+.data-grid-loading-spinner {
+  @apply size-8 animate-spin text-blue-500;
+}
+
+.data-grid-loading-text {
+  @apply text-sm font-medium text-gray-600;
+}
+
+/* ===== Row Number Cell ===== */
+.data-grid-row-number {
+  @apply w-10 text-center text-xs text-gray-400 font-mono cursor-grab relative flex justify-end self-center;
+}
+
+.data-grid-row-number:active {
+  @apply cursor-grabbing;
+}
+
+.data-grid-row-number.dragging {
+  @apply opacity-30 bg-gray-200;
+}
+
+/* ===== Drop Indicators ===== */
+.data-grid-drop-indicator-top {
+  @apply absolute left-0 right-0 top-0 h-0.5 bg-blue-500 -translate-y-1/2 z-20;
+}
+
+.data-grid-drop-indicator-bottom {
+  @apply absolute left-0 right-0 bottom-0 h-0.5 bg-blue-500 translate-y-1/2 z-20;
+}
+
+.data-grid-drop-indicator-left {
+  @apply absolute left-0 top-0 bottom-0 w-1 bg-blue-500 -translate-x-1/2 z-20;
+}
+
+.data-grid-drop-indicator-right {
+  @apply absolute right-0 top-0 bottom-0 w-1 bg-blue-500 translate-x-1/2 z-20;
+}
+
+/* ===== Column Header ===== */
+.data-grid-column-header {
+  @apply w-full relative;
+}
+
+.data-grid-column-header.dragging {
+  @apply opacity-30 bg-gray-200;
+}
+
+/* Motion Reorder Item Styles */
+[data-reorder-item] {
+  @apply cursor-grab;
+  user-select: none;
+  touch-action: none;
+}
+
+[data-reorder-item]:active {
+  @apply cursor-grabbing;
+  z-index: 1000;
+}
+
+/* Prevent text selection during drag */
+[data-reorder-item] * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.data-grid-column-header-content {
+  @apply h-8 w-full flex items-center gap-1 px-2;
+}
+
+.data-grid-column-header-content:hover {
+  @apply bg-gray-100;
+}
+
+.label-column {
+  @apply bg-pink-50;
+}
+
+.value-column {
+  @apply bg-purple-50;
+}
+
+.data-grid-grip-icon {
+  @apply size-3 text-gray-400 cursor-grab shrink-0;
+}
+
+.data-grid-type-badge {
+  @apply rounded bg-violet-100 px-1 py-0.5 text-[10px] font-mono font-medium text-slate-500 shrink-0;
+}
+
+.data-grid-sort-icon {
+  @apply size-3 shrink-0;
+}
+
+.data-grid-dropdown-trigger {
+  @apply p-1 rounded shrink-0 hover:bg-gray-200;
+}
+
+.data-grid-dropdown-icon {
+  @apply size-3 opacity-50;
+}
+
+/* ===== Resize Handle ===== */
+.data-grid-resize-handle {
+  @apply absolute right-0 top-0 bottom-0 w-1 cursor-col-resize z-30;
+}
+
+.data-grid-resize-handle:hover,
+.data-grid-resize-handle.resizing {
+  @apply bg-blue-500;
+}
+
+/* ===== Editable Column Name ===== */
+.data-grid-column-name-input {
+  @apply flex-1 min-w-0 text-sm font-semibold text-slate-700 bg-white border border-blue-500 rounded px-1 outline-none;
+}
+
+.data-grid-column-name {
+  @apply flex-1 min-w-0 text-left text-sm font-semibold text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap cursor-text;
+}
+
+/* ===== Editable Cell ===== */
+.data-grid-cell-input {
+  @apply w-full h-full px-2 py-1 bg-white outline-none border-none box-border;
+}
+
+.data-grid-cell-content {
+  @apply w-full h-full px-2 py-1 cursor-default overflow-hidden text-ellipsis whitespace-nowrap flex items-center leading-none outline-none box-border;
+}
+
+.data-grid-cell-content span {
+  @apply overflow-hidden text-ellipsis whitespace-nowrap min-w-0;
+}
+
+.data-grid-cell-content.readonly {
+  @apply bg-gray-50 text-gray-500;
+}
+
+.align-left {
+  @apply text-left;
+}
+.align-center {
+  @apply text-center;
+}
+.align-right {
+  @apply text-right;
+}
+
+/* ===== Cell Selection ===== */
+.data-grid-cell-selected {
+  @apply bg-blue-500 outline-[1.5px] outline-blue-500 outline-offset-0 z-1000 overflow-visible;
+}
+
+.data-grid-cell-fill-range {
+  @apply bg-blue-50/50 outline outline-dashed outline-blue-400 -outline-offset-1;
+}
+
+.data-grid-cell-overflow-visible {
+  @apply overflow-visible;
+}
+
+/* ===== Fill Handle ===== */
+.data-grid-fill-handle {
+  @apply absolute size-2.5 bg-blue-600 cursor-crosshair z-2000 rounded-sm border-2 border-white shadow-md;
+  bottom: -1px;
+  right: -1px;
+}
+
+/* ===== Virtualized Row ===== */
+.data-grid-virtual-row {
+  @apply flex absolute top-0 left-0 w-full border-b border-gray-200;
+}
+
+.data-grid-virtual-row:has(.data-grid-cell-selected) {
+  @apply overflow-visible;
+}
+
+/* ===== Pagination ===== */
+.data-grid-pagination {
+  @apply flex items-center justify-between px-4 py-3 border-t border-border bg-gray-50;
+}
+
+.data-grid-pagination-info {
+  @apply text-sm text-gray-600;
+}
+
+.data-grid-pagination-controls {
+  @apply flex items-center gap-4;
+}
+
+.data-grid-pagination-size {
+  @apply flex items-center gap-2;
+}
+
+.data-grid-pagination-size-label {
+  @apply text-sm text-gray-600;
+}
+
+.data-grid-pagination-buttons {
+  @apply flex items-center gap-1;
+}
+
+.data-grid-pagination-page-info {
+  @apply flex items-center gap-1 text-sm text-gray-600 px-2;
+}
+
+/* ===== Empty State ===== */
+.data-grid-empty {
+  @apply w-full h-full flex items-center justify-center text-gray-500;
+}
+
+.data-grid-empty-row {
+  @apply h-24 text-center;
+}
+
+/* ===== Row Number Header ===== */
+.data-grid-row-number-header {
+  @apply w-10 text-center text-xs text-gray-500;
+}
+
+/* ===== Checkbox ===== */
+.data-grid-checkbox {
+  @apply ml-1;
+}
+
+/* ===== Menu Icons ===== */
+.data-grid-menu-icon {
+  @apply mr-2 size-4;
+}
+
+.data-grid-menu-checkmark {
+  @apply ml-auto;
+}
+
+/* ===== Dropdown Content ===== */
+.data-grid-dropdown-content {
+  @apply w-48;
+}

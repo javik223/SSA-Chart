@@ -5,15 +5,17 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
-import { ChartCanvas } from '@/components/chart-canvas';
+import { BasicChart } from '@/components/charts/BasicChart';
 import { ChartSettings } from '@/components/chart-settings';
 
 export function ChartPreviewResizable() {
   return (
     <ResizablePanelGroup direction='horizontal'>
-      {/* Chart Canvas Area */}
+      {/* Chart Display Area */}
       <ResizablePanel defaultSize={75} minSize={50}>
-        <ChartCanvas />
+        <div className='w-full h-full p-8 flex items-center justify-center'>
+          <BasicChart />
+        </div>
       </ResizablePanel>
 
       {/* Resize Handle */}

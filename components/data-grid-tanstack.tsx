@@ -15,6 +15,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { Reorder } from 'motion/react';
 import {
   Table,
   TableBody,
@@ -45,7 +46,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -80,6 +80,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import './data-grid-tanstack.css';
 
 interface VirtualDataFunctions {
   isReady: boolean;
@@ -155,7 +156,7 @@ function EditableColumnName({ name, onRename }: EditableColumnNameProps) {
             setIsEditing(false);
           }
         }}
-        className='flex-1 min-w-0 text-sm font-semibold text-slate-700 bg-white border border-blue-500 rounded px-1 outline-none'
+        className='data-grid-column-name-input'
         onClick={(e) => e.stopPropagation()}
       />
     );
@@ -164,7 +165,7 @@ function EditableColumnName({ name, onRename }: EditableColumnNameProps) {
   return (
     <span
       ref={spanRef}
-      className='flex-1 min-w-0 text-left text-sm font-semibold text-slate-700 truncate cursor-text'
+      className='data-grid-column-name'
       onDoubleClick={(e) => {
         e.stopPropagation();
         setEditValue(name);
@@ -289,7 +290,7 @@ function EditableCell({
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         className={cn(
-          'w-full h-full px-2 py-1 min-h-[28px] bg-white outline-none border-none focus:ring-0',
+          'w-full h-full px-2 py-1 min-h-7 bg-white outline-none border-none focus:ring-0',
           alignmentClass
         )}
       />
@@ -303,7 +304,7 @@ function EditableCell({
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        'px-2 py-1 min-h-[28px] cursor-default truncate outline-none',
+        'px-2 py-1 min-h-7 cursor-default truncate outline-none',
         alignmentClass,
         isReadOnly && 'bg-gray-50 text-gray-500',
         className
@@ -323,23 +324,21 @@ export const DataGridTanstack = memo(function DataGridTanstack({
   const data = useChartStore((state) => state.data);
   const setData = useChartStore((state) => state.setData);
   const columnMapping = useChartStore((state) => state.columnMapping);
+  const setColumnMapping = useChartStore((state) => state.setColumnMapping);
   const columnTypes = useChartStore((state) => state.columnTypes);
+  const setColumnTypes = useChartStore((state) => state.setColumnTypes);
 
   // Table state
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 100,
   });
-  const [globalFilter, setGlobalFilter] = useState('');
 
-  // Sync searchQuery prop to global filter
+  // Reset to first page when search changes
   useEffect(() => {
-    setGlobalFilter(searchQuery);
-    // Reset to first page when search changes
     if (searchQuery) {
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     }
@@ -387,9 +386,10 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     null
   );
 
-  // Drag reorder state
-  const [draggedColumn, setDraggedColumn] = useState<number | null>(null);
-  const [dragOverColumn, setDragOverColumn] = useState<number | null>(null);
+  // Column order state for Motion Reorder
+  const [columnOrder, setColumnOrder] = useState<number[]>([]);
+
+  // Row drag reorder state (keeping HTML5 for rows for now)
   const [draggedRow, setDraggedRow] = useState<number | null>(null);
   const [dragOverRow, setDragOverRow] = useState<number | null>(null);
 
@@ -452,46 +452,59 @@ export const DataGridTanstack = memo(function DataGridTanstack({
   // Handle row deletion
   const handleDeleteRows = useCallback(
     (rowIndices: number[]) => {
+      // Optimistic update: Remove rows from local data immediately
+      const currentData = dataRef.current;
+      // Sort indices in descending order to remove from end first
+      const sortedIndices = [...rowIndices].sort((a, b) => b - a);
+
+      const newData = [...currentData];
+      sortedIndices.forEach((idx) => {
+        // +1 to account for header row
+        newData.splice(idx + 1, 1);
+      });
+      setData(newData);
+
+      // Then persist to DuckDB
       if (virtualData) {
         virtualData.deleteRows(rowIndices).catch((err) => {
           console.error('[DataGridTanstack] Failed to delete rows:', err);
         });
       }
     },
-    [virtualData]
+    [virtualData, setData]
   );
 
   // Use ref to access current data in callbacks without causing re-renders
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  // Handle column deletion
+  // Handle column deletion (optimistic)
   const handleDeleteColumn = useCallback(
-    async (colIndex: number) => {
+    (colIndex: number) => {
+      // Optimistic update: Remove column from local data immediately
       const currentData = dataRef.current;
       const newData = currentData.map((row) =>
         row.filter((_, i) => i !== colIndex)
       );
       setData(newData, { index: colIndex, count: 1 });
 
-      // Sync to DuckDB
+      // Then sync to DuckDB in background
       if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
+        virtualData.syncToDuckDB(newData).catch((err) => {
           console.error(
             '[DataGridTanstack] Failed to sync column deletion to DuckDB:',
             err
           );
-        }
+        });
       }
     },
     [setData, virtualData]
   );
 
-  // Handle insert column
+  // Handle insert column (optimistic)
   const handleInsertColumn = useCallback(
-    async (colIndex: number, position: 'left' | 'right') => {
+    (colIndex: number, position: 'left' | 'right') => {
+      // Optimistic update: Insert column immediately
       const currentData = dataRef.current;
       const insertAt = position === 'left' ? colIndex : colIndex + 1;
       const newData = currentData.map((row, rowIndex) => {
@@ -505,24 +518,23 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       });
       setData(newData);
 
-      // Sync to DuckDB so the new column is persisted
+      // Then sync to DuckDB in background
       if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
+        virtualData.syncToDuckDB(newData).catch((err) => {
           console.error(
             '[DataGridTanstack] Failed to sync column to DuckDB:',
             err
           );
-        }
+        });
       }
     },
     [setData, virtualData]
   );
 
-  // Handle clear column
+  // Handle clear column (optimistic)
   const handleClearColumn = useCallback(
-    async (colIndex: number) => {
+    (colIndex: number) => {
+      // Optimistic update: Clear column immediately
       const currentData = dataRef.current;
       const newData = currentData.map((row, rowIndex) => {
         if (rowIndex === 0) return row; // Keep header
@@ -532,24 +544,23 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       });
       setData(newData);
 
-      // Sync to DuckDB
+      // Then sync to DuckDB in background
       if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
+        virtualData.syncToDuckDB(newData).catch((err) => {
           console.error(
             '[DataGridTanstack] Failed to sync column clear to DuckDB:',
             err
           );
-        }
+        });
       }
     },
     [setData, virtualData]
   );
 
-  // Handle rename column
+  // Handle rename column (optimistic)
   const handleRenameColumn = useCallback(
-    async (colIndex: number, newName: string) => {
+    (colIndex: number, newName: string) => {
+      // Optimistic update: Rename column immediately
       const currentData = dataRef.current;
       if (!currentData[0]) return;
 
@@ -558,23 +569,20 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       newData[0][colIndex] = newName;
       setData(newData);
 
-      // Sync to DuckDB
+      // Then sync to DuckDB in background
       if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
+        virtualData.syncToDuckDB(newData).catch((err) => {
           console.error(
             '[DataGridTanstack] Failed to sync column rename to DuckDB:',
             err
           );
-        }
+        });
       }
     },
     [setData, virtualData]
   );
 
   // Handle change column type
-  const setColumnTypes = useChartStore((state) => state.setColumnTypes);
   const handleChangeColumnType = useCallback(
     (colIndex: number, newType: 'text' | 'number' | 'date' | 'boolean') => {
       const newTypes = [...columnTypes];
@@ -626,40 +634,22 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     };
   }, [resizingColumn]);
 
-  // Handle column reorder
+  // Handle column reorder (called by Motion Reorder)
   const handleColumnReorder = useCallback(
-    async (fromIndex: number, toIndex: number) => {
-      if (fromIndex === toIndex) return;
-
-      const currentData = dataRef.current;
-      const newData = currentData.map((row) => {
-        const newRow = [...row];
-        const [moved] = newRow.splice(fromIndex, 1);
-        newRow.splice(toIndex, 0, moved);
-        return newRow;
-      });
-      setData(newData);
-
-      // Sync to DuckDB
-      if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
-          console.error(
-            '[DataGridTanstack] Failed to sync column reorder to DuckDB:',
-            err
-          );
-        }
-      }
+    (newOrder: number[]) => {
+      // Just update the visual order state
+      // Data stays in original order, we only change how it's displayed
+      setColumnOrder(newOrder);
     },
-    [setData, virtualData]
+    []
   );
 
-  // Handle row reorder
+  // Handle row reorder (optimistic)
   const handleRowReorder = useCallback(
-    async (fromIndex: number, toIndex: number) => {
+    (fromIndex: number, toIndex: number) => {
       if (fromIndex === toIndex) return;
 
+      // Optimistic update: Reorder rows immediately
       const currentData = dataRef.current;
       const newData = [...currentData];
       // +1 to account for header row
@@ -667,16 +657,14 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       newData.splice(toIndex + 1, 0, moved);
       setData(newData);
 
-      // Sync to DuckDB
+      // Then sync to DuckDB in background
       if (virtualData) {
-        try {
-          await virtualData.syncToDuckDB(newData);
-        } catch (err) {
+        virtualData.syncToDuckDB(newData).catch((err) => {
           console.error(
             '[DataGridTanstack] Failed to sync row reorder to DuckDB:',
             err
           );
-        }
+        });
       }
     },
     [setData, virtualData]
@@ -720,8 +708,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       valueToInsert = clipboard.value;
 
       // If it was a cut, clear the original cell
-      if (clipboard.isCut && virtualData) {
-        // We'd need to track the source cell for this
+      if (clipboard.isCut) {
         setClipboard(null);
       }
     } else {
@@ -734,59 +721,103 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       }
     }
 
-    if (virtualData && valueToInsert !== undefined) {
+    if (valueToInsert === undefined) return;
+
+    // Optimistic update: Update cell in local data immediately
+    const currentData = dataRef.current;
+    if (currentData[selectedCell.row + 1]) {
+      const newData = [...currentData];
+      newData[selectedCell.row + 1] = [...newData[selectedCell.row + 1]];
+      newData[selectedCell.row + 1][selectedCell.col] = valueToInsert;
+      setData(newData);
+    }
+
+    // Then persist to DuckDB
+    if (virtualData) {
       virtualData
         .updateCell(selectedCell.row, selectedCell.col, valueToInsert)
         .catch(console.error);
     }
-  }, [selectedCell, clipboard, virtualData]);
+  }, [selectedCell, clipboard, virtualData, setData]);
 
   // Handle clear cell(s)
   const handleClearCell = useCallback(() => {
-    if (!virtualData) return;
+    const currentData = dataRef.current;
 
-    // Clear all selected cells
+    // Collect updates
+    const updates: Array<{ row: number; col: number; value: unknown }> = [];
+
     if (selectedCells.size > 0) {
-      const updates: Array<{ row: number; col: number; value: unknown }> = [];
       selectedCells.forEach((cellKey) => {
         const [row, col] = cellKey.split(':').map(Number);
         updates.push({ row, col, value: '' });
       });
-
-      if (updates.length > 0) {
-        virtualData.updateCellsAndPersist(updates).catch(console.error);
-      }
     } else if (selectedCell) {
-      virtualData
-        .updateCell(selectedCell.row, selectedCell.col, '')
-        .catch(console.error);
+      updates.push({ row: selectedCell.row, col: selectedCell.col, value: '' });
     }
-  }, [selectedCell, selectedCells, virtualData]);
 
-  // Handle insert row above
+    if (updates.length === 0) return;
+
+    // Optimistic update: Clear cells in local data immediately
+    const newData = [...currentData];
+    for (const update of updates) {
+      if (newData[update.row + 1]) {
+        newData[update.row + 1] = [...newData[update.row + 1]];
+        newData[update.row + 1][update.col] = '';
+      }
+    }
+    setData(newData);
+
+    // Then persist to DuckDB
+    if (virtualData) {
+      virtualData.updateCellsAndPersist(updates).catch(console.error);
+    }
+  }, [selectedCell, selectedCells, virtualData, setData]);
+
+  // Handle insert row above (optimistic)
   const handleInsertRowAbove = useCallback(() => {
-    if (!selectedCell || !virtualData) return;
+    if (!selectedCell) return;
     const currentData = dataRef.current;
     const colCount = currentData[0]?.length || 0;
     const emptyRow = Array(colCount).fill('');
 
-    // Insert at the selected row position
+    // Optimistic update: Insert row in local data immediately
     const newData = [...currentData];
     newData.splice(selectedCell.row + 1, 0, emptyRow); // +1 for header
     setData(newData);
+
+    // Then sync to DuckDB in background
+    if (virtualData) {
+      virtualData.syncToDuckDB(newData).catch((err) => {
+        console.error(
+          '[DataGridTanstack] Failed to sync row insert to DuckDB:',
+          err
+        );
+      });
+    }
   }, [selectedCell, virtualData, setData]);
 
-  // Handle insert row below
+  // Handle insert row below (optimistic)
   const handleInsertRowBelow = useCallback(() => {
-    if (!selectedCell || !virtualData) return;
+    if (!selectedCell) return;
     const currentData = dataRef.current;
     const colCount = currentData[0]?.length || 0;
     const emptyRow = Array(colCount).fill('');
 
-    // Insert after the selected row
+    // Optimistic update: Insert row in local data immediately
     const newData = [...currentData];
     newData.splice(selectedCell.row + 2, 0, emptyRow); // +2 for header and after current
     setData(newData);
+
+    // Then sync to DuckDB in background
+    if (virtualData) {
+      virtualData.syncToDuckDB(newData).catch((err) => {
+        console.error(
+          '[DataGridTanstack] Failed to sync row insert to DuckDB:',
+          err
+        );
+      });
+    }
   }, [selectedCell, virtualData, setData]);
 
   // Handle toggle read-only
@@ -889,6 +920,20 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     [isFilling, fillStart, fillEnd]
   );
 
+  // Initialize/update column order when headers change
+  useEffect(() => {
+    const newLength = headers.length;
+    if (newLength === 0) {
+      setColumnOrder([]);
+      return;
+    }
+
+    // If columnOrder is empty or length changed, reset to identity mapping
+    if (columnOrder.length === 0 || columnOrder.length !== newLength) {
+      setColumnOrder(Array.from({ length: newLength }, (_, i) => i));
+    }
+  }, [headers.length, columnOrder.length]);
+
   // Generate columns dynamically
   const columns: ColumnDef<unknown[]>[] = useMemo(() => {
     if (headers.length === 0) return [];
@@ -898,7 +943,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       {
         id: 'rowNumber',
         header: () => (
-          <div className='w-10 text-center text-xs text-gray-500'>#</div>
+          <div className='data-grid-row-number-header'>#</div>
         ),
         cell: ({ row }) => (
           <div
@@ -931,7 +976,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
               setDragOverRow(null);
             }}
             className={cn(
-              'w-10 h-full text-center text-xs text-gray-500 font-mono cursor-grab active:cursor-grabbing relative',
+              'data-grid-row-number',
               draggedRow === row.index && 'opacity-30 bg-gray-200'
             )}
           >
@@ -939,43 +984,18 @@ export const DataGridTanstack = memo(function DataGridTanstack({
             {dragOverRow === row.index &&
               draggedRow !== null &&
               draggedRow > row.index && (
-                <div className='absolute left-0 right-0 top-0 h-0.5 bg-blue-500 -translate-y-1/2 z-20' />
+                <div className='data-grid-drop-indicator-top' />
               )}
             {/* Drop indicator - bottom */}
             {dragOverRow === row.index &&
               draggedRow !== null &&
               draggedRow < row.index && (
-                <div className='absolute left-0 right-0 bottom-0 h-0.5 bg-blue-500 translate-y-1/2 z-20' />
+                <div className='data-grid-drop-indicator-bottom' />
               )}
             {row.index + 1}
           </div>
         ),
         size: 50,
-        enableSorting: false,
-        enableHiding: false,
-      },
-      // Selection column
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            checked={table.getIsAllPageRowsSelected()}
-            onCheckedChange={(value) =>
-              table.toggleAllPageRowsSelected(!!value)
-            }
-            aria-label='Select all'
-            className='ml-1'
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label='Select row'
-            className='ml-1'
-          />
-        ),
-        size: 40,
         enableSorting: false,
         enableHiding: false,
       },
@@ -995,62 +1015,17 @@ export const DataGridTanstack = memo(function DataGridTanstack({
         header: ({ column }) => {
           const isSorted = column.getIsSorted();
           return (
-            <div
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', String(index));
-                // Use requestAnimationFrame to set state after drag starts
-                requestAnimationFrame(() => {
-                  setDraggedColumn(index);
-                });
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragOverColumn(index);
-              }}
-              onDragLeave={() => {
-                setDragOverColumn(null);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                if (draggedColumn !== null && draggedColumn !== index) {
-                  handleColumnReorder(draggedColumn, index);
-                }
-                setDraggedColumn(null);
-                setDragOverColumn(null);
-              }}
-              onDragEnd={() => {
-                setDraggedColumn(null);
-                setDragOverColumn(null);
-              }}
-              className={cn(
-                'w-full relative',
-                draggedColumn === index && 'opacity-30 bg-gray-200'
-              )}
-            >
-              {/* Drop indicator - left side */}
-              {dragOverColumn === index &&
-                draggedColumn !== null &&
-                draggedColumn > index && (
-                  <div className='absolute left-0 top-0 bottom-0 w-1 bg-blue-500 -translate-x-1/2 z-20' />
-                )}
-              {/* Drop indicator - right side */}
-              {dragOverColumn === index &&
-                draggedColumn !== null &&
-                draggedColumn < index && (
-                  <div className='absolute right-0 top-0 bottom-0 w-1 bg-blue-500 translate-x-1/2 z-20' />
-                )}
+            <div className='w-full relative'>
               <div
                 className={cn(
-                  'h-8 w-full flex items-center gap-1 px-2 hover:bg-gray-100',
-                  isLabelColumn && 'bg-pink-50',
-                  isValueColumn && 'bg-purple-50'
+                  'data-grid-column-header-content',
+                  isLabelColumn && 'label-column',
+                  isValueColumn && 'value-column'
                 )}
               >
-                <GripVertical className='h-3 w-3 text-gray-400 cursor-grab shrink-0' />
+                <GripVertical className='data-grid-grip-icon' />
                 <span
-                  className='rounded bg-violet-100 px-1 py-0.5 text-[10px] font-mono font-medium text-slate-500 shrink-0'
+                  className='data-grid-type-badge'
                   title={type}
                 >
                   {icon}
@@ -1059,33 +1034,33 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                   name={header || getColumnLetter(index)}
                   onRename={(newName) => handleRenameColumn(index, newName)}
                 />
-                {isSorted === 'asc' && <ArrowUp className='h-3 w-3 shrink-0' />}
+                {isSorted === 'asc' && <ArrowUp className='data-grid-sort-icon' />}
                 {isSorted === 'desc' && (
-                  <ArrowDown className='h-3 w-3 shrink-0' />
+                  <ArrowDown className='data-grid-sort-icon' />
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className='p-1 hover:bg-gray-200 rounded shrink-0'
+                      className='data-grid-dropdown-trigger'
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <ChevronDown className='h-3 w-3 opacity-50' />
+                      <ChevronDown className='data-grid-dropdown-icon' />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align='start' className='w-48'>
+                  <DropdownMenuContent align='start' className='data-grid-dropdown-content'>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
-                        <span className='mr-2'>{icon}</span>
+                        <span className='data-grid-menu-icon'>{icon}</span>
                         Data Type
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
                         <DropdownMenuItem
                           onClick={() => handleChangeColumnType(index, 'text')}
                         >
-                          <span className='mr-2'>ABC</span>
+                          <span className='data-grid-menu-icon'>ABC</span>
                           Text
                           {type === 'text' && (
-                            <span className='ml-auto'>✓</span>
+                            <span className='data-grid-menu-checkmark'>✓</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -1093,19 +1068,19 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                             handleChangeColumnType(index, 'number')
                           }
                         >
-                          <span className='mr-2'>123</span>
+                          <span className='data-grid-menu-icon'>123</span>
                           Number
                           {type === 'number' && (
-                            <span className='ml-auto'>✓</span>
+                            <span className='data-grid-menu-checkmark'>✓</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleChangeColumnType(index, 'date')}
                         >
-                          <span className='mr-2'>📅</span>
+                          <span className='data-grid-menu-icon'>📅</span>
                           Date
                           {type === 'date' && (
-                            <span className='ml-auto'>✓</span>
+                            <span className='data-grid-menu-checkmark'>✓</span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -1113,10 +1088,10 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                             handleChangeColumnType(index, 'boolean')
                           }
                         >
-                          <span className='mr-2'>✓✗</span>
+                          <span className='data-grid-menu-icon'>✓✗</span>
                           Boolean
                           {type === 'boolean' && (
-                            <span className='ml-auto'>✓</span>
+                            <span className='data-grid-menu-checkmark'>✓</span>
                           )}
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
@@ -1125,19 +1100,19 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                     <DropdownMenuItem
                       onClick={() => column.toggleSorting(false)}
                     >
-                      <ArrowUp className='mr-2 h-4 w-4' />
+                      <ArrowUp className='data-grid-menu-icon' />
                       Sort Ascending
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => column.toggleSorting(true)}
                     >
-                      <ArrowDown className='mr-2 h-4 w-4' />
+                      <ArrowDown className='data-grid-menu-icon' />
                       Sort Descending
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
-                        <Filter className='mr-2 h-4 w-4' />
+                        <Filter className='data-grid-menu-icon' />
                         Filter
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent className='p-2'>
@@ -1154,7 +1129,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                     <DropdownMenuSeparator />
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
-                        <AlignLeft className='mr-2 h-4 w-4' />
+                        <AlignLeft className='data-grid-menu-icon' />
                         Alignment
                       </DropdownMenuSubTrigger>
                       <DropdownMenuSubContent>
@@ -1166,7 +1141,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                             }))
                           }
                         >
-                          <AlignLeft className='mr-2 h-4 w-4' />
+                          <AlignLeft className='data-grid-menu-icon' />
                           Left
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -1177,7 +1152,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                             }))
                           }
                         >
-                          <AlignCenter className='mr-2 h-4 w-4' />
+                          <AlignCenter className='data-grid-menu-icon' />
                           Center
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -1188,7 +1163,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                             }))
                           }
                         >
-                          <AlignRight className='mr-2 h-4 w-4' />
+                          <AlignRight className='data-grid-menu-icon' />
                           Right
                         </DropdownMenuItem>
                       </DropdownMenuSubContent>
@@ -1209,12 +1184,12 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                     >
                       {readOnlyColumns.has(colId) ? (
                         <>
-                          <Unlock className='mr-2 h-4 w-4' />
+                          <Unlock className='data-grid-menu-icon' />
                           Make Editable
                         </>
                       ) : (
                         <>
-                          <Lock className='mr-2 h-4 w-4' />
+                          <Lock className='data-grid-menu-icon' />
                           Make Read Only
                         </>
                       )}
@@ -1223,17 +1198,17 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                     <DropdownMenuItem
                       onClick={() => handleInsertColumn(index, 'left')}
                     >
-                      <Plus className='mr-2 h-4 w-4' />
+                      <Plus className='data-grid-menu-icon' />
                       Insert Column Left
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleInsertColumn(index, 'right')}
                     >
-                      <Plus className='mr-2 h-4 w-4' />
+                      <Plus className='data-grid-menu-icon' />
                       Insert Column Right
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleClearColumn(index)}>
-                      <X className='mr-2 h-4 w-4' />
+                      <X className='data-grid-menu-icon' />
                       Clear Column
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
@@ -1241,7 +1216,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                       onClick={() => handleDeleteColumn(index)}
                       className='text-red-600 focus:text-red-600'
                     >
-                      <Trash2 className='mr-2 h-4 w-4' />
+                      <Trash2 className='data-grid-menu-icon' />
                       Delete Column
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -1302,13 +1277,9 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     handleDeleteColumn,
     handleInsertColumn,
     handleClearColumn,
-    handleColumnReorder,
-    handleRowReorder,
     handleRenameColumn,
     handleChangeColumnType,
     handleResizeStart,
-    draggedColumn,
-    dragOverColumn,
     draggedRow,
     dragOverRow,
     resizingColumn,
@@ -1335,19 +1306,13 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: setRowSelection,
     onPaginationChange: setPagination,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: 'includesString',
     state: {
       sorting,
       columnFilters,
       columnVisibility,
-      rowSelection,
       pagination,
-      globalFilter,
     },
-    enableRowSelection: true,
     meta: {
       isCellSelected,
     },
@@ -1627,17 +1592,11 @@ export const DataGridTanstack = memo(function DataGridTanstack({
     }
   }, [shouldNavigate, onNavigated, tableData.length]);
 
-  // Delete selected rows
-  const handleDeleteSelectedRows = useCallback(() => {
-    const selectedRowIndices = Object.keys(rowSelection)
-      .filter((key) => rowSelection[key as keyof typeof rowSelection])
-      .map((key) => parseInt(key));
-
-    if (selectedRowIndices.length > 0) {
-      handleDeleteRows(selectedRowIndices);
-      setRowSelection({});
-    }
-  }, [rowSelection, handleDeleteRows]);
+  // Delete the right-clicked row
+  const handleDeleteCurrentRow = useCallback(() => {
+    if (!selectedCell) return;
+    handleDeleteRows([selectedCell.row]);
+  }, [selectedCell, handleDeleteRows]);
 
   // Show loading state when no data
   if (!data || data.length === 0) {
@@ -1649,27 +1608,11 @@ export const DataGridTanstack = memo(function DataGridTanstack({
   }
 
   return (
-    <div className='w-full h-full flex flex-col'>
+    <div className='data-grid-container'>
       {/* Toolbar */}
-      <div className='flex items-center justify-between px-4 py-2 border-b bg-gray-50'>
-        <div className='flex items-center gap-2'>
-          {Object.keys(rowSelection).length > 0 && (
-            <>
-              <span className='text-sm text-gray-600'>
-                {Object.keys(rowSelection).length} row(s) selected
-              </span>
-              <Button
-                variant='destructive'
-                size='sm'
-                onClick={handleDeleteSelectedRows}
-              >
-                <Trash2 className='h-4 w-4 mr-1' />
-                Delete Selected
-              </Button>
-            </>
-          )}
-        </div>
-        <div className='flex items-center gap-2'>
+      <div className='data-grid-toolbar'>
+        <div className='data-grid-toolbar-left'></div>
+        <div className='data-grid-toolbar-right'>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
@@ -1688,10 +1631,9 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                       column.toggleVisibility(!column.getIsVisible())
                     }
                   >
-                    <Checkbox
-                      checked={column.getIsVisible()}
-                      className='mr-2'
-                    />
+                    <span className='mr-2'>
+                      {column.getIsVisible() ? '✓' : ' '}
+                    </span>
                     {column.id.replace('col_', 'Column ')}
                   </DropdownMenuItem>
                 ))}
@@ -1703,56 +1645,106 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       {/* Table */}
       <div
         ref={tableContainerRef}
-        className='flex-1 overflow-auto focus:outline-none relative'
+        className='data-grid-table-container'
         tabIndex={0}
         onKeyDown={handleKeyboardNavigation}
       >
         {/* Loading overlay */}
         {virtualData?.isLoading && (
-          <div className='absolute inset-0 bg-white/70 backdrop-blur-sm z-50 flex items-center justify-center'>
-            <div className='flex flex-col items-center gap-3'>
-              <Loader2 className='h-8 w-8 animate-spin text-blue-500' />
-              <span className='text-sm font-medium text-gray-600'>
-                Loading data...
-              </span>
+          <div className='data-grid-loading-overlay'>
+            <div className='data-grid-loading-content'>
+              <Loader2 className='data-grid-loading-spinner' />
+              <span className='data-grid-loading-text'>Loading data...</span>
             </div>
           </div>
         )}
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            <Table style={{ tableLayout: 'fixed', width: '100%' }}>
-              <TableHeader className='sticky top-0 bg-white z-10'>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow
-                    key={headerGroup.id}
-                    className='border-b'
-                    style={{ display: 'flex' }}
-                  >
-                    {headerGroup.headers.map((header) => (
-                      <TableHead
-                        key={header.id}
-                        className='h-10 px-0 border-r last:border-r-0 p-0! shrink-0'
-                        style={{
-                          width: header.id.startsWith('col_')
-                            ? columnWidths[header.id] || header.getSize()
-                            : header.getSize(),
-                        }}
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => {
+                  // Separate row number column from data columns
+                  const rowNumHeader = headerGroup.headers.find(h => h.id === 'rowNumber');
+                  const dataHeaders = headerGroup.headers.filter(h => h.id !== 'rowNumber');
+
+                  return (
+                    <TableRow key={headerGroup.id} className="flex">
+                      {/* Row number column (not reorderable) */}
+                      {rowNumHeader && (
+                        <TableHead
+                          key={rowNumHeader.id}
+                          style={{
+                            width: rowNumHeader.getSize(),
+                          }}
+                        >
+                          {flexRender(
+                            rowNumHeader.column.columnDef.header,
+                            rowNumHeader.getContext()
+                          )}
+                        </TableHead>
+                      )}
+
+                      {/* Data columns with Motion Reorder */}
+                      <Reorder.Group
+                        as="div"
+                        axis="x"
+                        values={columnOrder}
+                        onReorder={handleColumnReorder}
+                        className="flex flex-1"
+                        layoutScroll
+                        style={{ overflow: 'visible' }}
                       >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
+                        {columnOrder.map((colIndex) => {
+                          const header = dataHeaders.find(h => h.id === `col_${colIndex}`);
+                          if (!header) return null;
+
+                          return (
+                            <Reorder.Item
+                              key={header.id}
+                              value={colIndex}
+                              as="div"
+                              data-reorder-item
+                              dragListener={true}
+                              dragControls={undefined}
+                              whileDrag={{
+                                scale: 1.03,
+                                boxShadow: "0 8px 16px rgba(0,0,0,0.15)",
+                                zIndex: 1000,
+                                backgroundColor: "rgba(255,255,255,0.95)",
+                              }}
+                              transition={{
+                                layout: {
+                                  type: "spring",
+                                  stiffness: 350,
+                                  damping: 25,
+                                },
+                              }}
+                              style={{
+                                width: columnWidths[header.id] || header.getSize(),
+                                position: 'relative',
+                              }}
+                            >
+                              <TableHead
+                                style={{
+                                  width: '100%',
+                                }}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                              </TableHead>
+                            </Reorder.Item>
+                          );
+                        })}
+                      </Reorder.Group>
+                    </TableRow>
+                  );
+                })}
               </TableHeader>
               <TableBody
                 style={{
                   height: `${rowVirtualizer.getTotalSize()}px`,
-                  position: 'relative',
                 }}
               >
                 {rows.length ? (
@@ -1764,20 +1756,34 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                         data-index={virtualRow.index}
                         ref={(node) => rowVirtualizer.measureElement(node)}
                         data-state={row.getIsSelected() && 'selected'}
-                        className='border-b hover:bg-gray-50'
+                        className='data-grid-virtual-row'
                         style={{
-                          display: 'flex',
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          width: '100%',
                           transform: `translateY(${virtualRow.start}px)`,
                         }}
                       >
-                        {row.getVisibleCells().map((cell, cellIndex) => {
-                          // Calculate actual column index (skip row number and checkbox)
-                          const actualColIndex = cellIndex - 2;
-                          const isDataCell = cellIndex > 1;
+                        {(() => {
+                          const allCells = row.getVisibleCells();
+                          // Separate fixed columns from data columns
+                          const rowNumCell = allCells.find(c => c.column.id === 'rowNumber');
+                          const dataCells = allCells.filter(c => c.column.id !== 'rowNumber');
+
+                          // Reorder data cells based on columnOrder
+                          const orderedDataCells = columnOrder
+                            .map(colIndex => dataCells.find(c => c.column.id === `col_${colIndex}`))
+                            .filter((c): c is NonNullable<typeof c> => c !== undefined);
+
+                          // Combine fixed + ordered data cells
+                          const orderedCells = [
+                            ...(rowNumCell ? [rowNumCell] : []),
+                            ...orderedDataCells
+                          ];
+
+                          return orderedCells.map((cell, cellIndex) => {
+                            // Calculate actual column index
+                            // For data cells, map visual index back to original data column index
+                            const visualColIndex = cellIndex - 1; // -1 for row number column
+                            const actualColIndex = visualColIndex >= 0 ? columnOrder[visualColIndex] : -1;
+                            const isDataCell = cellIndex > 0; // Data cells start after row number
                           const isSelected =
                             isDataCell &&
                             isCellSelected(row.index, actualColIndex);
@@ -1797,12 +1803,10 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                                 isDataCell ? actualColIndex : undefined
                               }
                               className={cn(
-                                'p-0! border-r last:border-r-0 select-none relative shrink-0',
-                                isSelected &&
-                                  'bg-blue-50 outline-1 outline-blue-500 -outline-offset-1 z-10',
-                                isInFillRange &&
-                                  'bg-blue-50/50 outline-dashed outline-1 outline-blue-400 -outline-offset-1',
-                                showFillHandle && 'overflow-visible'
+                                isSelected && 'data-grid-cell-selected',
+                                isInFillRange && 'data-grid-cell-fill-range',
+                                showFillHandle &&
+                                  'data-grid-cell-overflow-visible'
                               )}
                               style={{
                                 width: cell.column.id.startsWith('col_')
@@ -1852,7 +1856,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                               {/* Fill handle - small square at bottom-right corner */}
                               {showFillHandle && (
                                 <div
-                                  className='absolute bottom-0 right-0 w-1.5 h-1.5 bg-blue-500 cursor-crosshair z-20 translate-x-1/2 translate-y-1/2'
+                                  className='data-grid-fill-handle'
                                   onMouseDown={(e) =>
                                     handleFillHandleMouseDown(
                                       e,
@@ -1864,7 +1868,8 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                               )}
                             </TableCell>
                           );
-                        })}
+                        });
+                        })()}
                       </TableRow>
                     );
                   })
@@ -1886,22 +1891,22 @@ export const DataGridTanstack = memo(function DataGridTanstack({
               <>
                 {/* Clipboard operations */}
                 <ContextMenuItem onClick={handleCopy}>
-                  <Copy className='mr-2 h-4 w-4' />
+                  <Copy className='data-grid-menu-icon' />
                   Copy
                 </ContextMenuItem>
                 <ContextMenuItem onClick={handleCut}>
-                  <Scissors className='mr-2 h-4 w-4' />
+                  <Scissors className='data-grid-menu-icon' />
                   Cut
                 </ContextMenuItem>
                 <ContextMenuItem onClick={handlePaste}>
-                  <ClipboardPaste className='mr-2 h-4 w-4' />
+                  <ClipboardPaste className='data-grid-menu-icon' />
                   Paste
                 </ContextMenuItem>
                 <ContextMenuSeparator />
 
                 {/* Cell operations */}
                 <ContextMenuItem onClick={handleClearCell}>
-                  <X className='mr-2 h-4 w-4' />
+                  <X className='data-grid-menu-icon' />
                   Clear Cell
                 </ContextMenuItem>
                 <ContextMenuSeparator />
@@ -1909,24 +1914,24 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                 {/* Row operations */}
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
-                    <Plus className='mr-2 h-4 w-4' />
+                    <Plus className='data-grid-menu-icon' />
                     Insert Row
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent>
                     <ContextMenuItem onClick={handleInsertRowAbove}>
-                      <ArrowUp className='mr-2 h-4 w-4' />
+                      <ArrowUp className='data-grid-menu-icon' />
                       Insert Above
                     </ContextMenuItem>
                     <ContextMenuItem onClick={handleInsertRowBelow}>
-                      <ArrowDown className='mr-2 h-4 w-4' />
+                      <ArrowDown className='data-grid-menu-icon' />
                       Insert Below
                     </ContextMenuItem>
                   </ContextMenuSubContent>
                 </ContextMenuSub>
                 <ContextMenuItem
-                  onClick={() => handleDeleteRows([selectedCell.row])}
+                  onClick={handleDeleteCurrentRow}
                 >
-                  <Trash2 className='mr-2 h-4 w-4' />
+                  <Trash2 className='data-grid-menu-icon' />
                   Delete Row
                 </ContextMenuItem>
                 <ContextMenuSeparator />
@@ -1934,7 +1939,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                 {/* Column operations */}
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
-                    <Plus className='mr-2 h-4 w-4' />
+                    <Plus className='data-grid-menu-icon' />
                     Insert Column
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent>
@@ -1959,13 +1964,13 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                 <ContextMenuItem
                   onClick={() => handleDeleteColumn(selectedCell.col)}
                 >
-                  <Trash2 className='mr-2 h-4 w-4' />
+                  <Trash2 className='data-grid-menu-icon' />
                   Delete Column
                 </ContextMenuItem>
                 <ContextMenuItem
                   onClick={() => handleClearColumn(selectedCell.col)}
                 >
-                  <X className='mr-2 h-4 w-4' />
+                  <X className='data-grid-menu-icon' />
                   Clear Column
                 </ContextMenuItem>
                 <ContextMenuSeparator />
@@ -1973,7 +1978,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                 {/* Column properties */}
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
-                    <AlignLeft className='mr-2 h-4 w-4' />
+                    <AlignLeft className='data-grid-menu-icon' />
                     Alignment
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent>
@@ -1986,7 +1991,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                         }));
                       }}
                     >
-                      <AlignLeft className='mr-2 h-4 w-4' />
+                      <AlignLeft className='data-grid-menu-icon' />
                       Left
                     </ContextMenuItem>
                     <ContextMenuItem
@@ -1998,7 +2003,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                         }));
                       }}
                     >
-                      <AlignCenter className='mr-2 h-4 w-4' />
+                      <AlignCenter className='data-grid-menu-icon' />
                       Center
                     </ContextMenuItem>
                     <ContextMenuItem
@@ -2010,7 +2015,7 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                         }));
                       }}
                     >
-                      <AlignRight className='mr-2 h-4 w-4' />
+                      <AlignRight className='data-grid-menu-icon' />
                       Right
                     </ContextMenuItem>
                   </ContextMenuSubContent>
@@ -2018,12 +2023,12 @@ export const DataGridTanstack = memo(function DataGridTanstack({
                 <ContextMenuItem onClick={handleToggleReadOnly}>
                   {readOnlyColumns.has(`col_${selectedCell.col}`) ? (
                     <>
-                      <Unlock className='mr-2 h-4 w-4' />
+                      <Unlock className='data-grid-menu-icon' />
                       Make Editable
                     </>
                   ) : (
                     <>
-                      <Lock className='mr-2 h-4 w-4' />
+                      <Lock className='data-grid-menu-icon' />
                       Make Read-Only
                     </>
                   )}
@@ -2035,25 +2040,25 @@ export const DataGridTanstack = memo(function DataGridTanstack({
       </div>
 
       {/* Pagination Controls */}
-      <div className='flex items-center justify-between px-4 py-3 border-t bg-gray-50'>
-        <div className='flex items-center gap-2'>
-          <span className='text-sm text-gray-600'>
-            Showing{' '}
-            {table.getState().pagination.pageIndex *
-              table.getState().pagination.pageSize +
-              1}{' '}
-            to{' '}
-            {Math.min(
-              (table.getState().pagination.pageIndex + 1) *
-                table.getState().pagination.pageSize,
-              table.getFilteredRowModel().rows.length
-            )}{' '}
-            of {table.getFilteredRowModel().rows.length} rows
-          </span>
+      <div className='data-grid-pagination'>
+        <div className='data-grid-pagination-info'>
+          Showing{' '}
+          {table.getState().pagination.pageIndex *
+            table.getState().pagination.pageSize +
+            1}{' '}
+          to{' '}
+          {Math.min(
+            (table.getState().pagination.pageIndex + 1) *
+              table.getState().pagination.pageSize,
+            table.getFilteredRowModel().rows.length
+          )}{' '}
+          of {table.getFilteredRowModel().rows.length} rows
         </div>
-        <div className='flex items-center gap-4'>
-          <div className='flex items-center gap-2'>
-            <span className='text-sm text-gray-600'>Rows per page:</span>
+        <div className='data-grid-pagination-controls'>
+          <div className='data-grid-pagination-size'>
+            <span className='data-grid-pagination-size-label'>
+              Rows per page:
+            </span>
             <Select
               value={String(table.getState().pagination.pageSize)}
               onValueChange={(value) => {
@@ -2074,11 +2079,10 @@ export const DataGridTanstack = memo(function DataGridTanstack({
               </SelectContent>
             </Select>
           </div>
-          <div className='flex items-center gap-1'>
+          <div className='data-grid-pagination-buttons'>
             <Button
               variant='outline'
               size='icon'
-              className='h-8 w-8'
               onClick={() => table.setPageIndex(0)}
               disabled={!table.getCanPreviousPage()}
             >
@@ -2087,20 +2091,18 @@ export const DataGridTanstack = memo(function DataGridTanstack({
             <Button
               variant='outline'
               size='icon'
-              className='h-8 w-8'
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
               <ChevronLeft className='h-4 w-4' />
             </Button>
-            <span className='flex items-center gap-1 text-sm text-gray-600 px-2'>
+            <span className='data-grid-pagination-page-info'>
               Page {table.getState().pagination.pageIndex + 1} of{' '}
               {table.getPageCount()}
             </span>
             <Button
               variant='outline'
               size='icon'
-              className='h-8 w-8'
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
@@ -2109,7 +2111,6 @@ export const DataGridTanstack = memo(function DataGridTanstack({
             <Button
               variant='outline'
               size='icon'
-              className='h-8 w-8'
               onClick={() => table.setPageIndex(table.getPageCount() - 1)}
               disabled={!table.getCanNextPage()}
             >

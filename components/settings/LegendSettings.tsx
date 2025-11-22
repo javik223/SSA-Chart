@@ -18,37 +18,37 @@ import { FormRow } from '@/components/ui/form-row';
 import { FormCol } from '@/components/ui/form-col';
 
 export function LegendSettings() {
-  const legendShow = useChartStore((state) => state.legendShow);
-  const setLegendShow = useChartStore((state) => state.setLegendShow);
-  const legendPosition = useChartStore((state) => state.legendPosition);
-  const setLegendPosition = useChartStore((state) => state.setLegendPosition);
-  const legendAlignment = useChartStore((state) => state.legendAlignment);
-  const setLegendAlignment = useChartStore((state) => state.setLegendAlignment);
-  const legendFontSize = useChartStore((state) => state.legendFontSize);
-  const setLegendFontSize = useChartStore((state) => state.setLegendFontSize);
-  const legendShowValues = useChartStore((state) => state.legendShowValues);
-  const setLegendShowValues = useChartStore((state) => state.setLegendShowValues);
-  const legendGap = useChartStore((state) => state.legendGap);
-  const setLegendGap = useChartStore((state) => state.setLegendGap);
-  const legendPaddingTop = useChartStore((state) => state.legendPaddingTop);
-  const setLegendPaddingTop = useChartStore((state) => state.setLegendPaddingTop);
-  const legendPaddingRight = useChartStore((state) => state.legendPaddingRight);
-  const setLegendPaddingRight = useChartStore((state) => state.setLegendPaddingRight);
-  const legendPaddingBottom = useChartStore((state) => state.legendPaddingBottom);
-  const setLegendPaddingBottom = useChartStore((state) => state.setLegendPaddingBottom);
-  const legendPaddingLeft = useChartStore((state) => state.legendPaddingLeft);
-  const setLegendPaddingLeft = useChartStore((state) => state.setLegendPaddingLeft);
+  const legendShow = useChartStore( ( state ) => state.legendShow );
+  const setLegendShow = useChartStore( ( state ) => state.setLegendShow );
+  const legendPosition = useChartStore( ( state ) => state.legendPosition );
+  const setLegendPosition = useChartStore( ( state ) => state.setLegendPosition );
+  const legendAlignment = useChartStore( ( state ) => state.legendAlignment );
+  const setLegendAlignment = useChartStore( ( state ) => state.setLegendAlignment );
+  const legendFontSize = useChartStore( ( state ) => state.legendFontSize );
+  const setLegendFontSize = useChartStore( ( state ) => state.setLegendFontSize );
+  const legendShowValues = useChartStore( ( state ) => state.legendShowValues );
+  const setLegendShowValues = useChartStore( ( state ) => state.setLegendShowValues );
+  const legendGap = useChartStore( ( state ) => state.legendGap );
+  const setLegendGap = useChartStore( ( state ) => state.setLegendGap );
+  const legendPaddingTop = useChartStore( ( state ) => state.legendPaddingTop );
+  const setLegendPaddingTop = useChartStore( ( state ) => state.setLegendPaddingTop );
+  const legendPaddingRight = useChartStore( ( state ) => state.legendPaddingRight );
+  const setLegendPaddingRight = useChartStore( ( state ) => state.setLegendPaddingRight );
+  const legendPaddingBottom = useChartStore( ( state ) => state.legendPaddingBottom );
+  const setLegendPaddingBottom = useChartStore( ( state ) => state.setLegendPaddingBottom );
+  const legendPaddingLeft = useChartStore( ( state ) => state.legendPaddingLeft );
+  const setLegendPaddingLeft = useChartStore( ( state ) => state.setLegendPaddingLeft );
 
   return (
     <div className='settings-container'>
       <FormField
         label='Show Legend'
         type='switch'
-        checked={legendShow}
-        onChange={setLegendShow}
+        checked={ legendShow }
+        onChange={ setLegendShow }
       />
 
-      {legendShow && (
+      { legendShow && (
         <>
           <Separator />
 
@@ -58,9 +58,9 @@ export function LegendSettings() {
                 <FormField
                   type='button-group'
                   label='Position'
-                  value={legendPosition}
-                  onChange={setLegendPosition as (value: string) => void}
-                  options={[
+                  value={ legendPosition }
+                  onChange={ setLegendPosition as ( value: string ) => void }
+                  options={ [
                     {
                       value: 'top',
                       icon: <ArrowUp className='h-4 w-4' />,
@@ -77,7 +77,7 @@ export function LegendSettings() {
                       value: 'left',
                       icon: <ArrowLeft className='h-4 w-4' />,
                     },
-                  ]}
+                  ] }
                 />
               </FormCol>
 
@@ -85,9 +85,9 @@ export function LegendSettings() {
                 <FormField
                   type='button-group'
                   label='Alignment'
-                  value={legendAlignment}
-                  onChange={setLegendAlignment as (value: string) => void}
-                  options={[
+                  value={ legendAlignment }
+                  onChange={ setLegendAlignment as ( value: string ) => void }
+                  options={ [
                     {
                       value: 'start',
                       icon: <AlignLeft className='h-4 w-4' />,
@@ -100,7 +100,7 @@ export function LegendSettings() {
                       value: 'end',
                       icon: <AlignRight className='h-4 w-4' />,
                     },
-                  ]}
+                  ] }
                 />
               </FormCol>
             </FormRow>
@@ -109,23 +109,23 @@ export function LegendSettings() {
           <Separator />
 
           <FormSection title='Spacing'>
-            <FormGrid columns={2}>
+            <FormGrid columns={ 2 }>
               <FormField
                 type='number'
                 label='Size'
-                value={legendFontSize}
-                onChange={setLegendFontSize}
-                min={0.1}
-                max={10.0}
-                step={0.1}
+                value={ legendFontSize }
+                onChange={ ( v ) => setLegendFontSize( v ?? 1 ) }
+                min={ 0.1 }
+                max={ 10.0 }
+                step={ 0.1 }
               />
               <FormField
                 type='number'
                 label='Gap (px)'
-                value={legendGap}
-                onChange={setLegendGap}
-                min={5}
-                max={50}
+                value={ legendGap }
+                onChange={ ( v ) => setLegendGap( v ?? 5 ) }
+                min={ 5 }
+                max={ 50 }
               />
             </FormGrid>
           </FormSection>
@@ -136,46 +136,46 @@ export function LegendSettings() {
             label='Show Values'
             description='Display numeric values next to legend items'
             type='switch'
-            checked={legendShowValues}
-            onChange={setLegendShowValues}
+            checked={ legendShowValues }
+            onChange={ setLegendShowValues }
           />
 
           <Separator />
 
           <FormSection title='Padding (px)'>
-            <FormGrid columns={4}>
+            <FormGrid columns={ 4 }>
               <FormField
                 type='number'
                 label='Top'
-                value={legendPaddingTop}
-                onChange={setLegendPaddingTop}
-                min={0}
+                value={ legendPaddingTop }
+                onChange={ ( v ) => setLegendPaddingTop( v ?? 0 ) }
+                min={ 0 }
               />
               <FormField
                 type='number'
                 label='Right'
-                value={legendPaddingRight}
-                onChange={setLegendPaddingRight}
-                min={0}
+                value={ legendPaddingRight }
+                onChange={ ( v ) => setLegendPaddingRight( v ?? 0 ) }
+                min={ 0 }
               />
               <FormField
                 type='number'
                 label='Bottom'
-                value={legendPaddingBottom}
-                onChange={setLegendPaddingBottom}
-                min={0}
+                value={ legendPaddingBottom }
+                onChange={ ( v ) => setLegendPaddingBottom( v ?? 0 ) }
+                min={ 0 }
               />
               <FormField
                 type='number'
                 label='Left'
-                value={legendPaddingLeft}
-                onChange={setLegendPaddingLeft}
-                min={0}
+                value={ legendPaddingLeft }
+                onChange={ ( v ) => setLegendPaddingLeft( v ?? 0 ) }
+                min={ 0 }
               />
             </FormGrid>
           </FormSection>
         </>
-      )}
+      ) }
     </div>
   );
 }

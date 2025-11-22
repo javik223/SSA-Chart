@@ -54,7 +54,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${canvaSans.variable} font-sans antialiased`} suppressHydrationWarning>
+      <body
+        className={`${canvaSans.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
         <ChartInitializer />
         {children}
         <Toaster />

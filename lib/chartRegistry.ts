@@ -7,6 +7,7 @@
  */
 
 import { ChartType, ChartCategory } from '@/types/chart';
+import { YAxisConfig } from '@/types/chart-types';
 import { ComponentType } from 'react';
 
 /**
@@ -67,6 +68,7 @@ export interface ChartComponentProps {
   legendShowValues?: boolean;
   legendGap?: number;
   config?: any;
+  yAxis?: YAxisConfig;
 }
 
 /**

@@ -9,11 +9,12 @@
  */
 
 import { registerCharts } from './chartRegistry';
-import { LineChartD3 } from '@/components/charts/LineChartD3';
-import { BarChartD3 } from '@/components/charts/BarChartD3';
-import { AreaChartD3 } from '@/components/charts/AreaChartD3';
-import { PieChartD3 } from '@/components/charts/PieChartD3';
-import { DonutChartD3 } from '@/components/charts/DonutChartD3';
+// SVG-based D3.js chart components for high-quality, scalable rendering
+import { LineChart } from '@/components/charts/LineChart';
+import { BarChart } from '@/components/charts/BarChart';
+import { AreaChart } from '@/components/charts/AreaChart';
+import { PieChart } from '@/components/charts/PieChart';
+import { DonutChart } from '@/components/charts/DonutChart';
 // Import more chart components as they are created
 
 /**
@@ -30,7 +31,7 @@ export function initializeCharts() {
       name: 'Line chart',
       category: 'line-bar-pie',
       description: 'Show trends over time or categories',
-      component: LineChartD3,
+      component: LineChart,
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'stable',
@@ -45,7 +46,7 @@ export function initializeCharts() {
       name: 'Line chart (stacked)',
       category: 'line-bar-pie',
       description: 'Stacked lines showing cumulative values',
-      component: LineChartD3, // Will need separate component
+      component: LineChart, // Will need separate component
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'coming-soon',
@@ -56,7 +57,7 @@ export function initializeCharts() {
       name: 'Area chart',
       category: 'line-bar-pie',
       description: 'Line chart with filled area below',
-      component: AreaChartD3,
+      component: AreaChart,
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'stable',
@@ -71,7 +72,7 @@ export function initializeCharts() {
       name: 'Bar chart',
       category: 'line-bar-pie',
       description: 'Compare values across categories',
-      component: BarChartD3,
+      component: BarChart,
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'stable',
@@ -86,7 +87,7 @@ export function initializeCharts() {
       name: 'Column chart',
       category: 'line-bar-pie',
       description: 'Vertical bar chart for comparing values',
-      component: BarChartD3, // Can reuse with orientation prop
+      component: BarChart, // Can reuse with orientation prop
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'stable',
@@ -101,7 +102,7 @@ export function initializeCharts() {
       name: 'Pie chart',
       category: 'line-bar-pie',
       description: 'Show proportions of a whole as slices',
-      component: PieChartD3,
+      component: PieChart,
       supportsMultipleSeries: false,
       supportsAnimation: true,
       status: 'stable',
@@ -116,7 +117,7 @@ export function initializeCharts() {
       name: 'Donut chart',
       category: 'line-bar-pie',
       description: 'Pie chart with a hollow center, showing total in middle',
-      component: DonutChartD3,
+      component: DonutChart,
       supportsMultipleSeries: false,
       supportsAnimation: true,
       status: 'stable',

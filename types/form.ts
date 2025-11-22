@@ -23,8 +23,8 @@ interface TextInputField extends BaseFieldProps {
 // Number input field
 interface NumberInputField extends BaseFieldProps {
   type: 'number';
-  value: number;
-  onChange: (value: number) => void;
+  value: number | string;
+  onChange: (value: number | null) => void;
   min?: number;
   max?: number;
   step?: number;
