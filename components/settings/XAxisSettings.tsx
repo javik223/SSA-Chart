@@ -172,7 +172,7 @@ export function XAxisSettings() {
           <FormSection>
             <Separator />
             <FormRow>
-              <FormCol span={ 6 }>
+              <FormCol span={ 8 }>
                 <FormField
                   type='button-group'
                   label='Weight'
@@ -185,7 +185,7 @@ export function XAxisSettings() {
                   ] }
                 />
               </FormCol>
-              <FormCol span={ 6 }>
+              <FormCol span='auto'>
                 <FormField
                   type='color'
                   label='Color'

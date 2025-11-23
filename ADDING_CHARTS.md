@@ -14,7 +14,7 @@ That's it! No need to modify dropdowns, switch statements, or other UI component
 
 ### 1. Create Your Chart Component
 
-Create a new file in `components/charts/` (e.g., `ScatterChartD3.tsx`):
+Create a new file in `components/charts/` (e.g., `ScatterChart.tsx`):
 
 ```tsx
 'use client';
@@ -23,7 +23,7 @@ import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { ChartComponentProps } from '@/lib/chartRegistry';
 
-export function ScatterChartD3({ data, labelKey, valueKeys }: ChartComponentProps) {
+export function ScatterChart({ data, labelKey, valueKeys }: ChartComponentProps) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ export function ScatterChartD3({ data, labelKey, valueKeys }: ChartComponentProp
 Open `lib/chartRegistrations.ts` and add your chart to the `registerCharts()` array:
 
 ```typescript
-import { ScatterChartD3 } from '@/components/charts/ScatterChartD3';
+import { ScatterChart } from '@/components/charts/ScatterChart';
 
 export function initializeCharts() {
   registerCharts([
@@ -59,7 +59,7 @@ export function initializeCharts() {
       name: 'Scatter plot',
       category: 'scatter-distribution',
       description: 'Show correlation between two variables',
-      component: ScatterChartD3,
+      component: ScatterChart,
       supportsMultipleSeries: false,
       supportsAnimation: true,
       status: 'stable', // or 'beta', 'experimental', 'coming-soon'
@@ -161,13 +161,13 @@ registerCharts([
   {
     type: 'bar',
     name: 'Bar chart',
-    component: BarChartD3,
+    component: BarChart,
     // ...
   },
   {
     type: 'bar-stacked',
     name: 'Bar chart (stacked)',
-    component: BarChartD3,
+    component: BarChart,
     // Can use the same component with different config
     // ...
   },
@@ -200,9 +200,9 @@ const scatterCharts = chartRegistry.getByCategory('scatter-distribution');
 
 /components
   /charts
-    /LineChartD3.tsx        # Chart implementations
-    /BarChartD3.tsx
-    /ScatterChartD3.tsx
+    /LineChart.tsx        # Chart implementations
+    /BarChart.tsx
+    /ScatterChart.tsx
     # ... add new charts here
 
   /ChartInitializer.tsx     # Auto-initializes registry
@@ -222,13 +222,13 @@ const scatterCharts = chartRegistry.getByCategory('scatter-distribution');
 ## Example: Adding a Complete Chart
 
 ```typescript
-// 1. Create components/charts/BubbleChartD3.tsx
-export function BubbleChartD3({ data, labelKey, valueKeys }: ChartComponentProps) {
+// 1. Create components/charts/BubbleChart.tsx
+export function BubbleChart({ data, labelKey, valueKeys }: ChartComponentProps) {
   // Implementation
 }
 
 // 2. Register in lib/chartRegistrations.ts
-import { BubbleChartD3 } from '@/components/charts/BubbleChartD3';
+import { BubbleChart } from '@/components/charts/BubbleChart';
 
 export function initializeCharts() {
   registerCharts([
@@ -238,7 +238,7 @@ export function initializeCharts() {
       name: 'Bubble chart',
       category: 'scatter-distribution',
       description: 'Show three dimensions of data with x, y, and size',
-      component: BubbleChartD3,
+      component: BubbleChart,
       supportsMultipleSeries: true,
       supportsAnimation: true,
       status: 'stable',

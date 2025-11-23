@@ -269,7 +269,7 @@ export function YAxisSettings() {
 
       <FormSection title='Labels'>
         <FormRow>
-          <FormCol span={ 6 }>
+          <FormCol span={ 10 }>
             <FormField
               type='button-group'
               label='Weight'
@@ -282,7 +282,7 @@ export function YAxisSettings() {
               ] }
             />
           </FormCol>
-          <FormCol span={ 6 }>
+          <FormCol span='auto'>
             <FormField
               type='number'
               label='Rotation'
