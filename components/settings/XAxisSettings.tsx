@@ -340,7 +340,7 @@ export function XAxisSettings() {
               label='Spacing'
               value={ xAxisLabelSpacing }
               onChange={ ( v ) => setXAxisLabelSpacing( v ?? 0 ) }
-              min={ 0 }
+              min={ -100 }
             />
           </FormCol>
         </FormRow>

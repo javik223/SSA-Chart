@@ -237,7 +237,7 @@ export function AreaChart( {
 
     // Check if this is a zoom update (smooth transition) vs full redraw
     const isZoomUpdate = previousZoomDomainRef.current !== null &&
-                         JSON.stringify(previousZoomDomainRef.current) !== JSON.stringify(zoomDomain);
+      JSON.stringify( previousZoomDomainRef.current ) !== JSON.stringify( zoomDomain );
 
     // Update the ref for next render
     previousZoomDomainRef.current = zoomDomain;
@@ -248,17 +248,17 @@ export function AreaChart( {
     const svg = d3.select( svgRef.current );
 
     // If it's a zoom update, just update the existing elements
-    if (isZoomUpdate) {
-      const g = svg.select('g.main-group');
+    if ( isZoomUpdate ) {
+      const g = svg.select( 'g.main-group' );
 
       // Check if main-group exists (might not exist after chart type change)
-      if (g.empty()) {
+      if ( g.empty() ) {
         // Main group doesn't exist, do a full redraw instead
         svg.selectAll( '*' ).remove();
         previousZoomDomainRef.current = null;
         // Continue to full render below
       } else {
-        const contentGroup = g.select('g.content-group');
+        const contentGroup = g.select( 'g.content-group' );
 
         // Update areas and lines with transition
         valueKeys.forEach( ( key, index ) => {
@@ -275,11 +275,11 @@ export function AreaChart( {
           if ( curveType === 'linear' ) area.curve( d3.curveLinear );
 
           // Update area path with transition
-          contentGroup.select(`path.area-${index}`)
+          contentGroup.select( `path.area-${ index }` )
             .datum( filteredData )
             .transition()
-            .duration(transitionDuration)
-            .ease(d3.easeCubicInOut)
+            .duration( transitionDuration )
+            .ease( d3.easeCubicInOut )
             .attr( 'd', area( filteredData ) );
 
           // Update line
@@ -292,20 +292,24 @@ export function AreaChart( {
           if ( curveType === 'step' ) line.curve( d3.curveStep );
           if ( curveType === 'linear' ) line.curve( d3.curveLinear );
 
-          contentGroup.select(`path.line-${index}`)
+          contentGroup.select( `path.line-${ index }` )
             .datum( filteredData )
             .transition()
-            .duration(transitionDuration)
-            .ease(d3.easeCubicInOut)
+            .duration( transitionDuration )
+            .ease( d3.easeCubicInOut )
             .attr( 'd', line( filteredData ) );
 
           // Update dots with transition
-          if (showPoints) {
+          if ( showPoints ) {
             const dots = contentGroup.selectAll( `.dot-${ index }` )
               .data( filteredData );
 
             // Exit old dots
-            dots.exit().remove();
+            dots.exit()
+              .transition()
+              .duration( 100 )
+              .style( 'opacity', 0 )
+              .remove();
 
             // Enter new dots
             const dotsEnter = dots.enter()
@@ -314,27 +318,41 @@ export function AreaChart( {
               .attr( 'fill', pointColor || color )
               .attr( 'stroke', pointOutlineColor )
               .attr( 'stroke-width', pointOutlineWidth )
-              .attr( 'd', d3.symbol().type(
-                pointShape === 'square' ? d3.symbolSquare :
-                  pointShape === 'diamond' ? d3.symbolDiamond :
-                    pointShape === 'triangle' ? d3.symbolTriangle :
-                      d3.symbolCircle
-              ).size( Math.PI * Math.pow( pointSize, 2 ) ) );
+              .style( 'opacity', 0 );
 
-            // Update all dots (existing + new) with transition
-            ((dots as any).merge(dotsEnter))
+            const fullSize = Math.PI * Math.pow( pointSize, 2 );
+            const symbolGenerator = d3.symbol().type(
+              pointShape === 'square' ? d3.symbolSquare :
+                pointShape === 'diamond' ? d3.symbolDiamond :
+                  pointShape === 'triangle' ? d3.symbolTriangle :
+                    d3.symbolCircle
+            );
+
+            // Update all dots (existing + new)
+            ( ( dots as any ).merge( dotsEnter ) )
               .transition()
-              .duration(transitionDuration)
-              .ease(d3.easeCubicInOut)
-              .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` );
+              .duration( 100 )
+              .style( 'opacity', 0 )
+              .on( 'end', function ( d: any, i: number ) {
+                d3.select( this )
+                  .attr( 'transform', `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+                  .transition()
+                  .delay( i * 2 )
+                  .duration( 250 )
+                  .ease( d3.easeBackOut )
+                  .style( 'opacity', 1 )
+                  .attrTween( 'd', () => {
+                    const i = d3.interpolate( 0, fullSize );
+                    return ( t ) => symbolGenerator.size( i( t ) )() || '';
+                  } );
+              } );
           }
-        });
+        } );
 
         // Update axes by re-rendering them
-        // Remove all axis and grid elements except content-group
-        g.selectAll('g:not(.content-group)').remove();
-        // Remove axis title text elements
-        g.selectAll('text').remove();
+        // Axes and grids are updated in place
+        // Axis helper functions are idempotent and handle their own text elements
+        // g.selectAll( 'text' ).remove();
 
         // Re-render X Grid
         renderXGrid( g as any, {
@@ -383,6 +401,17 @@ export function AreaChart( {
             xAxisShowDomain
           } );
         }
+
+        // Re-initialize brush zoom
+        setupBrushZoom( {
+          g: g as any,
+          innerWidth,
+          innerHeight,
+          data,
+          labelKey,
+          valueKeys,
+          setZoomDomain
+        } );
 
         // Re-render Y Axis
         renderYAxis( g as any, {
@@ -461,7 +490,7 @@ export function AreaChart( {
 
       // Draw Area
       contentGroup.append( 'path' )
-        .attr( 'class', `area-${index}` )
+        .attr( 'class', `area-${ index }` )
         .datum( filteredData )
         .attr( 'fill', color )
         .attr( 'fill-opacity', effectiveFillOpacity )
@@ -469,7 +498,7 @@ export function AreaChart( {
 
       // Draw Line
       contentGroup.append( 'path' )
-        .attr( 'class', `line-${index}` )
+        .attr( 'class', `line-${ index }` )
         .datum( filteredData )
         .attr( 'fill', 'none' )
         .attr( 'stroke', color )

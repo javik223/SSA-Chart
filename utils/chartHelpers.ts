@@ -155,28 +155,67 @@ export function renderXAxis(
 
   const yPosition = config.xAxisPosition === 'top' ? 0 : config.innerHeight;
 
-  const xAxisGroup = g.append('g')
+  let xAxisGroup = g.select<SVGGElement>('.x-axis');
+  if (xAxisGroup.empty()) {
+    xAxisGroup = g.append('g')
+      .attr('class', 'x-axis');
+  }
+
+  xAxisGroup
     .attr('transform', `translate(0,${yPosition})`)
-    .call(axis)
     .style('font-size', `${config.xAxisLabelSize}px`)
     .style('font-weight', config.xAxisLabelWeight)
     .style('color', config.xAxisLabelColor);
 
-  // Apply label rotation
+  // Render axis with transition for smooth value changes
+  const transition = xAxisGroup.transition().duration(500);
+  
+  transition.call(axis)
+    .on('end', () => {
+      // Apply label rotation and styling after transition completes
+      if (config.xAxisLabelRotation !== 0) {
+        const rotation = config.xAxisLabelRotation;
+        const isBottomAxis = config.xAxisPosition !== 'top';
+        const tickSize = config.xAxisTickSize ?? 6;
+        const tickPadding = config.xAxisTickPadding ?? 3;
+        const yOffset = isBottomAxis ? (tickSize + tickPadding) : -(tickSize + tickPadding);
+        const xOffset = 0;
+        
+        const spacing = config.xAxisLabelSpacing || 0;
+        const spacingOffset = isBottomAxis ? spacing : -spacing;
+
+        xAxisGroup.selectAll('.tick text')
+          .attr('transform', `translate(0, ${spacingOffset}) rotate(${rotation}, ${xOffset}, ${yOffset})`)
+          .style('text-anchor', isBottomAxis 
+            ? (rotation > 0 ? 'start' : 'end') 
+            : (rotation > 0 ? 'end' : 'start'))
+          .attr('dx', isBottomAxis
+            ? (rotation > 0 ? '0.5em' : '-0.5em')
+            : (rotation > 0 ? '-0.5em' : '0.5em'))
+          .attr('dy', '0.32em');
+      } else {
+        // Reset if no rotation (handle spacing only)
+        if (config.xAxisLabelSpacing !== 0) {
+          xAxisGroup.selectAll('.tick text')
+            .attr('dy', config.xAxisPosition === 'top' ? `-${config.xAxisLabelSpacing}px` : `${config.xAxisLabelSpacing}px`);
+        }
+      }
+    });
+  
+  // Also apply immediately for initial render
   if (config.xAxisLabelRotation !== 0) {
     const rotation = config.xAxisLabelRotation;
     const isBottomAxis = config.xAxisPosition !== 'top';
+    const tickSize = config.xAxisTickSize ?? 6;
+    const tickPadding = config.xAxisTickPadding ?? 3;
+    const yOffset = isBottomAxis ? (tickSize + tickPadding) : -(tickSize + tickPadding);
+    const xOffset = 0;
+    
+    const spacing = config.xAxisLabelSpacing || 0;
+    const spacingOffset = isBottomAxis ? spacing : -spacing;
 
-    xAxisGroup.selectAll('text')
-      .each(function() {
-        const text = d3.select(this);
-        const x = parseFloat(text.attr('x') || '0');
-        const y = parseFloat(text.attr('y') || '0');
-        
-        text.attr('transform', `translate(${x}, ${y}) rotate(${rotation})`);
-        text.attr('x', 0);
-        text.attr('y', 0);
-      })
+    xAxisGroup.selectAll('.tick text')
+      .attr('transform', `translate(0, ${spacingOffset}) rotate(${rotation}, ${xOffset}, ${yOffset})`)
       .style('text-anchor', isBottomAxis 
         ? (rotation > 0 ? 'start' : 'end') 
         : (rotation > 0 ? 'end' : 'start'))
@@ -184,12 +223,12 @@ export function renderXAxis(
         ? (rotation > 0 ? '0.5em' : '-0.5em')
         : (rotation > 0 ? '-0.5em' : '0.5em'))
       .attr('dy', '0.32em');
-  }
-
-  // Apply label spacing (but not if rotation is applied, as it has its own dy)
-  if (config.xAxisLabelRotation === 0) {
-    xAxisGroup.selectAll('.tick text')
-      .attr('dy', config.xAxisPosition === 'top' ? `-${config.xAxisLabelSpacing}px` : `${config.xAxisLabelSpacing}px`);
+  } else {
+    // Reset if no rotation (handle spacing only)
+    if (config.xAxisLabelSpacing !== 0) {
+      xAxisGroup.selectAll('.tick text')
+        .attr('dy', config.xAxisPosition === 'top' ? `-${config.xAxisLabelSpacing}px` : `${config.xAxisLabelSpacing}px`);
+    }
   }
 
   // Add X axis title
@@ -249,30 +288,38 @@ export function renderYAxis(
     }
   }
 
-  const yAxisGroup = g.append('g')
+  let yAxisGroup = g.select<SVGGElement>('.y-axis');
+  if (yAxisGroup.empty()) {
+    yAxisGroup = g.append('g')
+      .attr('class', 'y-axis');
+  }
+
+  yAxisGroup
     .attr('transform', `translate(${yAxis.position === 'left' ? 0 : config.innerWidth},0)`)
     .style('font-size', `${yAxis.labelSize}px`)
     .style('font-weight', yAxis.labelWeight)
     .style('color', yAxis.labelColor);
 
-  // Apply axis with transition for smooth zoom animation
   yAxisGroup.transition()
-    .duration(300)
+    .duration(500)
     .call(axis);
 
-  // Apply tick position
-  if (yAxis.tickPosition === 'inside') {
-    yAxisGroup.selectAll('.tick line')
-      .attr('x2', yAxis.position === 'left' ? yAxis.tickSize : -yAxis.tickSize);
-  } else if (yAxis.tickPosition === 'cross') {
-    yAxisGroup.selectAll('.tick line')
-      .attr('x1', yAxis.position === 'left' ? yAxis.tickSize / 2 : -yAxis.tickSize / 2)
-      .attr('x2', yAxis.position === 'left' ? -yAxis.tickSize / 2 : yAxis.tickSize / 2);
-  }
+  // Render axis with transition for smooth value changes
+  const transition = yAxisGroup.transition().duration(500);
+  
+  transition.call(axis)
+    .on('end', () => {
+      // Apply label rotation after transition completes
+      if (yAxis.labelAngle !== 0) {
+        yAxisGroup.selectAll('.tick text')
+          .attr('transform', `rotate(${yAxis.labelAngle})`)
+          .style('text-anchor', yAxis.labelAngle < 0 ? 'end' : 'start');
+      }
+    });
 
-  // Apply label rotation
+  // Also apply immediately for initial render
   if (yAxis.labelAngle !== 0) {
-    yAxisGroup.selectAll('text')
+    yAxisGroup.selectAll('.tick text')
       .attr('transform', `rotate(${yAxis.labelAngle})`)
       .style('text-anchor', yAxis.labelAngle < 0 ? 'end' : 'start');
   }
@@ -326,8 +373,13 @@ export function renderXGrid(
 ): void {
   if (!config.xAxisShowGrid || !config.xScale) return;
 
-  const grid = g.append('g')
-    .attr('class', 'x-grid')
+  let grid = g.select<SVGGElement>('.x-grid');
+  if (grid.empty()) {
+    grid = g.append('g')
+      .attr('class', 'x-grid');
+  }
+
+  grid
     .attr('transform', `translate(0,${config.innerHeight})`)
     .attr('opacity', config.xAxisGridOpacity ?? 0.5);
 
@@ -337,7 +389,7 @@ export function renderXGrid(
 
   if (config.xAxisTickCount) gridAxis.ticks(config.xAxisTickCount);
 
-  grid.call(gridAxis);
+  grid.transition().duration(500).call(gridAxis);
 
   grid.selectAll('line')
     .attr('stroke', config.xAxisGridColor ?? '#e5e7eb')
@@ -356,8 +408,13 @@ export function renderYGrid(
 ): void {
   if (!config.yAxis?.showGrid || !config.yScale) return;
 
-  const grid = g.append('g')
-    .attr('class', 'y-grid')
+  let grid = g.select<SVGGElement>('.y-grid');
+  if (grid.empty()) {
+    grid = g.append('g')
+      .attr('class', 'y-grid');
+  }
+
+  grid
     .attr('opacity', 0.5);
 
   const gridAxis = d3.axisLeft(config.yScale)
@@ -367,7 +424,7 @@ export function renderYGrid(
 
   // Apply grid with transition for smooth zoom animation
   grid.transition()
-    .duration(300)
+    .duration(500)
     .call(gridAxis);
 
   grid.selectAll('line')
@@ -537,7 +594,33 @@ export function setupBrushZoom(config: BrushZoomConfig): void {
   const brush = d3.brushX()
     .extent([[0, 0], [config.innerWidth, config.innerHeight]])
     .on('end', (event) => {
-      if (!event.selection) return;
+  // Handle zoom reset on double-click (empty selection)
+      if (!event.selection) {
+        const svgNode = config.g.node() as any;
+        
+        if (!svgNode.__idleTimeout) {
+          svgNode.__idleTimeout = setTimeout(() => {
+            svgNode.__idleTimeout = null;
+          }, 350);
+          return;
+        }
+        
+        svgNode.__idleTimeout = null;
+
+        // Reset to full domain
+        const yMinFull = d3.min(config.data, (d) =>
+          Math.min(...config.valueKeys.map((key) => Number(d[key]) || 0))
+        ) || 0;
+        const yMaxFull = d3.max(config.data, (d) =>
+          Math.max(...config.valueKeys.map((key) => Number(d[key]) || 0))
+        ) || 0;
+
+        config.setZoomDomain({
+          x: [0, config.data.length - 1],
+          y: [yMinFull, yMaxFull]
+        });
+        return;
+      }
 
       const [x0, x1] = event.selection as [number, number];
 
@@ -578,7 +661,14 @@ export function setupBrushZoom(config: BrushZoomConfig): void {
     });
 
   // Add brush overlay
-  config.g.append('g')
-    .attr('class', 'brush')
-    .call(brush);
+  let brushGroup = config.g.select<SVGGElement>('.brush');
+  if (brushGroup.empty()) {
+    brushGroup = config.g.append('g')
+      .attr('class', 'brush');
+  }
+  
+  brushGroup.call(brush);
+  
+  // Ensure brush is raised
+  brushGroup.raise();
 }
