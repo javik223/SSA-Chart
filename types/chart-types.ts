@@ -69,7 +69,7 @@ export interface YAxisConfig {
   // Ticks & Labels
   tickPosition: 'outside' | 'inside' | 'cross';
   labelSize: number;
-  labelWeight: 'bold' | 'regular';
+  labelWeight: 'bold' | 'regular' | 'light';
   labelColor: string;
   labelPadding: number;
   labelAngle: number;

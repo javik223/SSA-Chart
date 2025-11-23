@@ -289,7 +289,7 @@ export function XAxisSettings() {
 
       <FormSection title='Labels'>
         <FormRow>
-          <FormCol span={ 10 }>
+          <FormCol span={ 8 }>
             <FormField
               type='button-group'
               label='Weight'
@@ -299,10 +299,11 @@ export function XAxisSettings() {
                 { value: 'bold', label: 'Bold' },
                 { value: 'medium', label: 'Medium' },
                 { value: 'normal', label: 'Normal' },
+                { value: 'light', label: 'Light' },
               ] }
             />
           </FormCol>
-          <FormCol span={ 2 }>
+          <FormCol span={ 4 }>
             <FormField
               type='number'
               label='Rotation'

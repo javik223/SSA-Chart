@@ -602,8 +602,8 @@ interface ChartStore {
   xAxisTickPosition: 'outside' | 'inside' | 'cross';
   setXAxisTickPosition: (position: 'outside' | 'inside' | 'cross') => void;
   
-  xAxisLabelWeight: 'bold' | 'regular';
-  setXAxisLabelWeight: (weight: 'bold' | 'regular') => void;
+  xAxisLabelWeight: 'bold' | 'regular' | 'light';
+  setXAxisLabelWeight: (weight: 'bold' | 'regular' | 'light') => void;
   
   xAxisLabelColor: string;
   setXAxisLabelColor: (color: string) => void;
@@ -715,8 +715,8 @@ interface ChartStore {
   yAxisLabelAngle: number;
   setYAxisLabelAngle: (angle: number) => void;
   
-  yAxisLabelWeight: 'bold' | 'regular';
-  setYAxisLabelWeight: (weight: 'bold' | 'regular') => void;
+  yAxisLabelWeight: 'bold' | 'regular' | 'light';
+  setYAxisLabelWeight: (weight: 'bold' | 'regular' | 'light') => void;
   
   yAxisLabelMaxLines: number;
   setYAxisLabelMaxLines: (maxLines: number) => void;
@@ -1570,7 +1570,7 @@ export const useChartStore = create<ChartStore>()(
       xAxisTickPosition: 'outside',
       setXAxisTickPosition: (position) => set({ xAxisTickPosition: position }),
       
-      xAxisLabelWeight: 'regular',
+      xAxisLabelWeight: 'light',
       setXAxisLabelWeight: (weight) => set({ xAxisLabelWeight: weight }),
       
       xAxisLabelColor: '#000000',
@@ -1683,7 +1683,7 @@ export const useChartStore = create<ChartStore>()(
       yAxisLabelAngle: 0,
       setYAxisLabelAngle: (angle) => set({ yAxisLabelAngle: angle }),
       
-      yAxisLabelWeight: 'regular',
+      yAxisLabelWeight: 'light',
       setYAxisLabelWeight: (weight) => set({ yAxisLabelWeight: weight }),
       
       yAxisLabelMaxLines: 1,
