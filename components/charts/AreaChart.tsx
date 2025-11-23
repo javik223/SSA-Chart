@@ -124,6 +124,7 @@ export function AreaChart( {
   yAxis = DEFAULT_Y_AXIS_CONFIG,
 }: AreaChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
+  const previousZoomDomainRef = useRef<any>( null );
 
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
@@ -234,7 +235,167 @@ export function AreaChart( {
   useEffect( () => {
     if ( !svgRef.current || !xScale || !yScale ) return;
 
+    // Check if this is a zoom update (smooth transition) vs full redraw
+    const isZoomUpdate = previousZoomDomainRef.current !== null &&
+                         JSON.stringify(previousZoomDomainRef.current) !== JSON.stringify(zoomDomain);
+
+    // Update the ref for next render
+    previousZoomDomainRef.current = zoomDomain;
+
+    // Transition duration
+    const transitionDuration = isZoomUpdate ? 500 : 0;
+
     const svg = d3.select( svgRef.current );
+
+    // If it's a zoom update, just update the existing elements
+    if (isZoomUpdate) {
+      const g = svg.select('g.main-group');
+
+      // Check if main-group exists (might not exist after chart type change)
+      if (g.empty()) {
+        // Main group doesn't exist, do a full redraw instead
+        svg.selectAll( '*' ).remove();
+        previousZoomDomainRef.current = null;
+        // Continue to full render below
+      } else {
+        const contentGroup = g.select('g.content-group');
+
+        // Update areas and lines with transition
+        valueKeys.forEach( ( key, index ) => {
+          const color = colors[ index % colors.length ];
+
+          const area = d3
+            .area<any>()
+            .x( ( d ) => getXPosition( d ) )
+            .y0( innerHeight )
+            .y1( ( d ) => yScale( Number( d[ key ] ) ) );
+
+          if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
+          if ( curveType === 'step' ) area.curve( d3.curveStep );
+          if ( curveType === 'linear' ) area.curve( d3.curveLinear );
+
+          // Update area path with transition
+          contentGroup.select(`path.area-${index}`)
+            .datum( filteredData )
+            .transition()
+            .duration(transitionDuration)
+            .ease(d3.easeCubicInOut)
+            .attr( 'd', area( filteredData ) );
+
+          // Update line
+          const line = d3
+            .line<any>()
+            .x( ( d ) => getXPosition( d ) )
+            .y( ( d ) => yScale( Number( d[ key ] ) ) );
+
+          if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
+          if ( curveType === 'step' ) line.curve( d3.curveStep );
+          if ( curveType === 'linear' ) line.curve( d3.curveLinear );
+
+          contentGroup.select(`path.line-${index}`)
+            .datum( filteredData )
+            .transition()
+            .duration(transitionDuration)
+            .ease(d3.easeCubicInOut)
+            .attr( 'd', line( filteredData ) );
+
+          // Update dots with transition
+          if (showPoints) {
+            const dots = contentGroup.selectAll( `.dot-${ index }` )
+              .data( filteredData );
+
+            // Exit old dots
+            dots.exit().remove();
+
+            // Enter new dots
+            const dotsEnter = dots.enter()
+              .append( 'path' )
+              .attr( 'class', `dot-${ index }` )
+              .attr( 'fill', pointColor || color )
+              .attr( 'stroke', pointOutlineColor )
+              .attr( 'stroke-width', pointOutlineWidth )
+              .attr( 'd', d3.symbol().type(
+                pointShape === 'square' ? d3.symbolSquare :
+                  pointShape === 'diamond' ? d3.symbolDiamond :
+                    pointShape === 'triangle' ? d3.symbolTriangle :
+                      d3.symbolCircle
+              ).size( Math.PI * Math.pow( pointSize, 2 ) ) );
+
+            // Update all dots (existing + new) with transition
+            ((dots as any).merge(dotsEnter))
+              .transition()
+              .duration(transitionDuration)
+              .ease(d3.easeCubicInOut)
+              .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` );
+          }
+        });
+
+        // Update axes by re-rendering them
+        // Remove all axis and grid elements except content-group
+        g.selectAll('g:not(.content-group)').remove();
+        // Remove axis title text elements
+        g.selectAll('text').remove();
+
+        // Re-render X Grid
+        renderXGrid( g as any, {
+          xScale,
+          innerWidth,
+          innerHeight,
+          xAxisShowGrid,
+          xAxisGridColor,
+          xAxisGridWidth,
+          xAxisGridOpacity,
+          xAxisGridDashArray,
+          xAxisTickCount
+        } );
+
+        // Re-render Y Grid
+        renderYGrid( g as any, {
+          yScale,
+          innerWidth,
+          innerHeight,
+          yAxis
+        } );
+
+        // Re-render X Axis
+        if ( xAxisShow && xAxisPosition !== 'hidden' ) {
+          renderXAxis( g as any, {
+            xScale,
+            innerWidth,
+            innerHeight,
+            xAxisShow,
+            xAxisPosition,
+            xAxisTickSize,
+            xAxisTickPadding,
+            xAxisTickCount,
+            xAxisTickFormat,
+            xAxisScaleType,
+            xAxisLabelSize,
+            xAxisLabelWeight,
+            xAxisLabelColor,
+            xAxisLabelRotation,
+            xAxisLabelSpacing,
+            xAxisTitle,
+            xAxisTitleSize,
+            xAxisTitleWeight,
+            xAxisTitleColor,
+            xAxisTitlePadding,
+            xAxisShowDomain
+          } );
+        }
+
+        // Re-render Y Axis
+        renderYAxis( g as any, {
+          yScale,
+          innerWidth,
+          innerHeight,
+          yAxis
+        } );
+
+        return; // Skip the rest of the rendering
+      }
+    }
+
     svg.selectAll( '*' ).remove();
 
     // Set viewBox for responsiveness
@@ -247,6 +408,7 @@ export function AreaChart( {
 
     const g = svg
       .append( 'g' )
+      .attr( 'class', 'main-group' )
       .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
 
     // X Grid (using utility)
@@ -271,7 +433,9 @@ export function AreaChart( {
     } );
 
     // Areas and Lines (Clipped)
-    const contentGroup = g.append( 'g' ).attr( 'clip-path', `url(#${ clipId })` );
+    const contentGroup = g.append( 'g' )
+      .attr( 'class', 'content-group' )
+      .attr( 'clip-path', `url(#${ clipId })` );
 
     valueKeys.forEach( ( key, index ) => {
       const color = colors[ index % colors.length ];
@@ -297,6 +461,7 @@ export function AreaChart( {
 
       // Draw Area
       contentGroup.append( 'path' )
+        .attr( 'class', `area-${index}` )
         .datum( filteredData )
         .attr( 'fill', color )
         .attr( 'fill-opacity', effectiveFillOpacity )
@@ -304,6 +469,7 @@ export function AreaChart( {
 
       // Draw Line
       contentGroup.append( 'path' )
+        .attr( 'class', `line-${index}` )
         .datum( filteredData )
         .attr( 'fill', 'none' )
         .attr( 'stroke', color )

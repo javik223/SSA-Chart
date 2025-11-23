@@ -164,16 +164,33 @@ export function renderXAxis(
 
   // Apply label rotation
   if (config.xAxisLabelRotation !== 0) {
+    const rotation = config.xAxisLabelRotation;
+    const isBottomAxis = config.xAxisPosition !== 'top';
+
     xAxisGroup.selectAll('text')
-      .attr('transform', `rotate(${config.xAxisLabelRotation})`)
-      .style('text-anchor', config.xAxisLabelRotation > 0 ? 'start' : 'end')
-      .attr('dx', config.xAxisLabelRotation > 0 ? '0.5em' : '-0.5em')
-      .attr('dy', config.xAxisLabelRotation > 0 ? '0.5em' : '0.5em');
+      .each(function() {
+        const text = d3.select(this);
+        const x = parseFloat(text.attr('x') || '0');
+        const y = parseFloat(text.attr('y') || '0');
+        
+        text.attr('transform', `translate(${x}, ${y}) rotate(${rotation})`);
+        text.attr('x', 0);
+        text.attr('y', 0);
+      })
+      .style('text-anchor', isBottomAxis 
+        ? (rotation > 0 ? 'start' : 'end') 
+        : (rotation > 0 ? 'end' : 'start'))
+      .attr('dx', isBottomAxis
+        ? (rotation > 0 ? '0.5em' : '-0.5em')
+        : (rotation > 0 ? '-0.5em' : '0.5em'))
+      .attr('dy', '0.32em');
   }
 
-  // Apply label spacing
-  xAxisGroup.selectAll('.tick text')
-    .attr('dy', config.xAxisPosition === 'top' ? `-${config.xAxisLabelSpacing}px` : `${config.xAxisLabelSpacing}px`);
+  // Apply label spacing (but not if rotation is applied, as it has its own dy)
+  if (config.xAxisLabelRotation === 0) {
+    xAxisGroup.selectAll('.tick text')
+      .attr('dy', config.xAxisPosition === 'top' ? `-${config.xAxisLabelSpacing}px` : `${config.xAxisLabelSpacing}px`);
+  }
 
   // Add X axis title
   if (config.xAxisTitle) {
