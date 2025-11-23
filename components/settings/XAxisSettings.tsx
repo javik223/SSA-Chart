@@ -1,10 +1,13 @@
 'use client';
 
+import { ArrowUp, ArrowDown, EyeOff, TrendingUp, Activity } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { FormField } from '@/components/ui/form-field';
 import { FormSection } from '@/components/ui/form-section';
 import { FormGrid } from '@/components/ui/form-grid';
+import { FormRow } from '@/components/ui/form-row';
+import { FormCol } from '@/components/ui/form-col';
 
 export function XAxisSettings() {
   // Position
@@ -87,49 +90,48 @@ export function XAxisSettings() {
 
   return (
     <div className='settings-container'>
-      {/* Position */ }
-      <FormSection title='Position'>
-        <FormField
-          type='select'
-          value={ xAxisPosition }
-          onChange={ setXAxisPosition }
-          options={ [
-            { value: 'bottom', label: 'Bottom' },
-            { value: 'top', label: 'Top' },
-            { value: 'hidden', label: 'Hidden' },
-          ] }
-        />
+      <FormSection>
+        <FormRow>
+          <FormCol span='auto'>
+            <FormField
+              type='switch'
+              label='Show X Axis'
+              checked={ xAxisShow }
+              onChange={ setXAxisShow }
+            />
+          </FormCol>
+          <FormCol span='auto'>
+            <FormField
+              type='button-group'
+              label='Position'
+              value={ xAxisPosition }
+              onChange={ setXAxisPosition as ( value: string ) => void }
+              options={ [
+                { value: 'top', icon: <ArrowUp className='h-4 w-4' /> },
+                { value: 'bottom', icon: <ArrowDown className='h-4 w-4' /> },
+                { value: 'hidden', icon: <EyeOff className='h-4 w-4' /> },
+              ] }
+            />
+          </FormCol>
+        </FormRow>
       </FormSection>
 
       <Separator />
 
-      {/* Show/Hide X Axis */ }
-      <FormField
-        type='switch'
-        label='X axis'
-        checked={ xAxisShow }
-        onChange={ setXAxisShow }
-      />
-
-      <Separator />
-
-      {/* Scale */ }
-      <FormSection title='Scale'>
+      <FormSection title='Scale & Range'>
         <FormField
-          type='select'
+          type='button-group'
+          label='Scale Type'
           value={ xAxisScaleType }
-          onChange={ setXAxisScaleType }
+          onChange={ setXAxisScaleType as ( value: string ) => void }
           options={ [
-            { value: 'linear', label: 'Linear' },
-            { value: 'log', label: 'Log' },
+            { value: 'linear', icon: <TrendingUp className='h-4 w-4' />, tooltip: 'Linear' },
+            { value: 'log', icon: <Activity className='h-4 w-4' />, tooltip: 'Logarithmic' },
+            { value: 'time', icon: <span className='text-xs font-bold'>T</span>, tooltip: 'Time' },
+            { value: 'band', icon: <span className='text-xs font-bold'>B</span>, tooltip: 'Band' },
+            { value: 'point', icon: <span className='text-xs font-bold'>P</span>, tooltip: 'Point' },
           ] }
         />
-      </FormSection>
-
-      <Separator />
-
-      {/* Min/Max Range */ }
-      <FormSection title='Range'>
         <FormGrid columns={ 2 }>
           <FormField
             type='number'
@@ -150,237 +152,269 @@ export function XAxisSettings() {
 
       <Separator />
 
-      {/* X Axis Title */ }
-      <FormSection title='Axis title'>
+      <FormSection title='Title'>
         <FormField
           type='text'
+          label='Axis Title'
           value={ xAxisTitle }
           onChange={ setXAxisTitle }
           placeholder='Enter axis title'
         />
+
+        <FormField
+          type='switch'
+          label='Custom Style'
+          checked={ xAxisTitleType !== 'auto' }
+          onChange={ ( enabled ) => setXAxisTitleType( enabled ? 'custom' : 'auto' ) }
+        />
+
+        { xAxisTitleType !== 'auto' && (
+          <FormSection>
+            <Separator />
+            <FormRow>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='button-group'
+                  label='Weight'
+                  value={ xAxisTitleWeight }
+                  onChange={ setXAxisTitleWeight as ( value: string ) => void }
+                  options={ [
+                    { value: 'bold', label: 'Bold' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'normal', label: 'Normal' },
+                  ] }
+                />
+              </FormCol>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='color'
+                  label='Color'
+                  value={ xAxisTitleColor }
+                  onChange={ setXAxisTitleColor }
+                />
+              </FormCol>
+            </FormRow>
+
+            <FormRow>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='number'
+                  label='Size'
+                  value={ xAxisTitleSize }
+                  onChange={ ( v ) => setXAxisTitleSize( v ?? 12 ) }
+                  min={ 8 }
+                  max={ 32 }
+                />
+              </FormCol>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='number'
+                  label='Padding'
+                  value={ xAxisTitlePadding }
+                  onChange={ ( v ) => setXAxisTitlePadding( v ?? 0 ) }
+                  min={ 0 }
+                />
+              </FormCol>
+            </FormRow>
+          </FormSection>
+        ) }
       </FormSection>
 
       <Separator />
 
-      {/* Title Styling */ }
-      <FormSection title='Title styling'>
-        <FormField
-          type='select'
-          label='Type'
-          value={ xAxisTitleType }
-          onChange={ setXAxisTitleType }
-          options={ [
-            { value: 'auto', label: 'Auto' },
-            { value: 'custom', label: 'Custom' },
-          ] }
-        />
+      <FormSection title='Ticks'>
+        <FormRow>
+          <FormCol span='auto'>
+            <FormField
+              type='button-group'
+              label='Position'
+              value={ xAxisTickPosition }
+              onChange={ setXAxisTickPosition as ( value: string ) => void }
+              options={ [
+                { value: 'default', label: 'Default' },
+                { value: 'axis-label', label: 'Axis Label' },
+                { value: 'annotation', label: 'Annotation' },
+                { value: 'cross', label: 'Cross' },
+              ] }
+            />
+          </FormCol>
+        </FormRow>
 
-        <FormField
-          type='select'
-          label='Weight'
-          value={ xAxisTitleWeight }
-          onChange={ setXAxisTitleWeight }
-          options={ [
-            { value: 'regular', label: 'Regular' },
-            { value: 'bold', label: 'Bold' },
-          ] }
-        />
+        <FormRow>
+          <FormCol span='auto'>
+            <FormField
+              type='text'
+              label='Format'
+              value={ xAxisTickFormat }
+              onChange={ setXAxisTickFormat }
+              placeholder='e.g., .2f'
+            />
+          </FormCol>
+        </FormRow>
 
-        <FormField
-          type='color'
-          label='Color'
-          value={ xAxisTitleColor }
-          onChange={ setXAxisTitleColor }
-        />
-
-        <FormGrid columns={ 2 }>
-          <FormField
-            type='number'
-            label='Size (px)'
-            value={ xAxisTitleSize }
-            onChange={ ( v ) => setXAxisTitleSize( v ?? 12 ) }
-            min={ 8 }
-            max={ 32 }
-          />
-          <FormField
-            type='number'
-            label='Padding (px)'
-            value={ xAxisTitlePadding }
-            onChange={ ( v ) => setXAxisTitlePadding( v ?? 0 ) }
-            min={ 0 }
-          />
-        </FormGrid>
+        <FormRow>
+          <FormCol span={ 4 }>
+            <FormField
+              type='number'
+              label='Tick Count'
+              value={ xAxisTickCount ?? 0 }
+              onChange={ ( v ) => setXAxisTickCount( v === 0 ? null : v ) }
+              min={ 0 }
+              max={ 50 }
+              description='Set to 0 for auto'
+            />
+          </FormCol>
+          <FormCol span={ 4 }>
+            <FormField
+              type='number'
+              label='Size'
+              value={ xAxisTickSize }
+              onChange={ ( v ) => setXAxisTickSize( v ?? 6 ) }
+              min={ 0 }
+            />
+          </FormCol>
+          <FormCol span={ 4 }>
+            <FormField
+              type='number'
+              label='Padding'
+              value={ xAxisTickPadding }
+              onChange={ ( v ) => setXAxisTickPadding( v ?? 8 ) }
+              min={ 0 }
+            />
+          </FormCol>
+        </FormRow>
       </FormSection>
 
       <Separator />
 
-      {/* Tick & Label Styling */ }
-      <FormSection title='Tick & label styling'>
-        <FormField
-          type='select'
-          label='Tick position'
-          value={ xAxisTickPosition }
-          onChange={ setXAxisTickPosition }
-          options={ [
-            { value: 'outside', label: 'Outside' },
-            { value: 'inside', label: 'Inside' },
-            { value: 'cross', label: 'Cross' },
-          ] }
-        />
+      <FormSection title='Labels'>
+        <FormRow>
+          <FormCol span={ 10 }>
+            <FormField
+              type='button-group'
+              label='Weight'
+              value={ xAxisLabelWeight }
+              onChange={ setXAxisLabelWeight as ( value: string ) => void }
+              options={ [
+                { value: 'bold', label: 'Bold' },
+                { value: 'medium', label: 'Medium' },
+                { value: 'normal', label: 'Normal' },
+              ] }
+            />
+          </FormCol>
+          <FormCol span={ 2 }>
+            <FormField
+              type='number'
+              label='Rotation'
+              value={ xAxisLabelRotation }
+              onChange={ ( v ) => setXAxisLabelRotation( v ?? 0 ) }
+              min={ -90 }
+              max={ 90 }
+              step={ 15 }
+            />
+          </FormCol>
+        </FormRow>
 
-        <FormField
-          type='select'
-          label='Label weight'
-          value={ xAxisLabelWeight }
-          onChange={ setXAxisLabelWeight }
-          options={ [
-            { value: 'regular', label: 'Regular' },
-            { value: 'bold', label: 'Bold' },
-          ] }
-        />
-
-        <FormField
-          type='color'
-          label='Label color'
-          value={ xAxisLabelColor }
-          onChange={ setXAxisLabelColor }
-        />
-
-        <FormGrid columns={ 2 }>
-          <FormField
-            type='number'
-            label='Label size (px)'
-            value={ xAxisLabelSize }
-            onChange={ ( v ) => setXAxisLabelSize( v ?? 12 ) }
-            min={ 8 }
-            max={ 24 }
-          />
-          <FormField
-            type='number'
-            label='Spacing (px)'
-            value={ xAxisLabelSpacing }
-            onChange={ ( v ) => setXAxisLabelSpacing( v ?? 0 ) }
-            min={ 0 }
-          />
-        </FormGrid>
+        <FormRow>
+          <FormCol span={ 4 }>
+            <FormField
+              type='color'
+              label='Color'
+              value={ xAxisLabelColor }
+              onChange={ setXAxisLabelColor }
+            />
+          </FormCol>
+          <FormCol span={ 4 }>
+            <FormField
+              type='number'
+              label='Size'
+              value={ xAxisLabelSize }
+              onChange={ ( v ) => setXAxisLabelSize( v ?? 12 ) }
+              min={ 8 }
+              max={ 24 }
+            />
+          </FormCol>
+          <FormCol span={ 4 }>
+            <FormField
+              type='number'
+              label='Spacing'
+              value={ xAxisLabelSpacing }
+              onChange={ ( v ) => setXAxisLabelSpacing( v ?? 0 ) }
+              min={ 0 }
+            />
+          </FormCol>
+        </FormRow>
       </FormSection>
 
       <Separator />
 
-      {/* Grid Lines */ }
-      <FormField
-        type='switch'
-        label='Show grid lines'
-        checked={ xAxisShowGrid }
-        onChange={ setXAxisShowGrid }
-      />
+      <FormSection title='Grid & Domain'>
+        <FormRow>
+          <FormCol span={ 6 }>
+            <FormField
+              type='switch'
+              label='Show Grid'
+              checked={ xAxisShowGrid }
+              onChange={ setXAxisShowGrid }
+            />
+          </FormCol>
+          <FormCol span={ 6 }>
+            <FormField
+              type='switch'
+              label='Show Domain'
+              checked={ xAxisShowDomain }
+              onChange={ setXAxisShowDomain }
+            />
+          </FormCol>
+        </FormRow>
 
-      <Separator />
-
-      {/* Gridline Styling */ }
-      <FormSection title='Gridline styling'>
-        <FormField
-          type='color'
-          label='Color'
-          value={ xAxisGridColor }
-          onChange={ setXAxisGridColor }
-        />
-
-        <FormGrid columns={ 2 }>
-          <FormField
-            type='number'
-            label='Width (px)'
-            value={ xAxisGridWidth }
-            onChange={ ( v ) => setXAxisGridWidth( v ?? 1 ) }
-            min={ 0.5 }
-            max={ 5 }
-            step={ 0.5 }
-          />
-          <FormField
-            type='number'
-            label='Opacity'
-            value={ xAxisGridOpacity }
-            onChange={ ( v ) => setXAxisGridOpacity( v ?? 1 ) }
-            min={ 0 }
-            max={ 1 }
-            step={ 0.1 }
-          />
-        </FormGrid>
-
-        <FormField
-          type='text'
-          label='Dash pattern'
-          value={ xAxisGridDashArray }
-          onChange={ setXAxisGridDashArray }
-          placeholder='e.g., 5,5 or 10,5'
-          description='0 = solid, 5,5 = dashed'
-        />
-      </FormSection>
-
-      <Separator />
-
-      {/* Domain Line */ }
-      <FormField
-        type='switch'
-        label='Show domain line'
-        checked={ xAxisShowDomain }
-        onChange={ setXAxisShowDomain }
-      />
-
-      <Separator />
-
-      {/* Tick Settings */ }
-      <FormSection title='Tick settings'>
-        <FormGrid columns={ 2 }>
-          <FormField
-            type='number'
-            label='Tick count'
-            value={ xAxisTickCount }
-            onChange={ ( v ) => setXAxisTickCount( v ?? 5 ) }
-            min={ 0 }
-          />
-          <FormField
-            type='number'
-            label='Tick size (px)'
-            value={ xAxisTickSize }
-            onChange={ ( v ) => setXAxisTickSize( v ?? 6 ) }
-            min={ 0 }
-          />
-        </FormGrid>
-
-        <FormField
-          type='number'
-          label='Tick padding (px)'
-          value={ xAxisTickPadding }
-          onChange={ ( v ) => setXAxisTickPadding( v ?? 8 ) }
-          min={ 0 }
-        />
-      </FormSection>
-
-      <Separator />
-
-      {/* Label Rotation */ }
-      <FormSection title='Label rotation'>
-        <FormField
-          type='number'
-          label='Degrees'
-          value={ xAxisLabelRotation }
-          onChange={ ( v ) => setXAxisLabelRotation( v ?? 0 ) }
-          min={ -90 }
-          max={ 90 }
-        />
-      </FormSection>
-
-      <Separator />
-
-      {/* Tick Format */ }
-      <FormSection title='Tick format'>
-        <FormField
-          type='text'
-          value={ xAxisTickFormat }
-          onChange={ setXAxisTickFormat }
-          placeholder='e.g., .2f, %'
-        />
+        { xAxisShowGrid && (
+          <>
+            <FormRow>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='color'
+                  label='Grid Color'
+                  value={ xAxisGridColor }
+                  onChange={ setXAxisGridColor }
+                />
+              </FormCol>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='text'
+                  label='Dash Pattern'
+                  value={ xAxisGridDashArray }
+                  onChange={ setXAxisGridDashArray }
+                  placeholder='e.g., 5,5'
+                />
+              </FormCol>
+            </FormRow>
+            <FormRow>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='number'
+                  label='Width'
+                  value={ xAxisGridWidth }
+                  onChange={ ( v ) => setXAxisGridWidth( v ?? 1 ) }
+                  min={ 0.5 }
+                  max={ 5 }
+                  step={ 0.5 }
+                />
+              </FormCol>
+              <FormCol span={ 6 }>
+                <FormField
+                  type='number'
+                  label='Opacity'
+                  value={ xAxisGridOpacity }
+                  onChange={ ( v ) => setXAxisGridOpacity( v ?? 1 ) }
+                  min={ 0 }
+                  max={ 1 }
+                  step={ 0.1 }
+                />
+              </FormCol>
+            </FormRow>
+          </>
+        ) }
       </FormSection>
     </div>
   );

@@ -126,12 +126,29 @@ interface ChartStore {
 
   gridMode: 'single' | 'grid';
   setGridMode: (mode: 'single' | 'grid') => void;
+  
+  gridSplitBy: 'label' | 'value';
+  setGridSplitBy: (splitBy: 'label' | 'value') => void;
+  
+  gridColumns: number;
+  setGridColumns: (columns: number) => void;
+  
+  gridAspectRatio: string;
+  setGridAspectRatio: (ratio: string) => void;
 
   heightMode: 'auto' | 'standard' | 'aspect';
   setHeightMode: (mode: 'auto' | 'standard' | 'aspect') => void;
 
   aggregationMode: 'none' | 'sum' | 'average' | 'count';
   setAggregationMode: (mode: 'none' | 'sum' | 'average' | 'count') => void;
+
+  // Zoom settings
+  zoomDomain: { x: [number, number] | null; y: [number, number] | null } | null;
+  setZoomDomain: (domain: { x: [number, number] | null; y: [number, number] | null } | null) => void;
+  resetZoom: () => void;
+  
+  showZoomControls: boolean;
+  setShowZoomControls: (show: boolean) => void;
 
   // Preview settings
   previewWidth: number;
@@ -538,8 +555,8 @@ interface ChartStore {
   xAxisShowDomain: boolean;
   setXAxisShowDomain: (show: boolean) => void;
 
-  xAxisTickCount: number;
-  setXAxisTickCount: (count: number) => void;
+  xAxisTickCount: number | null;
+  setXAxisTickCount: (count: number | null) => void;
 
   xAxisTickSize: number;
   setXAxisTickSize: (size: number) => void;
@@ -556,8 +573,8 @@ interface ChartStore {
   xAxisPosition: 'bottom' | 'top' | 'hidden';
   setXAxisPosition: (position: 'bottom' | 'top' | 'hidden') => void;
   
-  xAxisScaleType: 'linear' | 'log';
-  setXAxisScaleType: (type: 'linear' | 'log') => void;
+  xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
+  setXAxisScaleType: (type: 'linear' | 'log' | 'time' | 'band' | 'point') => void;
   
   xAxisMin: number | null;
   setXAxisMin: (min: number | null) => void;
@@ -623,8 +640,8 @@ interface ChartStore {
   yAxisShowDomain: boolean;
   setYAxisShowDomain: (show: boolean) => void;
 
-  yAxisTickCount: number;
-  setYAxisTickCount: (count: number) => void;
+  yAxisTickCount: number | null;
+  setYAxisTickCount: (count: number | null) => void;
 
   yAxisTickSize: number;
   setYAxisTickSize: (size: number) => void;
@@ -754,6 +771,28 @@ interface ChartStore {
   
   yAxisEdgePadding: number;
   setYAxisEdgePadding: (padding: number) => void;
+
+  // Line settings
+  curveType: 'linear' | 'monotone' | 'step';
+  setCurveType: (type: 'linear' | 'monotone' | 'step') => void;
+  lineWidth: number;
+  setLineWidth: (width: number) => void;
+  lineStyle: 'solid' | 'dashed' | 'dotted';
+  setLineStyle: (style: 'solid' | 'dashed' | 'dotted') => void;
+
+  // Point settings
+  showPoints: boolean;
+  setShowPoints: (show: boolean) => void;
+  pointSize: number;
+  setPointSize: (size: number) => void;
+  pointShape: 'circle' | 'square' | 'triangle' | 'diamond';
+  setPointShape: (shape: 'circle' | 'square' | 'triangle' | 'diamond') => void;
+
+  // Area settings
+  showArea: boolean;
+  setShowArea: (show: boolean) => void;
+  areaOpacity: number;
+  setAreaOpacity: (opacity: number) => void;
 
   // Legend settings
   legendShow: boolean;
@@ -1058,12 +1097,29 @@ export const useChartStore = create<ChartStore>()(
 
       gridMode: 'single',
       setGridMode: (mode) => set({ gridMode: mode }),
+      
+      gridSplitBy: 'label',
+      setGridSplitBy: (splitBy) => set({ gridSplitBy: splitBy }),
+      
+      gridColumns: 2,
+      setGridColumns: (columns) => set({ gridColumns: columns }),
+      
+      gridAspectRatio: '16/9',
+      setGridAspectRatio: (ratio) => set({ gridAspectRatio: ratio }),
 
       heightMode: 'auto',
       setHeightMode: (mode) => set({ heightMode: mode }),
 
       aggregationMode: 'sum',
       setAggregationMode: (mode) => set({ aggregationMode: mode }),
+
+      // Zoom settings
+      zoomDomain: null,
+      setZoomDomain: (domain) => set({ zoomDomain: domain }),
+      resetZoom: () => set({ zoomDomain: null }),
+      
+      showZoomControls: true,
+      setShowZoomControls: (show) => set({ showZoomControls: show }),
 
       // Preview settings
       previewWidth: 1920,
@@ -1683,6 +1739,28 @@ export const useChartStore = create<ChartStore>()(
       
       yAxisEdgePadding: 0,
       setYAxisEdgePadding: (padding) => set({ yAxisEdgePadding: padding }),
+
+      // Line settings
+      curveType: 'linear',
+      setCurveType: (type) => set({ curveType: type }),
+      lineWidth: 2,
+      setLineWidth: (width) => set({ lineWidth: width }),
+      lineStyle: 'solid',
+      setLineStyle: (style) => set({ lineStyle: style }),
+
+      // Point settings
+      showPoints: false,
+      setShowPoints: (show) => set({ showPoints: show }),
+      pointSize: 4,
+      setPointSize: (size) => set({ pointSize: size }),
+      pointShape: 'circle',
+      setPointShape: (shape) => set({ pointShape: shape }),
+
+      // Area settings
+      showArea: false,
+      setShowArea: (show) => set({ showArea: show }),
+      areaOpacity: 0.2,
+      setAreaOpacity: (opacity) => set({ areaOpacity: opacity }),
 
       // Legend settings
       legendShow: true,

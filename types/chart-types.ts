@@ -1,3 +1,48 @@
+export interface BaseChartProps {
+  width?: number;
+  height?: number;
+  colors?: string[];
+  
+  // Legend
+  legendShow?: boolean;
+  legendPosition?: 'top' | 'right' | 'bottom' | 'left';
+  legendAlignment?: 'start' | 'center' | 'end';
+  legendFontSize?: number;
+  legendGap?: number;
+  legendPaddingTop?: number;
+  legendPaddingRight?: number;
+  legendPaddingBottom?: number;
+  legendPaddingLeft?: number;
+
+  // X Axis
+  xAxisShow?: boolean;
+  xAxisTitle?: string;
+  xAxisShowGrid?: boolean;
+  xAxisShowDomain?: boolean;
+  xAxisTickCount?: number | null;
+  xAxisTickSize?: number;
+  xAxisTickPadding?: number;
+  xAxisLabelRotation?: number;
+  xAxisTickFormat?: string;
+  xAxisPosition?: 'bottom' | 'top' | 'hidden';
+  xAxisTitleWeight?: 'bold' | 'regular';
+  xAxisTitleColor?: string;
+  xAxisTitleSize?: number;
+  xAxisTitlePadding?: number;
+  xAxisTickPosition?: 'outside' | 'inside' | 'cross';
+  xAxisLabelWeight?: 'bold' | 'regular';
+  xAxisLabelColor?: string;
+  xAxisLabelSize?: number;
+  xAxisLabelSpacing?: number;
+  xAxisGridColor?: string;
+  xAxisGridWidth?: number;
+  xAxisGridOpacity?: number;
+  xAxisGridDashArray?: string;
+
+  // Y Axis
+  yAxis?: YAxisConfig;
+}
+
 export interface YAxisConfig {
   // General
   show: boolean;
@@ -36,7 +81,7 @@ export interface YAxisConfig {
   tickMode: 'auto' | 'linear' | 'array';
   tickNumber: number;
   oneTickLabelPerLine: boolean;
-  tickCount: number;
+  tickCount: number | null;
   tickSize: number;
   tickPadding: number;
   tickFormat: string;

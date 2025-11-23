@@ -42,6 +42,7 @@ import { FooterSettingsSection } from '@/components/FooterSettingsSection';
 import { LayoutSettings } from '@/components/settings/LayoutSettings';
 import { XAxisSettings } from '@/components/settings/XAxisSettings';
 import { YAxisSettings } from '@/components/settings/YAxisSettings';
+import { LinesSettings } from '@/components/settings/LinesSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
 import { FormField } from '@/components/ui/form-field';
 import { FormSection } from '@/components/ui/form-section';
@@ -57,6 +58,15 @@ export function ChartSettings() {
     setTheme,
     gridMode,
     setGridMode,
+    gridSplitBy,
+    setGridSplitBy,
+    gridColumns,
+    setGridColumns,
+    gridAspectRatio,
+    setGridAspectRatio,
+    showZoomControls,
+    setShowZoomControls,
+    resetZoom,
     heightMode,
     setHeightMode,
     aggregationMode,
@@ -95,6 +105,28 @@ export function ChartSettings() {
 
   const [ searchQuery, setSearchQuery ] = useState( '' );
   const [ openSections, setOpenSections ] = useState<string[]>( [] );
+
+  // Group chart options for FormField select
+  const chartTypeOptions = getChartsByCategory().map( ( { category, charts } ) => ( {
+    label: category.name,
+    options: charts.map( ( chart ) => {
+      const statusLabel = getStatusLabel( chart.status );
+      return {
+        value: chart.type,
+        label: (
+          <span className='flex items-center gap-2'>
+            { chart.name }
+            { statusLabel && (
+              <span className='text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600'>
+                { statusLabel }
+              </span>
+            ) }
+          </span>
+        ),
+        disabled: chart.status === 'coming-soon',
+      };
+    } ),
+  } ) );
 
   // Define all accordion sections with searchable content
   const accordionSections = [
@@ -203,6 +235,12 @@ export function ChartSettings() {
       keywords: [ 'animations', 'effects', 'transitions', 'motion' ],
     },
     {
+      value: 'zoom',
+      title: 'Zoom',
+      description: 'Enable interactive zoom functionality',
+      keywords: [ 'zoom', 'interactive', 'brush', 'selection', 'pan' ],
+    },
+    {
       value: 'layout',
       title: 'Layout',
       description: 'Adjust chart layout and spacing',
@@ -285,6 +323,8 @@ export function ChartSettings() {
                       <XAxisSettings />
                     ) : section.value === 'y-axis' ? (
                       <YAxisSettings />
+                    ) : section.value === 'lines' ? (
+                      <LinesSettings />
                     ) : section.value === 'theme' ? (
                       <div className='settings-container'>
                         <FormSection title='Theme' helpIcon>
@@ -309,48 +349,37 @@ export function ChartSettings() {
                           </FormRow>
                         </FormSection>
                       </div>
+                    ) : section.value === 'zoom' ? (
+                      <FormSection>
+                        <FormField
+                          type='switch'
+                          label='Show zoom controls'
+                          checked={ showZoomControls }
+                          onChange={ setShowZoomControls }
+                        />
+                        <p className='text-xs text-zinc-500 mt-1'>Display zoom buttons on the chart</p>
+
+                        { showZoomControls && (
+                          <Button
+                            variant='outline'
+                            size='sm'
+                            onClick={ resetZoom }
+                            className='w-full mt-2'
+                          >
+                            <RefreshCw className='h-4 w-4 mr-2' />
+                            Reset Zoom
+                          </Button>
+                        ) }
+                      </FormSection>
                     ) : section.value === 'chart-type' ? (
                       <div className='settings-container'>
-                        <FormSection title='Chart type'>
-                          <div className='flex items-center justify-end -mt-8 mb-2'>
-                            <Button variant='ghost' size='sm' className='h-6 w-6 p-0'>
-                              <span className='text-lg'>+</span>
-                            </Button>
-                          </div>
-
-                          <Select value={ chartType } onValueChange={ setChartType }>
-                            <SelectTrigger className='h-8 text-xs'>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              { getChartsByCategory().map( ( { category, charts } ) => (
-                                <div key={ category.id }>
-                                  <div className='px-2 py-1.5 text-xs font-semibold text-zinc-500 first:pt-0'>
-                                    { category.name }
-                                  </div>
-                                  { charts.map( ( chart ) => {
-                                    const statusLabel = getStatusLabel( chart.status );
-                                    return (
-                                      <SelectItem
-                                        key={ chart.type }
-                                        value={ chart.type }
-                                        disabled={ chart.status === 'coming-soon' }
-                                      >
-                                        <span className='flex items-center gap-2'>
-                                          { chart.name }
-                                          { statusLabel && (
-                                            <span className='text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600'>
-                                              { statusLabel }
-                                            </span>
-                                          ) }
-                                        </span>
-                                      </SelectItem>
-                                    );
-                                  } ) }
-                                </div>
-                              ) ) }
-                            </SelectContent>
-                          </Select>
+                        <FormSection>
+                          <FormField
+                            type='select'
+                            value={ chartType }
+                            onChange={ setChartType }
+                            options={ chartTypeOptions }
+                          />
 
                           <FormField
                             type='button-group'
@@ -362,6 +391,50 @@ export function ChartSettings() {
                               { value: 'grid', label: 'Grid of charts' },
                             ] }
                           />
+
+                          { gridMode === 'grid' && (
+                            <FormRow>
+                              <FormCol>
+                                <FormField
+                                  type='button-group'
+                                  label='Split by'
+                                  value={ gridSplitBy }
+                                  onChange={ setGridSplitBy }
+                                  options={ [
+                                    { value: 'label', label: 'By Label' },
+                                    { value: 'value', label: 'By Value' },
+                                  ] }
+                                />
+                              </FormCol>
+                              <FormCol>
+                                <FormField
+                                  type='number'
+                                  label='Grid columns'
+                                  value={ gridColumns }
+                                  onChange={ ( value ) => setGridColumns( Number( value ) ) }
+                                  min={ 1 }
+                                  max={ 6 }
+                                />
+                              </FormCol>
+                            </FormRow>
+                          ) }
+
+                          { gridMode === 'grid' && (
+                            <FormField
+                              type='select'
+                              label='Aspect ratio'
+                              value={ gridAspectRatio }
+                              onChange={ setGridAspectRatio }
+                              options={ [
+                                { value: '16/9', label: '16:9 (Widescreen)' },
+                                { value: '4/3', label: '4:3 (Standard)' },
+                                { value: '1/1', label: '1:1 (Square)' },
+                                { value: '21/9', label: '21:9 (Ultrawide)' },
+                                { value: '3/2', label: '3:2 (Classic)' },
+                                { value: '2/1', label: '2:1 (Panoramic)' },
+                              ] }
+                            />
+                          ) }
 
                           <FormField
                             type='button-group'

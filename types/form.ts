@@ -32,11 +32,23 @@ interface NumberInputField extends BaseFieldProps {
 }
 
 // Select field
+// Select field
+interface SelectOption {
+  value: string;
+  label: string | ReactNode;
+  disabled?: boolean;
+}
+
+interface SelectGroup {
+  label: string;
+  options: SelectOption[];
+}
+
 interface SelectField extends BaseFieldProps {
   type: 'select';
   value: string;
   onChange: (value: any) => void;
-  options: Array<{ value: string; label: string }>;
+  options: Array<SelectOption | SelectGroup>;
   placeholder?: string;
 }
 
@@ -45,7 +57,7 @@ interface ButtonGroupField extends BaseFieldProps {
   type: 'button-group';
   value: string;
   onChange: (value: any) => void;
-  options: Array<{ value: string; label?: string; icon?: ReactNode }>;
+  options: Array<{ value: string; label?: string; icon?: ReactNode; tooltip?: string }>;
 }
 
 // Switch field

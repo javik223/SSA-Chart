@@ -7,7 +7,9 @@ import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -75,11 +77,33 @@ export function FormField( props: FormFieldProps ) {
               <SelectValue placeholder={ props.placeholder } />
             </SelectTrigger>
             <SelectContent id={ props.id }>
-              { props.options.map( ( option ) => (
-                <SelectItem key={ option.value } value={ option.value }>
-                  { option.label }
-                </SelectItem>
-              ) ) }
+              { props.options.map( ( option, index ) => {
+                if ( 'options' in option ) {
+                  return (
+                    <SelectGroup key={ index }>
+                      <SelectLabel>{ option.label }</SelectLabel>
+                      { option.options.map( ( subOption ) => (
+                        <SelectItem
+                          key={ subOption.value }
+                          value={ subOption.value }
+                          disabled={ subOption.disabled }
+                        >
+                          { subOption.label }
+                        </SelectItem>
+                      ) ) }
+                    </SelectGroup>
+                  );
+                }
+                return (
+                  <SelectItem
+                    key={ option.value }
+                    value={ option.value }
+                    disabled={ option.disabled }
+                  >
+                    { option.label }
+                  </SelectItem>
+                );
+              } ) }
             </SelectContent>
           </Select>
         );
@@ -95,6 +119,7 @@ export function FormField( props: FormFieldProps ) {
                 className='settings-button'
                 onClick={ () => props.onChange( option.value ) }
                 disabled={ disabled }
+                title={ option.tooltip }
               >
                 { option.icon || option.label }
               </Button>
@@ -203,8 +228,8 @@ export function FormField( props: FormFieldProps ) {
           { label }
         </FieldLabel>
       ) }
-      { description && <FieldDescription>{ description }</FieldDescription> }
       { renderField() }
+      { description && <FieldDescription className='-mt-2!'>{ description }</FieldDescription> }
     </Field>
   );
 }

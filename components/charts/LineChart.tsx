@@ -34,7 +34,9 @@ interface LineChartProps {
  * - Accessible and inspectable DOM
  */
 export function LineChart( props: LineChartProps ) {
-  return <LineChartD3 { ...props } yAxis={ props.yAxis || DEFAULT_Y_AXIS_CONFIG } />;
+  return (
+    <LineChartD3 { ...props } yAxis={ props.yAxis || DEFAULT_Y_AXIS_CONFIG } />
+  );
 }
 
 // Re-export D3 component for direct use

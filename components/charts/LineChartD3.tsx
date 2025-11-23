@@ -1,8 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig } from '@/types/chart-types';
+import { useChartStore } from '@/store/useChartStore';
+import { createScale } from '@/utils/chartScales';
+import { inferScaleType } from '@/utils/inferScaleType';
+import { ChartZoomControls } from './ChartZoomControls';
 
 interface LineChartD3Props {
   data: Array<Record<string, string | number>>;
@@ -22,20 +26,19 @@ interface LineChartD3Props {
   legendPaddingRight?: number;
   legendPaddingBottom?: number;
   legendPaddingLeft?: number;
-  curveType?: 'monotone' | 'linear' | 'step';
 
   // X Axis
   xAxisShow?: boolean;
   xAxisTitle?: string;
   xAxisShowGrid?: boolean;
   xAxisShowDomain?: boolean;
-  xAxisTickCount?: number;
+  xAxisTickCount?: number | null;
   xAxisTickSize?: number;
   xAxisTickPadding?: number;
   xAxisLabelRotation?: number;
   xAxisTickFormat?: string;
   xAxisPosition?: 'bottom' | 'top' | 'hidden';
-  xAxisScaleType?: 'linear' | 'log';
+  xAxisScaleType?: 'linear' | 'log' | 'time' | 'band' | 'point';
   xAxisMin?: number | null;
   xAxisMax?: number | null;
   xAxisTitleType?: 'auto' | 'custom';
@@ -77,7 +80,6 @@ export function LineChartD3( {
   legendPaddingRight = 0,
   legendPaddingBottom = 0,
   legendPaddingLeft = 0,
-  curveType = 'monotone',
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
@@ -111,91 +113,190 @@ export function LineChartD3( {
 }: LineChartD3Props ) {
   const svgRef = useRef<SVGSVGElement>( null );
 
+  // Store hooks
+  const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
+  const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
+  const showZoomControls = useChartStore( ( state ) => state.showZoomControls );
+  const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
+
+  // Visual settings
+  const curveType = useChartStore( ( state ) => state.curveType );
+  const lineWidth = useChartStore( ( state ) => state.lineWidth );
+  const lineStyle = useChartStore( ( state ) => state.lineStyle );
+  const showPoints = useChartStore( ( state ) => state.showPoints );
+  const pointSize = useChartStore( ( state ) => state.pointSize );
+  const pointShape = useChartStore( ( state ) => state.pointShape );
+  const showArea = useChartStore( ( state ) => state.showArea );
+  const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
+
+  // Automatically infer and set X-axis scale type when data or labelKey changes
   useEffect( () => {
-    if ( !svgRef.current || data.length === 0 ) return;
+    if ( !data || data.length === 0 || !labelKey ) return;
+
+    const values = data.map( d => d[ labelKey ] );
+    const inferredType = inferScaleType( values );
+
+    // Only update if the inferred type is different to avoid unnecessary re-renders
+    // We use the store action directly
+    setXAxisScaleType( inferredType );
+  }, [ data, labelKey, setXAxisScaleType ] );
+
+  // 1. Calculate Dimensions
+  const { innerWidth, innerHeight, chartMargin } = useMemo( () => {
+    const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+    const legendSpace = 120; // Default space for legend
+
+    // Adjust margins for legend
+    if ( legendShow ) {
+      if ( legendPosition === 'top' ) margin.top += legendSpace;
+      if ( legendPosition === 'bottom' ) margin.bottom += legendSpace;
+      if ( legendPosition === 'left' ) margin.left += legendSpace;
+      if ( legendPosition === 'right' ) margin.right += legendSpace;
+    }
+
+    // Default margins if legend is not taking up space
+    if ( legendPosition !== 'bottom' ) margin.bottom = Math.max( margin.bottom, 40 );
+    if ( legendPosition !== 'left' ) margin.left = Math.max( margin.left, 50 );
+
+    // Adjust margins for axis titles and labels
+    if ( xAxisShow && xAxisPosition !== 'hidden' ) {
+      if ( xAxisPosition === 'bottom' ) margin.bottom += xAxisTitlePadding + xAxisLabelSpacing;
+      if ( xAxisPosition === 'top' ) margin.top += xAxisTitlePadding + xAxisLabelSpacing;
+    }
+
+    if ( yAxis.show && yAxis.position !== 'hidden' ) {
+      if ( yAxis.position === 'left' ) margin.left += yAxis.titlePadding + yAxis.labelSpacing;
+      if ( yAxis.position === 'right' ) margin.right += yAxis.titlePadding + yAxis.labelSpacing;
+    }
+
+    // Add edge padding
+    margin.top += yAxis.edgePadding;
+    margin.bottom += yAxis.edgePadding;
+
+    return {
+      innerWidth: propWidth - margin.left - margin.right,
+      innerHeight: propHeight - margin.top - margin.bottom,
+      chartMargin: margin
+    };
+  }, [
+    propWidth, propHeight, legendShow, legendPosition,
+    xAxisShow, xAxisPosition, xAxisTitlePadding, xAxisLabelSpacing,
+    yAxis.show, yAxis.position, yAxis.titlePadding, yAxis.labelSpacing, yAxis.edgePadding
+  ] );
+
+  // 2. Filter Data
+  const filteredData = useMemo( () => {
+    if ( !zoomDomain?.x ) return data;
+    const [ xMin, xMax ] = zoomDomain.x;
+    return data.filter( ( d, i ) => {
+      // For point scale, we use indices
+      return i >= xMin && i <= xMax;
+    } );
+  }, [ data, zoomDomain?.x ] );
+
+  // 3. Create Scales
+  const xScale = useMemo( () => {
+    let domainValues: any[];
+    if ( xAxisScaleType === 'linear' ) {
+      domainValues = filteredData.map( ( d ) => Number( d[ labelKey ] ) );
+    } else if ( xAxisScaleType === 'time' ) {
+      domainValues = filteredData.map( ( d ) => new Date( d[ labelKey ] ) );
+    } else {
+      domainValues = filteredData.map( ( d ) => String( d[ labelKey ] ) );
+    }
+
+    return createScale(
+      ( xAxisScaleType || 'point' ) as any,
+      {
+        domain: domainValues,
+        range: [ 0, innerWidth ],
+        padding: 0.5,
+      }
+    ) as d3.ScalePoint<string> | d3.ScaleLinear<number, number>;
+  }, [ filteredData, labelKey, xAxisScaleType, innerWidth ] );
+
+  const yScale = useMemo( () => {
+    // Calculate Y domain
+    let yMin = yAxis.min !== null ? yAxis.min : 0;
+    let yMax = yAxis.max !== null ? yAxis.max : ( d3.max( filteredData, ( d ) =>
+      Math.max( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
+    ) || 0 );
+
+    // Apply zoom domain to Y if it exists
+    if ( zoomDomain?.y ) {
+      [ yMin, yMax ] = zoomDomain.y;
+    }
+
+    const scale = d3.scaleLinear()
+      .domain( [ yMin, yMax ] )
+      .range( [ innerHeight, 0 ] );
+
+    // Only apply nice() if not using custom domain and not zoomed
+    if ( yAxis.min === null && yAxis.max === null && !zoomDomain?.y ) {
+      scale.nice();
+    }
+
+    return scale;
+  }, [ filteredData, valueKeys, yAxis.min, yAxis.max, zoomDomain?.y, innerHeight ] );
+
+  // Helper function to get X position based on scale type
+  const getXPosition = ( d: any ): number => {
+    let value: any;
+
+    // Convert value based on scale type
+    if ( xAxisScaleType === 'linear' ) {
+      value = Number( d[ labelKey ] );
+    } else if ( xAxisScaleType === 'time' ) {
+      // Convert to Date object for time scales
+      value = new Date( d[ labelKey ] );
+    } else {
+      // For point/band scales, use string
+      value = String( d[ labelKey ] );
+    }
+
+    const pos = xScale( value as any ) || 0;
+
+    // Add bandwidth offset for point/band scales
+    if ( 'bandwidth' in xScale ) {
+      return pos + ( xScale.bandwidth() / 2 );
+    }
+    return pos;
+  };
+
+  useEffect( () => {
+    if ( !svgRef.current || !data || !propWidth || !propHeight ) return;
 
     // Clear previous chart
     d3.select( svgRef.current ).selectAll( '*' ).remove();
 
-    // Use prop dimensions for calculations
     const width = propWidth;
     const height = propHeight;
-
-    // Reserve space for legend based on position
-    const legendSpace = legendShow ? 120 : 0;
-    const chartMargin = {
-      top: legendPosition === 'top' ? legendSpace : 0,
-      right: legendPosition === 'right' ? legendSpace : 0,
-      bottom: legendPosition === 'bottom' ? legendSpace : 40, // Space for x-axis labels
-      left: legendPosition === 'left' ? legendSpace : 50, // Space for y-axis
-    };
-
-    // Add minimal space for axes when legend isn't on that side
-    if ( legendPosition !== 'bottom' ) chartMargin.bottom = Math.max( chartMargin.bottom, 40 );
-    if ( legendPosition !== 'left' ) chartMargin.left = Math.max( chartMargin.left, 50 );
-
-    // Adjust margins for axis titles and labels
-    if ( xAxisShow && xAxisPosition !== 'hidden' ) {
-      if ( xAxisPosition === 'bottom' ) chartMargin.bottom += xAxisTitlePadding + xAxisLabelSpacing;
-      if ( xAxisPosition === 'top' ) chartMargin.top += xAxisTitlePadding + xAxisLabelSpacing;
-    }
-
-    if ( yAxis.show && yAxis.position !== 'hidden' ) {
-      if ( yAxis.position === 'left' ) chartMargin.left += yAxis.titlePadding + yAxis.labelSpacing;
-      if ( yAxis.position === 'right' ) chartMargin.right += yAxis.titlePadding + yAxis.labelSpacing;
-    }
-
-    // Add edge padding
-    chartMargin.top += yAxis.edgePadding;
-    chartMargin.bottom += yAxis.edgePadding;
-
-    const innerWidth = width - chartMargin.left - chartMargin.right;
-    const innerHeight = height - chartMargin.top - chartMargin.bottom;
 
     // Create SVG with viewBox for responsiveness
     const svg = d3
       .select( svgRef.current )
-      .attr( 'viewBox', `0 0 ${ width } ${ height }` )
+      .attr( 'viewBox', `0 0 ${ propWidth } ${ propHeight }` )
       .attr( 'preserveAspectRatio', 'xMidYMid meet' );
 
     const g = svg
       .append( 'g' )
       .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
 
-    // Scales
-    const xScale = d3
-      .scalePoint()
-      .domain( data.map( ( d ) => String( d[ labelKey ] ) ) )
-      .range( [ 0, innerWidth ] )
-      .padding( 0.5 );
-
-    // Calculate Y domain
-    const yMin = yAxis.min !== null ? yAxis.min : 0;
-    const yMax = yAxis.max !== null ? yAxis.max : ( d3.max( data, ( d ) =>
-      Math.max( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
-    ) || 0 );
-
-    const yScale = d3
-      .scaleLinear()
-      .domain( [ yMin, yMax ] )
-      .range( [ innerHeight, 0 ] );
-
-    // Only apply nice() if not using custom domain
-    if ( yAxis.min === null && yAxis.max === null ) {
-      yScale.nice();
-    }
-
     // Y Grid lines
     if ( yAxis.showGrid ) {
       const grid = g.append( 'g' )
         .attr( 'class', 'y-grid' )
-        .attr( 'opacity', 0.5 ) // Use a default opacity or add a prop for it
+        .attr( 'opacity', 0.5 ); // Use a default opacity or add a prop for it
+
+      // Apply grid with transition for smooth zoom animation
+      grid.transition()
+        .duration( 300 )
         .call(
           d3
             .axisLeft( yScale )
             .tickSize( -innerWidth )
             .tickFormat( () => '' )
-            .ticks( yAxis.tickCount )
+            .ticks( yAxis.tickCount ?? 10 )
         );
 
       grid.selectAll( 'line' )
@@ -212,7 +313,7 @@ export function LineChartD3( {
       const axis = yAxisFunction
         .tickSize( yAxis.tickSize )
         .tickPadding( yAxis.tickPadding )
-        .ticks( yAxis.tickCount );
+        .ticks( yAxis.tickCount ?? 10 );
 
       // Apply tick format if provided
       if ( yAxis.tickFormat ) {
@@ -225,10 +326,14 @@ export function LineChartD3( {
 
       const yAxisGroup = g.append( 'g' )
         .attr( 'transform', `translate(${ yAxis.position === 'left' ? 0 : innerWidth },0)` )
-        .call( axis )
         .style( 'font-size', `${ yAxis.labelSize }px` )
         .style( 'font-weight', yAxis.labelWeight )
         .style( 'color', yAxis.labelColor );
+
+      // Apply axis with transition for smooth zoom animation
+      yAxisGroup.transition()
+        .duration( 300 )
+        .call( axis );
 
       // Apply tick position
       if ( yAxis.tickPosition === 'inside' ) {
@@ -278,10 +383,11 @@ export function LineChartD3( {
     // X axis
     if ( xAxisShow && xAxisPosition !== 'hidden' ) {
       // Determine axis function based on position
-      const axisFunction = xAxisPosition === 'top' ? d3.axisTop( xScale ) : d3.axisBottom( xScale );
+      const axisFunction = xAxisPosition === 'top' ? d3.axisTop( xScale as any ) : d3.axisBottom( xScale as any );
       const xAxis = axisFunction
         .tickSize( xAxisTickSize )
-        .tickPadding( xAxisTickPadding );
+        .tickPadding( xAxisTickPadding )
+        .ticks( xAxisTickCount ?? 10 );
 
       // Note: xAxisTickFormat is not applied for scalePoint as it uses string domain
       // Tick count also doesn't apply to scalePoint
@@ -291,10 +397,14 @@ export function LineChartD3( {
 
       const xAxisGroup = g.append( 'g' )
         .attr( 'transform', `translate(0,${ yPosition })` )
-        .call( xAxis )
         .style( 'font-size', `${ xAxisLabelSize }px` )
         .style( 'font-weight', xAxisLabelWeight )
         .style( 'color', xAxisLabelColor );
+
+      // Apply axis with transition for smooth zoom animation
+      xAxisGroup.transition()
+        .duration( 300 )
+        .call( xAxis );
 
       // Apply tick position
       if ( xAxisTickPosition === 'inside' ) {
@@ -344,12 +454,17 @@ export function LineChartD3( {
       if ( xAxisShowGrid ) {
         const grid = g.append( 'g' )
           .attr( 'class', 'x-grid' )
-          .attr( 'opacity', xAxisGridOpacity )
+          .attr( 'opacity', xAxisGridOpacity );
+
+        // Apply grid with transition for smooth zoom animation
+        grid.transition()
+          .duration( 300 )
           .call(
             d3
-              .axisBottom( xScale )
+              .axisBottom( xScale as any )
               .tickSize( innerHeight )
               .tickFormat( () => '' )
+              .ticks( xAxisTickCount ?? 10 )
           );
 
         grid.selectAll( 'line' )
@@ -365,10 +480,30 @@ export function LineChartD3( {
     valueKeys.forEach( ( key, index ) => {
       const color = colors[ index % colors.length ];
 
+      // Area generator
+      const area = d3
+        .area<any>()
+        .x( ( d ) => getXPosition( d ) )
+        .y0( innerHeight )
+        .y1( ( d ) => yScale( Number( d[ key ] ) ) );
+
+      if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
+      if ( curveType === 'step' ) area.curve( d3.curveStep );
+      if ( curveType === 'linear' ) area.curve( d3.curveLinear );
+
+      // Draw Area
+      if ( showArea ) {
+        g.append( 'path' )
+          .datum( filteredData )
+          .attr( 'fill', color )
+          .attr( 'fill-opacity', areaOpacity )
+          .attr( 'd', area( filteredData ) );
+      }
+
       // Line generator
       const line = d3
         .line<any>()
-        .x( ( d ) => ( xScale( String( d[ labelKey ] ) ) || 0 ) + xScale.bandwidth() / 2 )
+        .x( ( d ) => getXPosition( d ) )
         .y( ( d ) => yScale( Number( d[ key ] ) ) );
 
       if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
@@ -377,24 +512,31 @@ export function LineChartD3( {
 
       // Line
       g.append( 'path' )
-        .datum( data )
+        .datum( filteredData )
         .attr( 'fill', 'none' )
         .attr( 'stroke', color )
-        .attr( 'stroke-width', 2 )
-        .attr( 'd', line( data ) );
+        .attr( 'stroke-width', lineWidth )
+        .attr( 'stroke-dasharray', lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0' )
+        .attr( 'd', line( filteredData ) );
 
       // Dots
-      g.selectAll( `.dot-${ index }` )
-        .data( data )
-        .enter()
-        .append( 'circle' )
-        .attr( 'class', `dot-${ index }` )
-        .attr( 'cx', ( d ) => ( xScale( String( d[ labelKey ] ) ) || 0 ) + xScale.bandwidth() / 2 )
-        .attr( 'cy', ( d ) => yScale( Number( d[ key ] ) ) )
-        .attr( 'r', 4 )
-        .attr( 'fill', color )
-        .attr( 'stroke', '#fff' )
-        .attr( 'stroke-width', 2 );
+      if ( showPoints ) {
+        g.selectAll( `.dot-${ index }` )
+          .data( filteredData )
+          .enter()
+          .append( 'path' )
+          .attr( 'class', `dot-${ index }` )
+          .attr( 'transform', ( d ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+          .attr( 'fill', color )
+          .attr( 'stroke', '#fff' )
+          .attr( 'stroke-width', 2 )
+          .attr( 'd', d3.symbol().type(
+            pointShape === 'square' ? d3.symbolSquare :
+              pointShape === 'diamond' ? d3.symbolDiamond :
+                pointShape === 'triangle' ? d3.symbolTriangle :
+                  d3.symbolCircle
+          ).size( Math.PI * Math.pow( pointSize, 2 ) ) );
+      }
     } );
 
     // Legend
@@ -519,9 +661,67 @@ export function LineChartD3( {
         } );
       }
     }
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, xAxisShow, xAxisTitle, xAxisShowGrid, xAxisShowDomain, xAxisTickCount, xAxisTickSize, xAxisTickPadding, xAxisLabelRotation, xAxisTickFormat, xAxisPosition, xAxisScaleType, xAxisMin, xAxisMax, xAxisTitleType, xAxisTitleWeight, xAxisTitleColor, xAxisTitleSize, xAxisTitlePadding, xAxisTickPosition, xAxisLabelWeight, xAxisLabelColor, xAxisLabelSize, xAxisLabelSpacing, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, yAxis ] );
+
+    // Add brush for zoom interaction
+    const brush = d3.brushX()
+      .extent( [ [ 0, 0 ], [ innerWidth, innerHeight ] ] )
+      .on( 'end', ( event ) => {
+        if ( !event.selection ) return;
+
+        const [ x0, x1 ] = event.selection as [ number, number ];
+
+        // Convert pixel coordinates to data indices
+        const allLabels = data.map( ( d ) => String( d[ labelKey ] ) );
+        const xScaleFull = d3.scalePoint()
+          .domain( allLabels )
+          .range( [ 0, innerWidth ] )
+          .padding( 0.5 );
+
+        // Find the indices of the selected range
+        let startIndex = 0;
+        let endIndex = data.length - 1;
+
+        allLabels.forEach( ( label, i ) => {
+          const pos = ( xScaleFull( label ) || 0 ) + xScaleFull.bandwidth() / 2;
+          if ( pos >= x0 && i < startIndex ) startIndex = i;
+          if ( pos <= x1 ) endIndex = i;
+        } );
+
+        // Calculate Y domain from the selected data range
+        const selectedData = data.slice( startIndex, endIndex + 1 );
+        const yMinSelected = d3.min( selectedData, ( d ) =>
+          Math.min( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
+        ) || 0;
+        const yMaxSelected = d3.max( selectedData, ( d ) =>
+          Math.max( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
+        ) || 0;
+
+        // Update zoom domain
+        setZoomDomain( {
+          x: [ startIndex, endIndex ],
+          y: [ yMinSelected, yMaxSelected ],
+        } );
+
+        // Clear brush selection
+        g.select( '.brush' ).call( brush.move as any, null );
+      } );
+
+    // Add brush overlay
+    g.append( 'g' )
+      .attr( 'class', 'brush' )
+      .call( brush );
+
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, xAxisShow, xAxisTitle, xAxisShowGrid, xAxisShowDomain, xAxisTickCount, xAxisTickSize, xAxisTickPadding, xAxisLabelRotation, xAxisTickFormat, xAxisPosition, xAxisScaleType, xAxisMin, xAxisMax, xAxisTitleType, xAxisTitleWeight, xAxisTitleColor, xAxisTitleSize, xAxisTitlePadding, xAxisTickPosition, xAxisLabelWeight, xAxisLabelColor, xAxisLabelSize, xAxisLabelSpacing, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, yAxis, zoomDomain, setZoomDomain, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, showArea, areaOpacity ] );
 
   return (
-    <svg ref={ svgRef } className='w-full h-full' />
+    <div className='relative w-full h-full'>
+      <svg
+        ref={ svgRef }
+        width={ propWidth }
+        height={ propHeight }
+        className='overflow-visible w-full h-full'
+      />
+      <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data.length } />
+    </div>
   );
 }

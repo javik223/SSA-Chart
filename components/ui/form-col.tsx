@@ -5,14 +5,14 @@ import { ReactNode } from 'react';
 interface FormColProps {
   children: ReactNode;
   className?: string;
-  span?: 'auto' | 'full' | 1 | 2 | 3 | 4 | 6 | 8 | 12;
+  span?: 'auto' | 'full' | 1 | 2 | 3 | 4 | 6 | 8 | 10 | 12;
 }
 
-export function FormCol({
+export function FormCol( {
   children,
   className = '',
   span = 'auto'
-}: FormColProps) {
+}: FormColProps ) {
   const spanClass = {
     'auto': 'flex-1',
     'full': 'w-full',
@@ -22,12 +22,13 @@ export function FormCol({
     4: 'w-4/12',
     6: 'w-6/12',
     8: 'w-8/12',
+    10: 'w-10/12',
     12: 'w-full',
-  }[span];
+  }[ span ];
 
   return (
-    <div className={`${spanClass} ${className}`}>
-      {children}
+    <div className={ `${ spanClass } ${ className }` }>
+      { children }
     </div>
   );
 }

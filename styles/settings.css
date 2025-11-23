@@ -50,7 +50,7 @@
 
 /* Color Picker Styles */
 .settings-color-input {
-  @apply w-full cursor-pointer p-0 rounded-md;
+  @apply w-full h-8 cursor-pointer p-0 rounded-md;
 }
 
 /* Container Styles */
