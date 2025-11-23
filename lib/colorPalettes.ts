@@ -126,6 +126,119 @@ export const COLOR_PALETTES = [
       '#90E0EF',
     ],
   },
+  {
+  id: 'monochrome',
+  name: 'Monochrome',
+  colors: [
+    '#000000',
+    '#1A1A1A',
+    '#333333',
+    '#4D4D4D',
+    '#666666',
+    '#808080',
+    '#999999',
+    '#B3B3B3',
+    '#CCCCCC',
+    '#E6E6E6',
+  ],
+},
+{
+  id: 'neon',
+  name: 'Neon',
+  colors: [
+    '#39FF14', // Neon Green
+    '#FF073A', // Neon Red
+    '#FE019A', // Neon Pink
+    '#0FF0FC', // Neon Cyan
+    '#F5F500', // Neon Yellow
+    '#FF6EC7', // Neon Magenta
+    '#16F529', // Lime Neon
+  ],
+},
+{
+  id: 'sunset',
+  name: 'Sunset',
+  colors: [
+    '#FF4500',
+    '#FF6A00',
+    '#FF8C00',
+    '#FFA500',
+    '#FFC04D',
+    '#FFD280',
+    '#FFE5B4',
+    '#FFF2D5',
+  ],
+},
+{
+  id: 'forest',
+  name: 'Forest',
+  colors: [
+    '#0B3D0B',
+    '#145214',
+    '#1E6821',
+    '#2E8B57',
+    '#3CB371',
+    '#6DBE83',
+    '#98D7A0',
+    '#C1EBD0',
+  ],
+},
+{
+  id: 'cool',
+  name: 'Cool Blues',
+  colors: [
+    '#001F3F',
+    '#003566',
+    '#0353A4',
+    '#0466C8',
+    '#4EA8DE',
+    '#89C2D9',
+    '#ADE8F4',
+    '#CAF0F8',
+  ],
+},
+{
+  id: 'rainbow',
+  name: 'Rainbow',
+  colors: [
+    '#FF0000',
+    '#FF7F00',
+    '#FFFF00',
+    '#00FF00',
+    '#0000FF',
+    '#4B0082',
+    '#8B00FF',
+  ],
+},
+{
+  id: 'gold',
+  name: 'Gold & Luxury',
+  colors: [
+    '#3C2F2F',
+    '#4F3C3C',
+    '#705A36',
+    '#8B6F47',
+    '#B08D57', // Luxury Gold
+    '#D4AF37', // Metallic Gold
+    '#FFD700', // Pure Gold
+    '#FFE7A9',
+  ],
+},
+{
+  id: 'retro',
+  name: 'Retro 80s',
+  colors: [
+    '#FF6EC7',
+    '#FFB86C',
+    '#F1FA8C',
+    '#50FA7B',
+    '#8BE9FD',
+    '#BD93F9',
+    '#FF79C6',
+    '#FF5555',
+  ],
+},
+
 ];
 
 export function getColorPalette(paletteId: string) {

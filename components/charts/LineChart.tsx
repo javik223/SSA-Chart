@@ -278,6 +278,15 @@ export function LineChart( {
       .attr( 'viewBox', `0 0 ${ propWidth } ${ propHeight }` )
       .attr( 'preserveAspectRatio', 'xMidYMid meet' );
 
+    // Clip Path
+    const clipId = `clip-${ Math.random().toString( 36 ).substr( 2, 9 ) }`;
+    svg.append( 'defs' )
+      .append( 'clipPath' )
+      .attr( 'id', clipId )
+      .append( 'rect' )
+      .attr( 'width', innerWidth )
+      .attr( 'height', innerHeight );
+
     const g = svg
       .append( 'g' )
       .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
@@ -476,6 +485,9 @@ export function LineChart( {
       }
     }
 
+    // Lines, Areas, and Dots (Clipped)
+    const contentGroup = g.append( 'g' ).attr( 'clip-path', `url(#${ clipId })` );
+
     // Draw lines for each value key
     valueKeys.forEach( ( key, index ) => {
       const color = colors[ index % colors.length ];
@@ -493,7 +505,7 @@ export function LineChart( {
 
       // Draw Area
       if ( showArea ) {
-        g.append( 'path' )
+        contentGroup.append( 'path' )
           .datum( filteredData )
           .attr( 'fill', color )
           .attr( 'fill-opacity', areaOpacity )
@@ -511,7 +523,7 @@ export function LineChart( {
       if ( curveType === 'linear' ) line.curve( d3.curveLinear );
 
       // Line
-      g.append( 'path' )
+      contentGroup.append( 'path' )
         .datum( filteredData )
         .attr( 'fill', 'none' )
         .attr( 'stroke', color )
@@ -521,7 +533,7 @@ export function LineChart( {
 
       // Dots
       if ( showPoints ) {
-        g.selectAll( `.dot-${ index }` )
+        contentGroup.selectAll( `.dot-${ index }` )
           .data( filteredData )
           .enter()
           .append( 'path' )
