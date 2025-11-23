@@ -6,7 +6,7 @@ import { getChart } from '@/lib/chartRegistry';
 import { ChartTransition } from './ChartTransition';
 import { getColorPalette } from '@/lib/colorPalettes';
 
-export const BasicChart = memo( function BasicChart( { isVisible = true }: { isVisible?: boolean; } ) {
+export const BasicChart = memo( function BasicChart( { isVisible = true, isFloatingPreview = false }: { isVisible?: boolean; isFloatingPreview?: boolean; } ) {
   // Use selective subscription to only re-render when chart-related data changes
   // This prevents re-renders when title, description, footer, or legend settings change
   const data = useChartStore( ( state ) => state.data );
@@ -111,6 +111,23 @@ export const BasicChart = memo( function BasicChart( { isVisible = true }: { isV
   const yAxisTickLength = useChartStore( ( state ) => state.yAxisTickLength );
   const yAxisShowAxisLine = useChartStore( ( state ) => state.yAxisShowAxisLine );
   const yAxisEdgePadding = useChartStore( ( state ) => state.yAxisEdgePadding );
+
+  // Line settings
+  const curveType = useChartStore( ( state ) => state.curveType );
+  const lineWidth = useChartStore( ( state ) => state.lineWidth );
+  const lineStyle = useChartStore( ( state ) => state.lineStyle );
+
+  // Point settings
+  const showPoints = useChartStore( ( state ) => state.showPoints );
+  const pointSize = useChartStore( ( state ) => state.pointSize );
+  const pointShape = useChartStore( ( state ) => state.pointShape );
+  const pointColor = useChartStore( ( state ) => state.pointColor );
+  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
+  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
+
+  // Area settings
+  const showArea = useChartStore( ( state ) => state.showArea );
+  const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
 
   // Transform data for chart
   const chartData = useMemo( () => {
@@ -222,6 +239,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true }: { isV
     height: previewHeight,
     colors: palette.colors,
     colorMode,
+    isFloatingPreview,
     // Disable embedded legend since we now use a standalone legend component
     legendShow: false,
     // X Axis
@@ -252,6 +270,23 @@ export const BasicChart = memo( function BasicChart( { isVisible = true }: { isV
     xAxisGridWidth,
     xAxisGridOpacity,
     xAxisGridDashArray,
+
+    // Line settings
+    curveType,
+    lineWidth,
+    lineStyle,
+
+    // Point settings
+    showPoints,
+    pointSize,
+    pointShape,
+    pointColor,
+    pointOutlineWidth,
+    pointOutlineColor,
+
+    // Area settings
+    showArea,
+    areaOpacity,
 
     // Y Axis Config
     yAxis: {

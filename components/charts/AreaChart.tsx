@@ -138,6 +138,9 @@ export function AreaChart( {
   const showPoints = useChartStore( ( state ) => state.showPoints );
   const pointSize = useChartStore( ( state ) => state.pointSize );
   const pointShape = useChartStore( ( state ) => state.pointShape );
+  const pointColor = useChartStore( ( state ) => state.pointColor );
+  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
+  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
   // Area settings are passed as props or store? 
   // LineChart uses store for showArea/areaOpacity. AreaChart has fillOpacity prop.
   // We should probably respect the prop but maybe allow store override?
@@ -316,9 +319,9 @@ export function AreaChart( {
           .append( 'path' )
           .attr( 'class', `dot-${ index }` )
           .attr( 'transform', ( d ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .attr( 'fill', color )
-          .attr( 'stroke', '#fff' )
-          .attr( 'stroke-width', 2 )
+          .attr( 'fill', pointColor || color )
+          .attr( 'stroke', pointOutlineColor )
+          .attr( 'stroke-width', pointOutlineWidth )
           .attr( 'd', d3.symbol().type(
             pointShape === 'square' ? d3.symbolSquare :
               pointShape === 'diamond' ? d3.symbolDiamond :

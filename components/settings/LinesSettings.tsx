@@ -8,6 +8,7 @@ import { FormSection } from '@/components/ui/form-section';
 import { FormGrid } from '@/components/ui/form-grid';
 import { FormRow } from '@/components/ui/form-row';
 import { FormCol } from '@/components/ui/form-col';
+import { AnimatePresence, motion } from 'motion/react';
 
 export function LinesSettings() {
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -23,6 +24,12 @@ export function LinesSettings() {
   const setPointSize = useChartStore( ( state ) => state.setPointSize );
   const pointShape = useChartStore( ( state ) => state.pointShape );
   const setPointShape = useChartStore( ( state ) => state.setPointShape );
+  const pointColor = useChartStore( ( state ) => state.pointColor );
+  const setPointColor = useChartStore( ( state ) => state.setPointColor );
+  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
+  const setPointOutlineWidth = useChartStore( ( state ) => state.setPointOutlineWidth );
+  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
+  const setPointOutlineColor = useChartStore( ( state ) => state.setPointOutlineColor );
 
   const showArea = useChartStore( ( state ) => state.showArea );
   const setShowArea = useChartStore( ( state ) => state.setShowArea );
@@ -33,7 +40,7 @@ export function LinesSettings() {
     <div className='settings-container'>
       <FormSection title='Lines'>
         <FormRow>
-          <FormCol span={ 6 }>
+          <FormCol span='auto'>
             <FormField
               type='select'
               label='Curve Type'
@@ -46,7 +53,7 @@ export function LinesSettings() {
               ] }
             />
           </FormCol>
-          <FormCol span={ 6 }>
+          <FormCol span='auto'>
             <FormField
               type='select'
               label='Style'
@@ -59,9 +66,7 @@ export function LinesSettings() {
               ] }
             />
           </FormCol>
-        </FormRow>
-        <FormRow>
-          <FormCol span={ 12 }>
+          <FormCol span='auto'>
             <FormField
               type='number'
               label='Width'
@@ -88,7 +93,7 @@ export function LinesSettings() {
           <>
             <Separator />
             <FormRow>
-              <FormCol span={ 6 }>
+              <FormCol span='auto'>
                 <FormField
                   type='number'
                   label='Size'
@@ -98,7 +103,8 @@ export function LinesSettings() {
                   max={ 20 }
                 />
               </FormCol>
-              <FormCol span={ 6 }>
+
+              <FormCol span='auto'>
                 <FormField
                   type='button-group'
                   label='Shape'
@@ -112,6 +118,35 @@ export function LinesSettings() {
                   ] }
                 />
               </FormCol>
+              <FormCol span='auto'>
+                <FormField
+                  type='color'
+                  label='Color'
+                  value={ pointColor }
+                  onChange={ setPointColor }
+                />
+              </FormCol>
+            </FormRow>
+            <Separator />
+            <FormRow>
+              <FormCol span='auto'>
+                <FormField
+                  type='number'
+                  label='Outline Width'
+                  value={ pointOutlineWidth }
+                  onChange={ ( v ) => setPointOutlineWidth( v ?? 2 ) }
+                  min={ 0 }
+                  max={ 10 }
+                />
+              </FormCol>
+              <FormCol span='auto'>
+                <FormField
+                  type='color'
+                  label='Outline Color'
+                  value={ pointOutlineColor }
+                  onChange={ setPointOutlineColor }
+                />
+              </FormCol>
             </FormRow>
           </>
         ) }
@@ -120,31 +155,31 @@ export function LinesSettings() {
       <Separator />
 
       <FormSection title='Areas'>
-        <FormField
-          type='switch'
-          label='Fill Area'
-          checked={ showArea }
-          onChange={ setShowArea }
-        />
-
-        { showArea && (
-          <>
-            <Separator />
-            <FormRow>
-              <FormCol span={ 12 }>
-                <FormField
-                  type='number'
-                  label='Opacity'
-                  value={ areaOpacity }
-                  onChange={ ( v ) => setAreaOpacity( v ?? 0.2 ) }
-                  min={ 0 }
-                  max={ 1 }
-                  step={ 0.1 }
-                />
-              </FormCol>
-            </FormRow>
-          </>
-        ) }
+        <FormRow>
+          <FormField
+            type='switch'
+            label='Fill Area'
+            checked={ showArea }
+            onChange={ setShowArea }
+          />
+          <FormCol span={ 12 }>
+            <AnimatePresence>
+              { showArea && (
+                <motion.div initial={ { opacity: 0, height: 0 } } animate={ { opacity: 1, height: 'auto' } } exit={ { opacity: 0, height: 0 } } transition={ { duration: .3 } }>
+                  <FormField
+                    type='number'
+                    label='Opacity'
+                    value={ areaOpacity }
+                    onChange={ ( v ) => setAreaOpacity( v ?? 0.2 ) }
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.1 }
+                  />
+                </motion.div>
+              ) }
+            </AnimatePresence>
+          </FormCol>
+        </FormRow>
       </FormSection>
     </div>
   );

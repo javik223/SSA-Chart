@@ -279,7 +279,6 @@ export function YAxisSettings() {
                 { value: 'bold', label: 'Bold' },
                 { value: 'medium', label: 'Medium' },
                 { value: 'normal', label: 'Normal' },
-                { value: 'light', label: 'Light' },
               ] }
             />
           </FormCol>

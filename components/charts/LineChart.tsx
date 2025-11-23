@@ -137,6 +137,9 @@ export function LineChart( {
   const showPoints = useChartStore( ( state ) => state.showPoints );
   const pointSize = useChartStore( ( state ) => state.pointSize );
   const pointShape = useChartStore( ( state ) => state.pointShape );
+  const pointColor = useChartStore( ( state ) => state.pointColor );
+  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
+  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
   const showArea = useChartStore( ( state ) => state.showArea );
   const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
 
@@ -366,9 +369,9 @@ export function LineChart( {
           .append( 'path' )
           .attr( 'class', `dot-${ index }` )
           .attr( 'transform', ( d ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .attr( 'fill', color )
-          .attr( 'stroke', '#fff' )
-          .attr( 'stroke-width', 2 )
+          .attr( 'fill', pointColor || color )
+          .attr( 'stroke', pointOutlineColor )
+          .attr( 'stroke-width', pointOutlineWidth )
           .attr( 'd', d3.symbol().type(
             pointShape === 'square' ? d3.symbolSquare :
               pointShape === 'diamond' ? d3.symbolDiamond :

@@ -43,7 +43,7 @@ export interface XAxisProps {
   xAxisTitleSize?: number;
   xAxisTitlePadding?: number;
   xAxisTickPosition?: 'outside' | 'inside' | 'cross';
-  xAxisLabelWeight?: 'bold' | 'regular' | 'light';
+  xAxisLabelWeight?: 'bold' | 'regular';
   xAxisLabelColor?: string;
   xAxisLabelSize?: number;
   xAxisLabelSpacing?: number;

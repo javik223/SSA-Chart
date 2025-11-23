@@ -1,8 +1,8 @@
 'use client';
 
-import { memo } from 'react';
 import { ChartPreview } from '@/components/chart-preview';
 import { DataTable } from '@/components/data-table';
+import { memo } from 'react';
 
 interface TabContentProps {
   activeTab: string;

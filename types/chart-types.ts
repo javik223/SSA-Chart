@@ -2,7 +2,8 @@ export interface BaseChartProps {
   width?: number;
   height?: number;
   colors?: string[];
-  
+  isFloatingPreview?: boolean;
+
   // Legend
   legendShow?: boolean;
   legendPosition?: 'top' | 'right' | 'bottom' | 'left';
@@ -69,7 +70,7 @@ export interface YAxisConfig {
   // Ticks & Labels
   tickPosition: 'outside' | 'inside' | 'cross';
   labelSize: number;
-  labelWeight: 'bold' | 'regular' | 'light';
+  labelWeight: 'bold' | 'regular';
   labelColor: string;
   labelPadding: number;
   labelAngle: number;

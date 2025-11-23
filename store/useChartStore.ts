@@ -602,8 +602,8 @@ interface ChartStore {
   xAxisTickPosition: 'outside' | 'inside' | 'cross';
   setXAxisTickPosition: (position: 'outside' | 'inside' | 'cross') => void;
   
-  xAxisLabelWeight: 'bold' | 'regular' | 'light';
-  setXAxisLabelWeight: (weight: 'bold' | 'regular' | 'light') => void;
+  xAxisLabelWeight: 'bold' | 'regular';
+  setXAxisLabelWeight: (weight: 'bold' | 'regular') => void;
   
   xAxisLabelColor: string;
   setXAxisLabelColor: (color: string) => void;
@@ -715,8 +715,8 @@ interface ChartStore {
   yAxisLabelAngle: number;
   setYAxisLabelAngle: (angle: number) => void;
   
-  yAxisLabelWeight: 'bold' | 'regular' | 'light';
-  setYAxisLabelWeight: (weight: 'bold' | 'regular' | 'light') => void;
+  yAxisLabelWeight: 'bold' | 'regular';
+  setYAxisLabelWeight: (weight: 'bold' | 'regular') => void;
   
   yAxisLabelMaxLines: number;
   setYAxisLabelMaxLines: (maxLines: number) => void;
@@ -787,6 +787,12 @@ interface ChartStore {
   setPointSize: (size: number) => void;
   pointShape: 'circle' | 'square' | 'triangle' | 'diamond';
   setPointShape: (shape: 'circle' | 'square' | 'triangle' | 'diamond') => void;
+  pointColor: string;
+  setPointColor: (color: string) => void;
+  pointOutlineWidth: number;
+  setPointOutlineWidth: (width: number) => void;
+  pointOutlineColor: string;
+  setPointOutlineColor: (color: string) => void;
 
   // Area settings
   showArea: boolean;
@@ -1570,7 +1576,7 @@ export const useChartStore = create<ChartStore>()(
       xAxisTickPosition: 'outside',
       setXAxisTickPosition: (position) => set({ xAxisTickPosition: position }),
       
-      xAxisLabelWeight: 'light',
+      xAxisLabelWeight: 'regular',
       setXAxisLabelWeight: (weight) => set({ xAxisLabelWeight: weight }),
       
       xAxisLabelColor: '#000000',
@@ -1683,7 +1689,7 @@ export const useChartStore = create<ChartStore>()(
       yAxisLabelAngle: 0,
       setYAxisLabelAngle: (angle) => set({ yAxisLabelAngle: angle }),
       
-      yAxisLabelWeight: 'light',
+      yAxisLabelWeight: 'regular',
       setYAxisLabelWeight: (weight) => set({ yAxisLabelWeight: weight }),
       
       yAxisLabelMaxLines: 1,
@@ -1755,6 +1761,12 @@ export const useChartStore = create<ChartStore>()(
       setPointSize: (size) => set({ pointSize: size }),
       pointShape: 'circle',
       setPointShape: (shape) => set({ pointShape: shape }),
+      pointColor: '#3b82f6',
+      setPointColor: (color) => set({ pointColor: color }),
+      pointOutlineWidth: 2,
+      setPointOutlineWidth: (width) => set({ pointOutlineWidth: width }),
+      pointOutlineColor: '#ffffff',
+      setPointOutlineColor: (color) => set({ pointOutlineColor: color }),
 
       // Area settings
       showArea: false,

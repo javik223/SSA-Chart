@@ -15,9 +15,10 @@ interface ChartZoomControlsProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   yScale: any;
   dataLength: number;
+  isFloatingPreview?: boolean;
 }
 
-export function ChartZoomControls( { xScale, yScale, dataLength }: ChartZoomControlsProps ) {
+export function ChartZoomControls( { xScale, yScale, dataLength, isFloatingPreview = false }: ChartZoomControlsProps ) {
   const showZoomControls = useChartStore( ( state ) => state.showZoomControls );
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
@@ -74,7 +75,7 @@ export function ChartZoomControls( { xScale, yScale, dataLength }: ChartZoomCont
 
 
   return (
-    <motion.div drag className='absolute top-4 right-4 flex flex-col gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-zinc-200 p-1 z-10 justify-center items-center' dragListener={ false } dragControls={ controls }>
+    <motion.div drag className={ `absolute top-4 right-4 flex flex-col gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-zinc-200 p-1 z-10 justify-center items-center ${ isFloatingPreview ? 'scale-75' : '' }` } dragListener={ false } dragControls={ controls }>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

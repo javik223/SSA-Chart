@@ -22,6 +22,7 @@ export function BaseChart( {
   width = 800,
   height = 600,
   colors = [],
+  isFloatingPreview = false,
   xScale,
   yScale,
   data,
@@ -597,7 +598,7 @@ export function BaseChart( {
   return (
     <div style={ { width: '100%', height: '100%', position: 'relative' } }>
       {/* Zoom Controls Overlay */ }
-      <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data?.length || 0 } />
+      <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data?.length || 0 } isFloatingPreview={ isFloatingPreview } />
 
       <svg
         ref={ svgRef }

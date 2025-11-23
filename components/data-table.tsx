@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { Rnd } from 'react-rnd';
 import { DataGridTanstack } from '@/components/data-grid-tanstack';
 import { DataGridAG } from '@/components/data-grid-ag';
 import { DataSidebar } from '@/components/data-sidebar';
+import { BasicChart } from '@/components/charts/BasicChart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -51,6 +53,15 @@ export function DataTable() {
   const [ shouldNavigate, setShouldNavigate ] = useState( false );
   const [ isSearching, setIsSearching ] = useState( false );
   const [ rowCount, setRowCount ] = useState( 1 );
+  const [ chartPreviewPosition, setChartPreviewPosition ] = useState({ x: 0, y: 0 });
+
+  // Set initial position for chart preview (client-side only)
+  useEffect(() => {
+    setChartPreviewPosition({
+      x: window.innerWidth - 520,
+      y: window.innerHeight - 420,
+    });
+  }, []);
 
   const handleAddRows = () => {
     const count = Math.max( 1, Math.min( 1000, rowCount ) ); // Min 1, max 1000 rows
@@ -94,7 +105,7 @@ export function DataTable() {
   }, [ setFilterValue ] );
 
   return (
-    <div className='data-table-container'>
+    <div className='data-table-container relative'>
       {/* Main Content: Resizable Grid + Sidebar */ }
       <div className='data-table-content'>
         <ResizablePanelGroup direction='horizontal'>
@@ -223,6 +234,26 @@ export function DataTable() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      {/* Chart Preview - Bottom Right */ }
+      {chartPreviewPosition.x > 0 && (
+        <Rnd
+          default={{
+            x: chartPreviewPosition.x,
+            y: chartPreviewPosition.y,
+            width: 500,
+            height: 400,
+          }}
+          minWidth={300}
+          minHeight={200}
+          className='shadow-2xl rounded-lg overflow-hidden border border-gray-200 bg-white z-50'
+          style={{ position: 'fixed' }}
+        >
+          <div className='w-full h-full p-4'>
+            <BasicChart isFloatingPreview />
+          </div>
+        </Rnd>
+      )}
     </div>
   );
 }
