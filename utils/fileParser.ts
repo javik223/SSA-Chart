@@ -122,7 +122,7 @@ export function parseJSON(file: File): Promise<ParseResult> {
 
         if (Array.isArray(jsonData)) {
           // If it's an array of objects, convert to 2D array
-          if (jsonData.length > 0 && typeof jsonData[0] === 'object') {
+          if (jsonData.length > 0 && typeof jsonData[0] === 'object' && !Array.isArray(jsonData[0])) {
             const keys = Object.keys(jsonData[0]);
             data = [
               keys,
@@ -132,11 +132,58 @@ export function parseJSON(file: File): Promise<ParseResult> {
             // If it's already an array of arrays
             data = jsonData;
           }
+        } else if (typeof jsonData === 'object' && jsonData !== null) {
+          // Handle hierarchical/nested objects by flattening them
+          // This is useful for tree structures like sunburst data
+          const flattenedRows: any[] = [];
+          
+          function flattenNode(node: any, path: string = '', depth: number = 0) {
+            const row: any = {
+              name: node.name || 'root',
+              path: path || node.name || 'root',
+              depth: depth,
+              value: node.value || 0,
+            };
+            
+            // Add any other properties
+            Object.keys(node).forEach(key => {
+              if (key !== 'name' && key !== 'children' && key !== 'value') {
+                row[key] = node[key];
+              }
+            });
+            
+            flattenedRows.push(row);
+            
+            // Recursively process children
+            if (node.children && Array.isArray(node.children)) {
+              node.children.forEach((child: any) => {
+                const childPath = path ? `${path}/${child.name || 'unnamed'}` : (child.name || 'unnamed');
+                flattenNode(child, childPath, depth + 1);
+              });
+            }
+          }
+          
+          flattenNode(jsonData);
+          
+          if (flattenedRows.length > 0) {
+            const keys = Object.keys(flattenedRows[0]);
+            data = [
+              keys,
+              ...flattenedRows.map((obj) => keys.map((key) => obj[key] ?? '')),
+            ];
+          } else {
+            resolve({
+              data: [],
+              success: false,
+              error: 'Could not extract data from JSON object',
+            });
+            return;
+          }
         } else {
           resolve({
             data: [],
             success: false,
-            error: 'JSON must be an array',
+            error: 'JSON must be an array or object',
           });
           return;
         }

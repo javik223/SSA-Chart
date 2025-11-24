@@ -129,6 +129,12 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const showArea = useChartStore( ( state ) => state.showArea );
   const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
 
+  // Label settings (for charts like Sunburst)
+  const labelShow = useChartStore( ( state ) => state.labelShow );
+  const labelFontSize = useChartStore( ( state ) => state.labelFontSize );
+  const labelColor = useChartStore( ( state ) => state.labelColor );
+  const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
+
   // Transform data for chart
   const chartData = useMemo( () => {
     // Skip calculation if not visible
@@ -287,6 +293,12 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     // Area settings
     showArea,
     areaOpacity,
+
+    // Label settings (for charts like Sunburst)
+    labelShow,
+    labelFontSize,
+    labelColor,
+    labelFontWeight,
 
     // Y Axis Config
     yAxis: {

@@ -582,6 +582,62 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
           },
         },
         {
+          name: 'Insert Column Left',
+          icon: '<span class="ag-icon ag-icon-left"></span>',
+          action: () => {
+            if ( !params.column ) return;
+            const colMatch = params.column.getColId().match( /col_(\d+)/ );
+            if ( !colMatch ) return;
+
+            const colIndex = parseInt( colMatch[ 1 ] );
+            const currentData = [ ...data ];
+
+            // Insert empty column at the specified index
+            const newData = currentData.map( ( row ) => {
+              const newRow = [ ...( row as unknown[] ) ];
+              newRow.splice( colIndex, 0, '' ); // Insert empty value
+              return newRow;
+            } );
+
+            // Update header with a default name
+            newData[ 0 ][ colIndex ] = `Column ${ colIndex + 1 }`;
+
+            setData( newData );
+
+            if ( virtualData ) {
+              virtualData.syncToDuckDB( newData ).catch( console.error );
+            }
+          },
+        },
+        {
+          name: 'Insert Column Right',
+          icon: '<span class="ag-icon ag-icon-right"></span>',
+          action: () => {
+            if ( !params.column ) return;
+            const colMatch = params.column.getColId().match( /col_(\d+)/ );
+            if ( !colMatch ) return;
+
+            const colIndex = parseInt( colMatch[ 1 ] );
+            const currentData = [ ...data ];
+
+            // Insert empty column after the specified index
+            const newData = currentData.map( ( row ) => {
+              const newRow = [ ...( row as unknown[] ) ];
+              newRow.splice( colIndex + 1, 0, '' ); // Insert empty value after current column
+              return newRow;
+            } );
+
+            // Update header with a default name
+            newData[ 0 ][ colIndex + 1 ] = `Column ${ colIndex + 2 }`;
+
+            setData( newData );
+
+            if ( virtualData ) {
+              virtualData.syncToDuckDB( newData ).catch( console.error );
+            }
+          },
+        },
+        {
           name: '',
           disabled: true,
           cssClasses: [ 'ag-menu-separator' ],

@@ -16,8 +16,10 @@ import {
   renderXGrid,
   renderYGrid,
   renderLegend,
-  setupBrushZoom
+  setupBrushZoom,
+  setupPan
 } from '@/utils/chartHelpers';
+import { getColorPalette } from '@/lib/colorPalettes';
 
 interface BarChartProps {
   data: Array<Record<string, string | number>>;
@@ -37,6 +39,7 @@ interface BarChartProps {
   legendPaddingRight?: number;
   legendPaddingBottom?: number;
   legendPaddingLeft?: number;
+  colorPalette?: string;
 
   // X Axis
   xAxisShow?: boolean;
@@ -90,6 +93,7 @@ export function BarChart( {
   legendPaddingRight = 0,
   legendPaddingBottom = 0,
   legendPaddingLeft = 0,
+  colorPalette = 'default',
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
@@ -127,224 +131,278 @@ export function BarChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
-  const showZoomControls = useChartStore( ( state ) => state.showZoomControls );
-  const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
 
-  // Automatically infer and set X-axis scale type when data or labelKey changes
-  useEffect( () => {
-    if ( !data || data.length === 0 || !labelKey ) return;
+  const previousZoomDomainRef = useRef<typeof zoomDomain>( null );
 
-    const values = data.map( d => d[ labelKey ] );
-    const inferredType = inferScaleType( values );
-
-    setXAxisScaleType( inferredType === 'point' ? 'band' : inferredType );
-  }, [ data, labelKey, setXAxisScaleType ] );
-
-  // 1. Calculate Dimensions using utility function
-  const { innerWidth, innerHeight, margin: chartMargin } = useMemo( () => {
-    return calculateChartMargins( {
-      width: propWidth,
-      height: propHeight,
-      legendShow,
-      legendPosition,
-      xAxisShow,
-      xAxisPosition,
-      xAxisTitlePadding,
-      xAxisLabelSpacing,
-      yAxis
-    } );
-  }, [
-    propWidth, propHeight, legendShow, legendPosition,
-    xAxisShow, xAxisPosition, xAxisTitlePadding, xAxisLabelSpacing,
-    yAxis
+  // Chart dimensions
+  const margin = useMemo( () => calculateChartMargins( {
+    legendShow,
+    legendPosition,
+    xAxisShow,
+    xAxisPosition,
+    xAxisTitlePadding,
+    xAxisLabelSpacing,
+    yAxis,
+    width: propWidth,
+    height: propHeight
+  } ), [
+    legendShow,
+    legendPosition,
+    xAxisShow,
+    xAxisPosition,
+    xAxisTitlePadding,
+    xAxisLabelSpacing,
+    yAxis,
+    propWidth,
+    propHeight
   ] );
 
-  // 2. Filter Data
+  const { innerWidth, innerHeight } = margin;
+
+  // Filter data based on zoom
   const filteredData = useMemo( () => {
-    if ( !zoomDomain?.x ) return data;
-    const [ xMin, xMax ] = zoomDomain.x;
-    return data.filter( ( d, i ) => {
-      return i >= xMin && i <= xMax;
-    } );
-  }, [ data, zoomDomain?.x ] );
+    if ( !zoomDomain || !zoomDomain.x ) return data;
+    const [ start, end ] = zoomDomain.x;
+    return data.slice( start, end + 1 );
+  }, [ data, zoomDomain ] );
 
-  // 3. Create Scales
-  const x0Scale = useMemo( () => {
-    let domainValues: any[];
-    if ( xAxisScaleType === 'linear' ) {
-      domainValues = filteredData.map( ( d ) => Number( d[ labelKey ] ) );
-    } else if ( xAxisScaleType === 'time' ) {
-      domainValues = filteredData.map( ( d ) => new Date( d[ labelKey ] ) );
-    } else {
-      domainValues = filteredData.map( ( d ) => String( d[ labelKey ] ) );
-    }
-
-    return createScale( xAxisScaleType, {
-      domain: domainValues,
-      range: [ 0, innerWidth ],
-      padding: 0.2 // Default padding for band scale
-    } );
-  }, [ filteredData, labelKey, xAxisScaleType, innerWidth ] );
-
-  const x1Scale = useMemo( () => {
-    // This scale is for the bars within a group
-    // It's always a band scale
-    // We need to know the bandwidth of x0Scale if it's a band scale
-    // If x0Scale is linear/time, we need a fixed width or calculated width
-
-    let bandwidth = 0;
-    if ( 'bandwidth' in x0Scale ) {
-      bandwidth = ( x0Scale as d3.ScaleBand<string> ).bandwidth();
-    } else {
-      // Fallback for linear/time scales: divide width by data length * 1.5 (gap)
-      bandwidth = innerWidth / ( filteredData.length || 1 ) * 0.8;
-    }
-
+  // Create scales
+  const xScale = useMemo( () => {
     return d3.scaleBand()
-      .domain( valueKeys )
-      .range( [ 0, bandwidth ] )
-      .padding( 0.05 );
-  }, [ valueKeys, x0Scale, innerWidth, filteredData.length ] );
+      .domain( filteredData.map( ( d ) => String( d[ labelKey ] ) ) )
+      .range( [ 0, innerWidth ] )
+      .padding( 0.2 );
+  }, [ filteredData, labelKey, innerWidth ] );
 
   const yScale = useMemo( () => {
-    const yMin = yAxis.min !== null ? yAxis.min : 0;
-    const yMax = yAxis.max !== null ? yAxis.max : ( d3.max( filteredData, ( d ) =>
+    const yMax = d3.max( filteredData, ( d ) =>
       Math.max( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
-    ) || 0 );
+    ) || 0;
 
-    const scale = d3.scaleLinear()
-      .domain( [ yMin, yMax ] )
+    // Ensure yMax is at least slightly above 0 to avoid flat line at bottom
+    const safeYMax = yMax === 0 ? 1 : yMax;
+
+    return d3.scaleLinear()
+      .domain( [ 0, safeYMax * 1.1 ] ) // Add 10% padding on top
       .range( [ innerHeight, 0 ] );
+  }, [ filteredData, valueKeys, innerHeight ] );
 
-    if ( yAxis.min === null && yAxis.max === null ) {
-      scale.nice();
-    }
+  const colorScale = useMemo( () => {
+    return d3.scaleOrdinal<string, string>()
+      .domain( valueKeys )
+      .range( colors || getColorPalette( colorPalette ).colors );
+  }, [ valueKeys, colors, colorPalette ] );
 
-    return scale;
-  }, [ filteredData, valueKeys, yAxis.min, yAxis.max, innerHeight ] );
-
-  // Helper to get X position (uses utility)
-  const getXPosition = ( d: any ) => {
-    return getXPositionHelper( d, labelKey, x0Scale, xAxisScaleType );
-  };
-
-  // Render Chart
   useEffect( () => {
-    if ( !svgRef.current || !x0Scale || !yScale ) return;
+    if ( !svgRef.current || !data || !propWidth || !propHeight ) return;
+
+    const isZoomUpdate = previousZoomDomainRef.current !== null &&
+      JSON.stringify( previousZoomDomainRef.current ) !== JSON.stringify( zoomDomain );
+
+    previousZoomDomainRef.current = zoomDomain;
 
     const svg = d3.select( svgRef.current );
-    svg.selectAll( '*' ).remove();
+    svg.selectAll( '*' ).interrupt(); // Stop any active transitions
 
-    // Set viewBox for responsiveness
-    svg
-      .attr( 'viewBox', `0 0 ${ propWidth } ${ propHeight }` )
-      .attr( 'preserveAspectRatio', 'xMidYMid meet' );
+    // Create main group if it doesn't exist
+    let g = svg.select<SVGGElement>( 'g.main-group' );
+    if ( g.empty() ) {
+      svg.selectAll( '*' ).remove();
+      g = svg
+        .append( 'g' )
+        .attr( 'class', 'main-group' )
+        .attr( 'transform', `translate(${ margin.margin.left },${ margin.margin.top })` );
+    } else {
+      g.attr( 'transform', `translate(${ margin.margin.left },${ margin.margin.top })` );
+    }
 
-    // Clip Path (using utility)
-    const clipId = createClipPath( svg, innerWidth, innerHeight );
-
-    const g = svg
-      .append( 'g' )
-      .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
-
-    // X Grid (using utility)
-    renderXGrid( g, {
-      xScale: x0Scale,
-      innerWidth,
-      innerHeight,
-      xAxisShowGrid,
-      xAxisGridColor,
-      xAxisGridWidth,
-      xAxisGridOpacity,
-      xAxisGridDashArray,
-      xAxisTickCount
-    } );
-
-    // Y Grid (using utility)
-    renderYGrid( g, {
-      yScale,
-      innerWidth,
-      innerHeight,
-      yAxis
-    } );
-
-    // Bars (Clipped)
-    const contentGroup = g.append( 'g' ).attr( 'clip-path', `url(#${ clipId })` );
-
-    const barGroups = contentGroup
-      .selectAll( '.bar-group' )
-      .data( filteredData )
-      .enter()
-      .append( 'g' )
-      .attr( 'class', 'bar-group' )
-      .attr( 'transform', ( d ) => {
-        // For linear/time scales, we center the group around the point
-        // For band scales, it's already at the start of the band
-        let xPos = getXPosition( d );
-        if ( xAxisScaleType !== 'band' && xAxisScaleType !== 'point' ) {
-          // Center the group: subtract half the group width
-          // Group width is roughly x1Scale.range()[1]
-          xPos -= x1Scale.range()[ 1 ] / 2;
-        }
-        return `translate(${ xPos },0)`;
+    // Handle Zoom Updates efficiently
+    if ( isZoomUpdate ) {
+      // Update scales
+      // Re-render X Axis
+      renderXAxis( g as any, {
+        xScale,
+        innerWidth,
+        innerHeight,
+        xAxisShow,
+        xAxisPosition,
+        xAxisTickSize,
+        xAxisTickPadding,
+        xAxisTickCount,
+        xAxisTickFormat,
+        xAxisScaleType: 'band',
+        xAxisLabelSize,
+        xAxisLabelWeight,
+        xAxisLabelColor,
+        xAxisLabelRotation,
+        xAxisLabelSpacing,
+        xAxisTitle,
+        xAxisTitleSize,
+        xAxisTitleWeight,
+        xAxisTitleColor,
+        xAxisTitlePadding,
+        xAxisShowDomain
       } );
 
-    barGroups.selectAll( 'rect' )
-      .data( ( d ) => valueKeys.map( ( key ) => ( { key, value: d[ key ] } ) ) )
+      // Re-render Y Axis
+      renderYAxis( g as any, {
+        yScale,
+        innerWidth,
+        innerHeight,
+        yAxis
+      } );
+
+      // Re-render X Grid
+      renderXGrid( g as any, {
+        xScale,
+        innerWidth,
+        innerHeight,
+        xAxisShowGrid,
+        xAxisGridColor,
+        xAxisGridWidth,
+        xAxisGridOpacity,
+        xAxisGridDashArray,
+        xAxisTickCount
+      } );
+
+      // Re-render Y Grid
+      renderYGrid( g as any, {
+        yScale,
+        innerWidth,
+        innerHeight,
+        yAxis
+      } );
+    }
+
+    // If not a zoom update, or if we want to fully re-render bars (which we do for now to handle enter/exit)
+    if ( !isZoomUpdate ) {
+      g.selectAll( '.content-group' ).remove();
+    }
+
+    let contentGroup = g.select<SVGGElement>( '.content-group' );
+    if ( contentGroup.empty() ) {
+      contentGroup = g.append( 'g' ).attr( 'class', 'content-group' );
+    }
+
+    // Render Bars
+    // We group bars by category (X axis value)
+    const barGroups = contentGroup
+      .selectAll<SVGGElement, any>( '.bar-group' )
+      .data( filteredData, ( d ) => String( d[ labelKey ] ) );
+
+    barGroups.exit().remove();
+
+    const barGroupsEnter = barGroups
       .enter()
-      .append( 'rect' )
-      .attr( 'x', ( d ) => x1Scale( d.key ) || 0 )
-      .attr( 'y', ( d ) => yScale( Number( d.value ) ) )
-      .attr( 'width', x1Scale.bandwidth() )
-      .attr( 'height', ( d ) => Math.max( 0, innerHeight - yScale( Number( d.value ) ) ) )
-      .attr( 'fill', ( d, i ) => colors[ i % colors.length ] );
+      .append( 'g' )
+      .attr( 'class', 'bar-group' );
 
-    // X Axis (using utility)
-    renderXAxis( g, {
-      xScale: x0Scale,
-      innerWidth,
-      innerHeight,
-      xAxisShow,
-      xAxisPosition,
-      xAxisTickSize,
-      xAxisTickPadding,
-      xAxisTickCount,
-      xAxisTickFormat,
-      xAxisScaleType,
-      xAxisLabelSize,
-      xAxisLabelWeight,
-      xAxisLabelColor,
-      xAxisLabelRotation,
-      xAxisLabelSpacing,
-      xAxisTitle,
-      xAxisTitleSize,
-      xAxisTitleWeight,
-      xAxisTitleColor,
-      xAxisTitlePadding,
-      xAxisShowDomain
+    const barGroupsMerge = barGroupsEnter.merge( barGroups );
+
+    barGroupsMerge
+      .attr( 'transform', ( d ) => `translate(${ xScale( String( d[ labelKey ] ) ) || 0 },0)` );
+
+    // Inner bars (for multiple values per category)
+    const xSubScale = d3.scaleBand()
+      .domain( valueKeys )
+      .range( [ 0, xScale.bandwidth() ] )
+      .padding( 0.05 );
+
+    // For each group, render rects
+    barGroupsMerge.each( function ( d ) {
+      const group = d3.select( this );
+      const rects = group.selectAll<SVGRectElement, string>( 'rect' )
+        .data( valueKeys );
+
+      rects.exit().remove();
+
+      const rectsEnter = rects.enter().append( 'rect' );
+
+      const rectsMerge = rectsEnter.merge( rects );
+
+      rectsMerge
+        .attr( 'fill', ( key, i ) => colorMode === 'by-column'
+          ? ( colors?.[ i ] || colorScale( key ) as string )
+          : ( colors?.[ filteredData.indexOf( d ) % colors.length ] || colorScale( key ) as string )
+        )
+        .attr( 'width', xSubScale.bandwidth() )
+        .attr( 'rx', 4 ) // Rounded corners
+        .attr( 'ry', 4 );
+
+      // Animate bars
+      rectsMerge.transition()
+        .duration( 500 )
+        .attr( 'x', ( key ) => xSubScale( key ) || 0 )
+        .attr( 'y', ( key ) => yScale( Number( d[ key ] ) || 0 ) )
+        .attr( 'height', ( key ) => innerHeight - yScale( Number( d[ key ] ) || 0 ) );
     } );
 
-    // Y Axis (using utility)
-    renderYAxis( g, {
-      yScale,
-      innerWidth,
-      innerHeight,
-      yAxis
-    } );
+    // Render Axes and Grids (only if not zoom update, or if we want to ensure they are there)
+    if ( !isZoomUpdate ) {
+      renderXGrid( g as any, {
+        xScale,
+        innerWidth,
+        innerHeight,
+        xAxisShowGrid,
+        xAxisGridColor,
+        xAxisGridWidth,
+        xAxisGridOpacity,
+        xAxisGridDashArray,
+        xAxisTickCount
+      } );
 
-    // Legend (using utility)
+      renderYGrid( g as any, {
+        yScale,
+        innerWidth,
+        innerHeight,
+        yAxis
+      } );
+
+      renderXAxis( g as any, {
+        xScale,
+        innerWidth,
+        innerHeight,
+        xAxisShow,
+        xAxisPosition,
+        xAxisTickSize,
+        xAxisTickPadding,
+        xAxisTickCount,
+        xAxisTickFormat,
+        xAxisScaleType: 'band',
+        xAxisLabelSize,
+        xAxisLabelWeight,
+        xAxisLabelColor,
+        xAxisLabelRotation,
+        xAxisLabelSpacing,
+        xAxisTitle,
+        xAxisTitleSize,
+        xAxisTitleWeight,
+        xAxisTitleColor,
+        xAxisTitlePadding,
+        xAxisShowDomain
+      } );
+
+      renderYAxis( g as any, {
+        yScale,
+        innerWidth,
+        innerHeight,
+        yAxis
+      } );
+    }
+
+    // Render Legend
     renderLegend( {
       svg,
       width: propWidth,
       height: propHeight,
-      chartMargin,
+      chartMargin: margin.margin,
       innerWidth,
       valueKeys,
-      colors,
+      colors: valueKeys.map( ( key, i ) => colors?.[ i ] || colorScale( key ) as string ),
       legendShow,
       legendPosition,
       legendAlignment,
-      legendFontSize,
+      legendFontSize: 12,
       legendGap,
       legendPaddingTop,
       legendPaddingRight,
@@ -352,9 +410,9 @@ export function BarChart( {
       legendPaddingLeft
     } );
 
-    // Brush zoom (using utility)
+    // Setup Brush Zoom
     setupBrushZoom( {
-      g,
+      g: g as any,
       innerWidth,
       innerHeight,
       data,
@@ -363,20 +421,83 @@ export function BarChart( {
       setZoomDomain
     } );
 
+    // Setup Pan
+    setupPan( {
+      g: g as any,
+      innerWidth,
+      innerHeight,
+      data,
+      zoomDomain: zoomDomain as any,
+      setZoomDomain,
+      valueKeys
+    } );
+
   }, [
-    filteredData, x0Scale, x1Scale, yScale, innerWidth, innerHeight, chartMargin,
-    colors, colorMode,
-    xAxisShow, xAxisShowGrid, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray,
-    yAxis, xAxisPosition, xAxisTickSize, xAxisTickPadding, xAxisTickCount, xAxisTickFormat,
-    xAxisLabelSize, xAxisLabelWeight, xAxisLabelColor, xAxisLabelRotation,
-    xAxisTitle, xAxisTitleSize, xAxisTitleWeight, xAxisTitleColor, xAxisTitlePadding,
-    legendShow, legendPosition, valueKeys
+    data,
+    labelKey,
+    valueKeys,
+    propWidth,
+    propHeight,
+    colors,
+    colorMode,
+    legendShow,
+    legendPosition,
+    legendAlignment,
+    legendGap,
+    legendPaddingTop,
+    legendPaddingRight,
+    legendPaddingBottom,
+    legendPaddingLeft,
+    xAxisShow,
+    xAxisTitle,
+    xAxisShowGrid,
+    xAxisShowDomain,
+    xAxisTickCount,
+    xAxisTickSize,
+    xAxisTickPadding,
+    xAxisLabelRotation,
+    xAxisTickFormat,
+    xAxisPosition,
+    xAxisLabelSize,
+    xAxisLabelWeight,
+    xAxisLabelColor,
+    xAxisLabelSpacing,
+    xAxisTitleType,
+    xAxisTitleWeight,
+    xAxisTitleColor,
+    xAxisTitleSize,
+    xAxisTitlePadding,
+    xAxisGridColor,
+    xAxisGridWidth,
+    xAxisGridOpacity,
+    xAxisGridDashArray,
+    yAxis,
+    margin,
+    innerWidth,
+    innerHeight,
+    colorPalette,
+    zoomDomain,
+    setZoomDomain,
+    xScale,
+    yScale,
+    colorScale,
+    filteredData
   ] );
 
   return (
-    <div className='relative w-full h-full'>
-      <ChartZoomControls xScale={ x0Scale } yScale={ yScale } dataLength={ data.length } />
-      <svg ref={ svgRef } width={ propWidth } height={ propHeight } className='overflow-visible w-full h-full' />
+    <div className="relative w-full h-full">
+      <svg
+        ref={ svgRef }
+        viewBox={ `0 0 ${ propWidth } ${ propHeight }` }
+        preserveAspectRatio="xMidYMid meet"
+        className="w-full h-full overflow-visible"
+      />
+      <ChartZoomControls
+        xScale={ xScale }
+        yScale={ yScale }
+        dataLength={ data.length }
+      />
     </div>
   );
-}
+};
+

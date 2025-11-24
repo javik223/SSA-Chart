@@ -840,6 +840,19 @@ interface ChartStore {
   legendPaddingLeft: number;
   setLegendPaddingLeft: (padding: number) => void;
 
+  // Label settings (for charts like Sunburst)
+  labelShow: boolean;
+  setLabelShow: (show: boolean) => void;
+
+  labelFontSize: number;
+  setLabelFontSize: (size: number) => void;
+
+  labelColor: string;
+  setLabelColor: (color: string) => void;
+
+  labelFontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+  setLabelFontWeight: (weight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900') => void;
+
   // UI state
   isDataPanelOpen: boolean;
   toggleDataPanel: () => void;
@@ -1817,6 +1830,19 @@ export const useChartStore = create<ChartStore>()(
 
       legendPaddingLeft: 0,
       setLegendPaddingLeft: (padding) => set({ legendPaddingLeft: padding }),
+
+      // Label settings
+      labelShow: true,
+      setLabelShow: (show) => set({ labelShow: show }),
+
+      labelFontSize: 14,
+      setLabelFontSize: (size) => set({ labelFontSize: size }),
+
+      labelColor: '#000000',
+      setLabelColor: (color) => set({ labelColor: color }),
+
+      labelFontWeight: 'normal',
+      setLabelFontWeight: (weight) => set({ labelFontWeight: weight }),
 
       // Initial UI state
       isDataPanelOpen: true,

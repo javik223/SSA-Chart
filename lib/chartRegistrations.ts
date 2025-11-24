@@ -15,7 +15,11 @@ import { BarChart } from '@/components/charts/BarChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { DonutChart } from '@/components/charts/DonutChart';
-// Import more chart components as they are created
+import { SunburstChart } from '@/components/charts/SunburstChart';
+import { CircularBarPlotChart } from '@/components/charts/CircularBarPlotChart';
+import { RadialBarChart } from '@/components/charts/RadialBarChart';
+import { PolarAreaChart } from '@/components/charts/PolarAreaChart';
+import { RadarChart } from '@/components/charts/RadarChart';
 
 /**
  * Register all charts
@@ -122,6 +126,81 @@ export function initializeCharts() {
       supportsAnimation: true,
       status: 'stable',
       tags: ['proportion', 'percentage', 'composition', 'ring', 'parts-of-whole'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'sunburst',
+      name: 'Sunburst chart',
+      category: 'line-bar-pie',
+      description: 'Visualize hierarchical data with zoomable rings',
+      component: SunburstChart,
+      supportsMultipleSeries: false,
+      supportsAnimation: true,
+      status: 'stable',
+      tags: ['hierarchy', 'proportion', 'zoomable', 'radial'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'circular-barplot',
+      name: 'Circular bar plot',
+      category: 'line-bar-pie',
+      description: 'Display data as bars arranged in a circle',
+      component: CircularBarPlotChart,
+      supportsMultipleSeries: true,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['circular', 'radial', 'bar', 'comparison'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'radial-bar',
+      name: 'Radial bar chart',
+      category: 'line-bar-pie',
+      description: 'Stacked bars arranged in a circular layout',
+      component: RadialBarChart,
+      supportsMultipleSeries: true,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['radial', 'circular', 'stacked', 'comparison'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'polar-area',
+      name: 'Polar area chart',
+      category: 'line-bar-pie',
+      description: 'Like a pie chart but with varying radii',
+      component: PolarAreaChart,
+      supportsMultipleSeries: false,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['polar', 'radial', 'area', 'proportion'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'radar',
+      name: 'Radar chart',
+      category: 'line-bar-pie',
+      description: 'Spider/radar chart for multivariate data',
+      component: RadarChart,
+      supportsMultipleSeries: true,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['radar', 'spider', 'multivariate', 'comparison'],
       requiredColumns: {
         label: true,
         value: true,

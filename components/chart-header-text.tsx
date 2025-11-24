@@ -143,8 +143,6 @@ export const ChartHeaderText = memo( function ChartHeaderText() {
   return (
     <div
       style={ {
-        paddingLeft: `${ layoutPaddingLeft }px`,
-        paddingRight: `${ layoutPaddingRight }px`,
         paddingBottom: '8px',
       } }
     >
@@ -160,7 +158,7 @@ export const ChartHeaderText = memo( function ChartHeaderText() {
           headerTextStyleEnabled ? '' : 'text-zinc-600',
           isEditing
             ? 'border-2 border-blue-500 rounded px-2 py-1 focus:outline-none'
-            : 'cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
+            : 'cursor-text hover:bg-zinc-50 rounded py-1',
           'transition-colors whitespace-pre-wrap'
         ) }
         style={ customStyles }

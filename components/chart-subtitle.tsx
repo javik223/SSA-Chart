@@ -5,80 +5,80 @@ import { useChartStore } from '@/store/useChartStore';
 import { cn } from '@/lib/utils';
 import './chart-subtitle.css';
 
-export const ChartSubtitle = memo(function ChartSubtitle() {
-  const chartSubtitle = useChartStore((state) => state.chartSubtitle);
-  const setChartSubtitle = useChartStore((state) => state.setChartSubtitle);
-  const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
-  const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+export const ChartSubtitle = memo( function ChartSubtitle() {
+  const chartSubtitle = useChartStore( ( state ) => state.chartSubtitle );
+  const setChartSubtitle = useChartStore( ( state ) => state.setChartSubtitle );
+  const layoutPaddingLeft = useChartStore( ( state ) => state.layoutPaddingLeft );
+  const layoutPaddingRight = useChartStore( ( state ) => state.layoutPaddingRight );
 
   // Subtitle style settings
   const subtitleStyleEnabled = useChartStore(
-    (state) => state.subtitleStyleEnabled
+    ( state ) => state.subtitleStyleEnabled
   );
-  const subtitleFont = useChartStore((state) => state.subtitleFont);
-  const subtitleFontSize = useChartStore((state) => state.subtitleFontSize);
+  const subtitleFont = useChartStore( ( state ) => state.subtitleFont );
+  const subtitleFontSize = useChartStore( ( state ) => state.subtitleFontSize );
   const subtitleBaseFontSizeMobile = useChartStore(
-    (state) => state.subtitleBaseFontSizeMobile
+    ( state ) => state.subtitleBaseFontSizeMobile
   );
   const subtitleBaseFontSizeTablet = useChartStore(
-    (state) => state.subtitleBaseFontSizeTablet
+    ( state ) => state.subtitleBaseFontSizeTablet
   );
   const subtitleBaseFontSizeDesktop = useChartStore(
-    (state) => state.subtitleBaseFontSizeDesktop
+    ( state ) => state.subtitleBaseFontSizeDesktop
   );
-  const subtitleFontWeight = useChartStore((state) => state.subtitleFontWeight);
-  const subtitleColor = useChartStore((state) => state.subtitleColor);
-  const subtitleLineHeight = useChartStore((state) => state.subtitleLineHeight);
-  const subtitleSpaceAbove = useChartStore((state) => state.subtitleSpaceAbove);
+  const subtitleFontWeight = useChartStore( ( state ) => state.subtitleFontWeight );
+  const subtitleColor = useChartStore( ( state ) => state.subtitleColor );
+  const subtitleLineHeight = useChartStore( ( state ) => state.subtitleLineHeight );
+  const subtitleSpaceAbove = useChartStore( ( state ) => state.subtitleSpaceAbove );
 
-  const [isEditing, setIsEditing] = useState(false);
-  const editableRef = useRef<HTMLHeadingElement>(null);
+  const [ isEditing, setIsEditing ] = useState( false );
+  const editableRef = useRef<HTMLHeadingElement>( null );
 
   const handleDoubleClick = () => {
-    setIsEditing(true);
+    setIsEditing( true );
   };
 
   const saveEdit = () => {
-    if (editableRef.current) {
-      setChartSubtitle(editableRef.current.innerText);
+    if ( editableRef.current ) {
+      setChartSubtitle( editableRef.current.innerText );
     }
-    setIsEditing(false);
+    setIsEditing( false );
   };
 
   const cancelEdit = () => {
-    if (editableRef.current) {
+    if ( editableRef.current ) {
       editableRef.current.innerText = chartSubtitle; // Revert to original
     }
-    setIsEditing(false);
+    setIsEditing( false );
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
+  const handleKeyDown = ( e: React.KeyboardEvent ) => {
+    if ( e.key === 'Escape' ) {
       cancelEdit();
-    } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    } else if ( e.key === 'Enter' && ( e.metaKey || e.ctrlKey ) ) {
       e.preventDefault();
       saveEdit();
-    } else if (e.key === 'Enter') {
+    } else if ( e.key === 'Enter' ) {
       e.preventDefault(); // Prevent new line in contenteditable
     }
   };
 
-  useEffect(() => {
-    if (isEditing) {
+  useEffect( () => {
+    if ( isEditing ) {
       editableRef.current?.focus();
       // Place caret at the end
       const range = document.createRange();
       const selection = window.getSelection();
-      if (editableRef.current && selection) {
-        range.selectNodeContents(editableRef.current);
-        range.collapse(false); // Collapse to the end
+      if ( editableRef.current && selection ) {
+        range.selectNodeContents( editableRef.current );
+        range.collapse( false ); // Collapse to the end
         selection.removeAllRanges();
-        selection.addRange(range);
+        selection.addRange( range );
       }
     }
-  }, [isEditing]);
+  }, [ isEditing ] );
 
-  if (!chartSubtitle && !isEditing) return null;
+  if ( !chartSubtitle && !isEditing ) return null;
 
   // Calculate responsive font sizes
   const calculatedFontSizeMobile =
@@ -90,7 +90,7 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
 
   // Calculate space above
   const getSpaceAbove = () => {
-    switch (subtitleSpaceAbove) {
+    switch ( subtitleSpaceAbove ) {
       case 'slim':
         return '4px';
       case 'medium':
@@ -106,7 +106,7 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
 
   // Get font weight class
   const getFontWeightClass = () => {
-    switch (subtitleFontWeight) {
+    switch ( subtitleFontWeight ) {
       case 'bold':
         return 'font-bold';
       case 'medium':
@@ -120,35 +120,35 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
 
   // Build custom styles
   const customStyles: React.CSSProperties = subtitleStyleEnabled
-    ? ({
-        fontFamily:
-          subtitleFont !== 'Same as parent' ? subtitleFont : undefined,
-        '--subtitle-font-size-mobile': `${calculatedFontSizeMobile}px`,
-        '--subtitle-font-size-tablet': `${calculatedFontSizeTablet}px`,
-        '--subtitle-font-size-desktop': `${calculatedFontSizeDesktop}px`,
-        color: subtitleColor,
-        lineHeight: subtitleLineHeight,
-        paddingTop: getSpaceAbove(),
-      } as React.CSSProperties)
+    ? ( {
+      fontFamily:
+        subtitleFont !== 'Same as parent' ? subtitleFont : undefined,
+      '--subtitle-font-size-mobile': `${ calculatedFontSizeMobile }px`,
+      '--subtitle-font-size-tablet': `${ calculatedFontSizeTablet }px`,
+      '--subtitle-font-size-desktop': `${ calculatedFontSizeDesktop }px`,
+      color: subtitleColor,
+      lineHeight: subtitleLineHeight,
+      paddingTop: getSpaceAbove(),
+    } as React.CSSProperties )
     : {
-        paddingTop: getSpaceAbove(),
-      };
+      paddingTop: getSpaceAbove(),
+    };
 
   return (
     <div
-      style={{
-        paddingLeft: `${layoutPaddingLeft}px`,
-        paddingRight: `${layoutPaddingRight}px`,
+      style={ {
+        // paddingLeft: `${layoutPaddingLeft}px`,
+        // paddingRight: `${layoutPaddingRight}px`,
         paddingBottom: '4px',
-      }}
+      } }
     >
       <h3
-        ref={editableRef}
-        contentEditable={isEditing}
-        suppressContentEditableWarning={true}
-        onBlur={saveEdit}
-        onKeyDown={handleKeyDown}
-        className={cn(
+        ref={ editableRef }
+        contentEditable={ isEditing }
+        suppressContentEditableWarning={ true }
+        onBlur={ saveEdit }
+        onKeyDown={ handleKeyDown }
+        className={ cn(
           subtitleStyleEnabled ? 'chart-subtitle' : 'text-lg md:text-xl',
           subtitleStyleEnabled ? getFontWeightClass() : 'font-semibold',
           subtitleStyleEnabled ? '' : 'text-zinc-700',
@@ -156,13 +156,13 @@ export const ChartSubtitle = memo(function ChartSubtitle() {
             ? 'border-2 border-blue-500 rounded px-2 py-1 focus:outline-none'
             : 'cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
           'transition-colors whitespace-pre-wrap'
-        )}
-        style={customStyles}
-        onDoubleClick={handleDoubleClick}
+        ) }
+        style={ customStyles }
+        onDoubleClick={ handleDoubleClick }
         title='Double-click to edit'
       >
-        {chartSubtitle}
+        { chartSubtitle }
       </h3>
     </div>
   );
-});
+} );

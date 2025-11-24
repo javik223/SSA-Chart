@@ -9,56 +9,56 @@ import { cn } from '@/lib/utils';
  */
 export function ChartFooterSection() {
   // Footer content
-  const footerSourceName = useChartStore((state) => state.footerSourceName);
-  const footerSourceUrl = useChartStore((state) => state.footerSourceUrl);
-  const footerSourceLabel = useChartStore((state) => state.footerSourceLabel);
-  const footerNote = useChartStore((state) => state.footerNote);
+  const footerSourceName = useChartStore( ( state ) => state.footerSourceName );
+  const footerSourceUrl = useChartStore( ( state ) => state.footerSourceUrl );
+  const footerSourceLabel = useChartStore( ( state ) => state.footerSourceLabel );
+  const footerNote = useChartStore( ( state ) => state.footerNote );
   const footerNoteSecondary = useChartStore(
-    (state) => state.footerNoteSecondary
+    ( state ) => state.footerNoteSecondary
   );
 
   // Footer settings
-  const footerAlignment = useChartStore((state) => state.footerAlignment);
+  const footerAlignment = useChartStore( ( state ) => state.footerAlignment );
   const footerStylesEnabled = useChartStore(
-    (state) => state.footerStylesEnabled
+    ( state ) => state.footerStylesEnabled
   );
-  const footerFont = useChartStore((state) => state.footerFont);
-  const footerFontWeight = useChartStore((state) => state.footerFontWeight);
+  const footerFont = useChartStore( ( state ) => state.footerFont );
+  const footerFontWeight = useChartStore( ( state ) => state.footerFontWeight );
 
   // Border settings
-  const footerBorder = useChartStore((state) => state.footerBorder);
-  const footerBorderStyle = useChartStore((state) => state.footerBorderStyle);
-  const footerBorderSpace = useChartStore((state) => state.footerBorderSpace);
-  const footerBorderWidth = useChartStore((state) => state.footerBorderWidth);
-  const footerBorderColor = useChartStore((state) => state.footerBorderColor);
+  const footerBorder = useChartStore( ( state ) => state.footerBorder );
+  const footerBorderStyle = useChartStore( ( state ) => state.footerBorderStyle );
+  const footerBorderSpace = useChartStore( ( state ) => state.footerBorderSpace );
+  const footerBorderWidth = useChartStore( ( state ) => state.footerBorderWidth );
+  const footerBorderColor = useChartStore( ( state ) => state.footerBorderColor );
 
   // Logo settings
-  const footerLogoEnabled = useChartStore((state) => state.footerLogoEnabled);
+  const footerLogoEnabled = useChartStore( ( state ) => state.footerLogoEnabled );
   const footerLogoImageUrl = useChartStore(
-    (state) => state.footerLogoImageUrl
+    ( state ) => state.footerLogoImageUrl
   );
   const footerLogoImageLink = useChartStore(
-    (state) => state.footerLogoImageLink
+    ( state ) => state.footerLogoImageLink
   );
-  const footerLogoHeight = useChartStore((state) => state.footerLogoHeight);
-  const footerLogoAlign = useChartStore((state) => state.footerLogoAlign);
-  const footerLogoPosition = useChartStore((state) => state.footerLogoPosition);
+  const footerLogoHeight = useChartStore( ( state ) => state.footerLogoHeight );
+  const footerLogoAlign = useChartStore( ( state ) => state.footerLogoAlign );
+  const footerLogoPosition = useChartStore( ( state ) => state.footerLogoPosition );
   const footerLogoPositionTop = useChartStore(
-    (state) => state.footerLogoPositionTop
+    ( state ) => state.footerLogoPositionTop
   );
   const footerLogoPositionRight = useChartStore(
-    (state) => state.footerLogoPositionRight
+    ( state ) => state.footerLogoPositionRight
   );
   const footerLogoPositionBottom = useChartStore(
-    (state) => state.footerLogoPositionBottom
+    ( state ) => state.footerLogoPositionBottom
   );
   const footerLogoPositionLeft = useChartStore(
-    (state) => state.footerLogoPositionLeft
+    ( state ) => state.footerLogoPositionLeft
   );
 
   // Layout padding
-  const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
-  const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+  const layoutPaddingLeft = useChartStore( ( state ) => state.layoutPaddingLeft );
+  const layoutPaddingRight = useChartStore( ( state ) => state.layoutPaddingRight );
 
   // If all content is empty, don't render anything
   const hasContent =
@@ -68,22 +68,22 @@ export function ChartFooterSection() {
     footerNoteSecondary ||
     footerLogoEnabled;
 
-  if (!hasContent) return null;
+  if ( !hasContent ) return null;
 
   // Calculate border styles
   const getBorderStyles = (): React.CSSProperties => {
-    if (footerBorder === 'none') return {};
+    if ( footerBorder === 'none' ) return {};
 
-    const borderStyle = `${footerBorderWidth}px ${footerBorderStyle} ${footerBorderColor}`;
+    const borderStyle = `${ footerBorderWidth }px ${ footerBorderStyle } ${ footerBorderColor }`;
     const result: React.CSSProperties = {};
 
-    if (footerBorder === 'top' || footerBorder === 'top-bottom') {
+    if ( footerBorder === 'top' || footerBorder === 'top-bottom' ) {
       result.borderTop = borderStyle;
-      result.paddingTop = `${footerBorderSpace}px`;
+      result.paddingTop = `${ footerBorderSpace }px`;
     }
-    if (footerBorder === 'bottom' || footerBorder === 'top-bottom') {
+    if ( footerBorder === 'bottom' || footerBorder === 'top-bottom' ) {
       result.borderBottom = borderStyle;
-      result.paddingBottom = `${footerBorderSpace}px`;
+      result.paddingBottom = `${ footerBorderSpace }px`;
     }
 
     return result;
@@ -91,7 +91,7 @@ export function ChartFooterSection() {
 
   // Calculate alignment class
   const getAlignmentClass = () => {
-    switch (footerAlignment) {
+    switch ( footerAlignment ) {
       case 'center':
         return 'items-center text-center';
       case 'right':
@@ -103,8 +103,8 @@ export function ChartFooterSection() {
 
   // Calculate font weight class
   const getFontWeightClass = () => {
-    if (!footerStylesEnabled) return '';
-    switch (footerFontWeight) {
+    if ( !footerStylesEnabled ) return '';
+    switch ( footerFontWeight ) {
       case 'bold':
         return 'font-bold';
       default:
@@ -115,162 +115,176 @@ export function ChartFooterSection() {
   // Build custom styles
   const customStyles: React.CSSProperties = footerStylesEnabled
     ? {
-        fontFamily: footerFont !== 'Same as parent' ? footerFont : undefined,
-      }
+      fontFamily: footerFont !== 'Same as parent' ? footerFont : undefined,
+    }
     : {};
 
-  // Calculate logo position styles
+  // Calculate logo position styles for grid
   const getLogoPositionStyles = (): React.CSSProperties => {
-    const baseStyles: React.CSSProperties = {
-      marginTop: `${footerLogoPositionTop}px`,
-      marginBottom: `${footerLogoPositionBottom}px`,
+    return {
+      marginTop: `${ footerLogoPositionTop }px`,
+      marginBottom: `${ footerLogoPositionBottom }px`,
+      marginLeft: `${ footerLogoPositionLeft }px`,
+      marginRight: `${ footerLogoPositionRight }px`,
     };
-
-    if (footerLogoPosition === 'bottom') {
-      return {
-        ...baseStyles,
-        marginLeft: `${footerLogoPositionLeft}px`,
-        marginRight: `${footerLogoPositionRight}px`,
-      };
-    } else if (footerLogoPosition === 'left') {
-      return {
-        ...baseStyles,
-        position: 'absolute',
-        left: `${footerLogoPositionLeft}px`,
-      };
-    } else if (footerLogoPosition === 'right') {
-      return {
-        ...baseStyles,
-        position: 'absolute',
-        right: `${footerLogoPositionRight}px`,
-      };
-    }
-
-    return baseStyles;
   };
 
   // Render logo/image
   const renderLogo = () => {
-    if (!footerLogoEnabled || !footerLogoImageUrl) return null;
+    if ( !footerLogoEnabled || !footerLogoImageUrl ) return null;
 
     const logoElement = (
       <img
-        src={footerLogoImageUrl}
+        src={ footerLogoImageUrl }
         alt='Footer Logo'
-        style={{
-          height: `${footerLogoHeight}px`,
+        style={ {
+          height: `${ footerLogoHeight }px`,
           display: 'block',
-        }}
+        } }
       />
     );
 
-    const logoWrapper = (
-      <div style={getLogoPositionStyles()}>
-        {footerLogoImageLink ? (
+    return (
+      <div style={ getLogoPositionStyles() }>
+        { footerLogoImageLink ? (
           <a
-            href={footerLogoImageLink}
+            href={ footerLogoImageLink }
             target='_blank'
             rel='noopener noreferrer'
           >
-            {logoElement}
+            { logoElement }
           </a>
         ) : (
           logoElement
-        )}
+        ) }
       </div>
     );
-
-    return logoWrapper;
   };
 
   // Render source citation
   const renderSource = () => {
-    if (!footerSourceName && !footerSourceUrl) return null;
+    if ( !footerSourceName && !footerSourceUrl ) return null;
 
     const label = footerSourceLabel || 'Source';
     const sourceName = footerSourceName || '';
 
     return (
       <div
-        className={cn(
+        className={ cn(
           'text-xs text-zinc-500 mb-1',
           getFontWeightClass()
-        )}
-        style={customStyles}
+        ) }
+        style={ customStyles }
       >
-        {label}:{' '}
-        {footerSourceUrl ? (
+        { label }:{ ' ' }
+        { footerSourceUrl ? (
           <a
-            href={footerSourceUrl}
+            href={ footerSourceUrl }
             target='_blank'
             rel='noopener noreferrer'
             className='underline hover:text-zinc-700'
           >
-            {sourceName}
+            { sourceName }
           </a>
         ) : (
           sourceName
-        )}
+        ) }
       </div>
     );
   };
 
   // Render notes
   const renderNotes = () => {
-    if (!footerNote && !footerNoteSecondary) return null;
+    if ( !footerNote && !footerNoteSecondary ) return null;
 
     return (
       <div className='space-y-1'>
-        {footerNote && (
+        { footerNote && (
           <div
-            className={cn(
+            className={ cn(
               'text-xs text-zinc-500 whitespace-pre-wrap',
               getFontWeightClass()
-            )}
-            style={customStyles}
+            ) }
+            style={ customStyles }
           >
-            {footerNote}
+            { footerNote }
           </div>
-        )}
-        {footerNoteSecondary && (
+        ) }
+        { footerNoteSecondary && (
           <div
-            className={cn(
+            className={ cn(
               'text-xs text-zinc-400 whitespace-pre-wrap',
               getFontWeightClass()
-            )}
-            style={customStyles}
+            ) }
+            style={ customStyles }
           >
-            {footerNoteSecondary}
+            { footerNoteSecondary }
           </div>
-        )}
+        ) }
       </div>
     );
   };
 
+  // Calculate grid template based on logo position
+  const getGridTemplate = () => {
+    if ( !footerLogoEnabled || !footerLogoImageUrl ) {
+      return {
+        display: 'flex',
+        flexDirection: 'column' as const,
+      };
+    }
+
+    if ( footerLogoPosition === 'left' ) {
+      return {
+        display: 'grid',
+        gridTemplateColumns: 'auto 1fr',
+        gap: '16px',
+        alignItems: 'center',
+      };
+    } else if ( footerLogoPosition === 'right' ) {
+      return {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gap: '16px',
+        alignItems: 'center',
+      };
+    } else {
+      // bottom position
+      return {
+        display: 'flex',
+        flexDirection: 'column' as const,
+      };
+    }
+  };
+
   return (
     <div
-      className={cn('relative flex flex-col', getAlignmentClass())}
-      style={{
+      className={ cn( 'flex flex-col', getAlignmentClass() ) }
+      style={ {
         ...getBorderStyles(),
-        paddingLeft:
-          footerLogoAlign === 'footer' ? `${layoutPaddingLeft}px` : 0,
-        paddingRight:
-          footerLogoAlign === 'footer' ? `${layoutPaddingRight}px` : 0,
+        // paddingLeft:
+        //   footerLogoAlign === 'footer' ? `${ layoutPaddingLeft }px` : 0,
+        // paddingRight:
+        //   footerLogoAlign === 'footer' ? `${ layoutPaddingRight }px` : 0,
         paddingTop: '16px',
-      }}
+      } }
     >
-      {/* Logo at left/right position (absolute) */}
-      {(footerLogoPosition === 'left' || footerLogoPosition === 'right') &&
-        renderLogo()}
+      <div style={ getGridTemplate() }>
+        {/* Logo on left */ }
+        { footerLogoPosition === 'left' && renderLogo() }
 
-      {/* Text Content */}
-      <div className='flex flex-col w-full'>
-        {renderSource()}
-        {renderNotes()}
+        {/* Text Content */ }
+        <div className='flex flex-col'>
+          { renderSource() }
+          { renderNotes() }
+        </div>
+
+        {/* Logo on right */ }
+        { footerLogoPosition === 'right' && renderLogo() }
       </div>
 
-      {/* Logo at bottom position */}
-      {footerLogoPosition === 'bottom' && renderLogo()}
+      {/* Logo at bottom position */ }
+      { footerLogoPosition === 'bottom' && renderLogo() }
     </div>
   );
 }

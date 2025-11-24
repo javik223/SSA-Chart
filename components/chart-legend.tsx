@@ -9,38 +9,38 @@ interface ChartLegendProps {
   valueKeys: string[];
 }
 
-export function ChartLegend({ valueKeys }: ChartLegendProps) {
-  const legendShow = useChartStore((state) => state.legendShow);
-  const colorPaletteId = useChartStore((state) => state.colorPalette);
-  const legendPosition = useChartStore((state) => state.legendPosition);
-  const legendAlignment = useChartStore((state) => state.legendAlignment);
-  const legendFontSize = useChartStore((state) => state.legendFontSize);
+export function ChartLegend( { valueKeys }: ChartLegendProps ) {
+  const legendShow = useChartStore( ( state ) => state.legendShow );
+  const colorPaletteId = useChartStore( ( state ) => state.colorPalette );
+  const legendPosition = useChartStore( ( state ) => state.legendPosition );
+  const legendAlignment = useChartStore( ( state ) => state.legendAlignment );
+  const legendFontSize = useChartStore( ( state ) => state.legendFontSize );
   const legendBaseFontSizeMobile = useChartStore(
-    (state) => state.legendBaseFontSizeMobile
+    ( state ) => state.legendBaseFontSizeMobile
   );
   const legendBaseFontSizeTablet = useChartStore(
-    (state) => state.legendBaseFontSizeTablet
+    ( state ) => state.legendBaseFontSizeTablet
   );
   const legendBaseFontSizeDesktop = useChartStore(
-    (state) => state.legendBaseFontSizeDesktop
+    ( state ) => state.legendBaseFontSizeDesktop
   );
-  const legendShowValues = useChartStore((state) => state.legendShowValues);
-  const legendGap = useChartStore((state) => state.legendGap);
-  const legendPaddingTop = useChartStore((state) => state.legendPaddingTop);
-  const legendPaddingRight = useChartStore((state) => state.legendPaddingRight);
+  const legendShowValues = useChartStore( ( state ) => state.legendShowValues );
+  const legendGap = useChartStore( ( state ) => state.legendGap );
+  const legendPaddingTop = useChartStore( ( state ) => state.legendPaddingTop );
+  const legendPaddingRight = useChartStore( ( state ) => state.legendPaddingRight );
   const legendPaddingBottom = useChartStore(
-    (state) => state.legendPaddingBottom
+    ( state ) => state.legendPaddingBottom
   );
-  const legendPaddingLeft = useChartStore((state) => state.legendPaddingLeft);
+  const legendPaddingLeft = useChartStore( ( state ) => state.legendPaddingLeft );
 
   // General layout padding - applies to all sections
-  const layoutPaddingLeft = useChartStore((state) => state.layoutPaddingLeft);
-  const layoutPaddingRight = useChartStore((state) => state.layoutPaddingRight);
+  const layoutPaddingLeft = useChartStore( ( state ) => state.layoutPaddingLeft );
+  const layoutPaddingRight = useChartStore( ( state ) => state.layoutPaddingRight );
 
   // Get colors from the selected palette
-  const palette = getColorPalette(colorPaletteId);
+  const palette = getColorPalette( colorPaletteId );
 
-  if (!legendShow || valueKeys.length === 0) return null;
+  if ( !legendShow || valueKeys.length === 0 ) return null;
 
   const isHorizontal = legendPosition === 'top' || legendPosition === 'bottom';
 
@@ -52,45 +52,43 @@ export function ChartLegend({ valueKeys }: ChartLegendProps) {
 
   return (
     <div
-      className={cn(
+      className={ cn(
         'chart-legend',
         isHorizontal ? 'chart-legend--horizontal' : 'chart-legend--vertical',
-        `chart-legend--align-${legendAlignment}`
-      )}
+        `chart-legend--align-${ legendAlignment }`
+      ) }
       style={
         {
-          '--legend-gap': `${legendGap}px`,
-          '--legend-padding-top': `${legendPaddingTop}px`,
-          '--legend-padding-right': `${
-            layoutPaddingRight + legendPaddingRight
-          }px`,
-          '--legend-padding-bottom': `${legendPaddingBottom}px`,
-          '--legend-padding-left': `${layoutPaddingLeft + legendPaddingLeft}px`,
-          '--legend-font-size-mobile': `${calculatedFontSizeMobile}px`,
-          '--legend-font-size-tablet': `${calculatedFontSizeTablet}px`,
-          '--legend-font-size-desktop': `${calculatedFontSizeDesktop}px`,
-          '--legend-item-gap-half': `${legendGap / 2}px`,
+          '--legend-gap': `${ legendGap }px`,
+          '--legend-padding-top': `${ legendPaddingTop }px`,
+          '--legend-padding-right': `${ legendPaddingRight }px`,
+          '--legend-padding-bottom': `${ legendPaddingBottom }px`,
+          '--legend-padding-left': `${ legendPaddingLeft }px`,
+          '--legend-font-size-mobile': `${ calculatedFontSizeMobile }px`,
+          '--legend-font-size-tablet': `${ calculatedFontSizeTablet }px`,
+          '--legend-font-size-desktop': `${ calculatedFontSizeDesktop }px`,
+          '--legend-item-gap-half': `${ legendGap / 2 }px`,
         } as React.CSSProperties
       }
     >
-      {valueKeys.map((key, index) => (
-        <div key={`legend-${index}-${key ?? 'empty'}`} className='chart-legend-item'>
+      { valueKeys.map( ( key, index ) => (
+        <div key={ `legend-${ index }-${ key ?? 'empty' }` } className='chart-legend-item'>
           <div
             className='chart-legend-color-box'
             style={
               {
-                '--legend-color': palette.colors[index % palette.colors.length],
+                '--legend-color': palette.colors[ index % palette.colors.length ],
               } as React.CSSProperties
             }
           />
-          <span className='whitespace-nowrap'>{key}</span>
-          {legendShowValues && (
+          <span className='whitespace-nowrap'>{ key }</span>
+          { legendShowValues && (
             <span className='text-zinc-500 font-mono text-xs'>
-              {/* Values would be populated from data context */}
+              {/* Values would be populated from data context */ }
             </span>
-          )}
+          ) }
         </div>
-      ))}
+      ) ) }
     </div>
   );
 }

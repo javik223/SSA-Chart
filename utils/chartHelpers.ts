@@ -237,7 +237,11 @@ export function renderXAxis(
       ? -config.xAxisTitlePadding
       : config.innerHeight + config.xAxisTitlePadding;
 
+    // Remove existing title if any
+    g.select('.x-axis-title').remove();
+
     g.append('text')
+      .attr('class', 'x-axis-title')
       .attr('x', config.innerWidth / 2)
       .attr('y', titleY)
       .style('text-anchor', 'middle')
@@ -245,6 +249,9 @@ export function renderXAxis(
       .style('font-weight', config.xAxisTitleWeight)
       .style('fill', config.xAxisTitleColor)
       .text(config.xAxisTitle);
+  } else {
+    // Remove title if xAxisTitle is empty
+    g.select('.x-axis-title').remove();
   }
 
   // Hide domain line if needed
@@ -328,13 +335,21 @@ export function renderYAxis(
   if (yAxis.title) {
     const titleX = yAxis.position === 'left' ? -yAxis.titlePadding : config.innerWidth + yAxis.titlePadding;
     const titleY = config.innerHeight / 2;
+
+    // Remove existing title if any
+    g.select('.y-axis-title').remove();
+
     g.append('text')
+      .attr('class', 'y-axis-title')
       .attr('transform', `translate(${titleX},${titleY}) rotate(-90)`)
       .style('text-anchor', 'middle')
       .style('font-size', `${yAxis.titleSize}px`)
       .style('font-weight', yAxis.titleWeight)
       .style('fill', yAxis.titleColor)
       .text(yAxis.title);
+  } else {
+    // Remove title if yAxis.title is empty
+    g.select('.y-axis-title').remove();
   }
 
   // Hide domain line if needed
@@ -593,6 +608,7 @@ interface BrushZoomConfig {
 export function setupBrushZoom(config: BrushZoomConfig): void {
   const brush = d3.brushX()
     .extent([[0, 0], [config.innerWidth, config.innerHeight]])
+    .filter((event) => !event.shiftKey && !event.button) // Ignore shift key (for panning) and right click
     .on('end', (event) => {
   // Handle zoom reset on double-click (empty selection)
       if (!event.selection) {
@@ -671,4 +687,103 @@ export function setupBrushZoom(config: BrushZoomConfig): void {
   
   // Ensure brush is raised
   brushGroup.raise();
+}
+
+interface PanConfig {
+  g: d3.Selection<SVGGElement, unknown, null, undefined>;
+  innerWidth: number;
+  innerHeight: number;
+  data: Array<Record<string, string | number>>;
+  zoomDomain: { x: [number, number]; y: [number, number] } | null;
+  setZoomDomain: (domain: { x: [number, number]; y: [number, number] }) => void;
+  valueKeys: string[];
+}
+
+/**
+ * Setup shift+drag panning interaction
+ */
+export function setupPan(config: PanConfig): void {
+  const drag = d3.drag()
+    .filter((event) => event.shiftKey) // Only activate when shift is held
+    .on('start', function() {
+      d3.select(this).style('cursor', 'grabbing');
+    })
+    .on('drag', (event) => {
+      if (!config.zoomDomain) return;
+
+      const [currentStart, currentEnd] = config.zoomDomain.x;
+      const range = currentEnd - currentStart;
+      
+      // Calculate how many data points to shift based on pixel drag
+      // Negative dx means dragging left, which means we want to see later data (increment index)
+      // Positive dx means dragging right, which means we want to see earlier data (decrement index)
+      const dataPointsPerPixel = range / config.innerWidth;
+      const indexDelta = Math.round(-event.dx * dataPointsPerPixel);
+
+      if (indexDelta === 0) return;
+
+      // Calculate new indices
+      let newStart = currentStart + indexDelta;
+      let newEnd = currentEnd + indexDelta;
+
+      // Clamp to data bounds
+      if (newStart < 0) {
+        newStart = 0;
+        newEnd = range;
+      }
+      if (newEnd > config.data.length - 1) {
+        newEnd = config.data.length - 1;
+        newStart = newEnd - range;
+      }
+
+      // If we hit the bounds, don't update
+      if (newStart === currentStart && newEnd === currentEnd) return;
+
+      // Calculate new Y domain based on the new visible data
+      const selectedData = config.data.slice(newStart, newEnd + 1);
+      const yMinSelected = d3.min(selectedData, (d) =>
+        Math.min(...config.valueKeys.map((key) => Number(d[key]) || 0))
+      ) || 0;
+      const yMaxSelected = d3.max(selectedData, (d) =>
+        Math.max(...config.valueKeys.map((key) => Number(d[key]) || 0))
+      ) || 0;
+
+      config.setZoomDomain({
+        x: [newStart, newEnd],
+        y: [yMinSelected, yMaxSelected]
+      });
+    })
+    .on('end', function() {
+      d3.select(this).style('cursor', 'default');
+    });
+
+  // Apply drag behavior
+  // We prefer attaching to the brush overlay if it exists, as it's usually on top
+  let target = config.g.select<SVGRectElement>('.brush .overlay');
+  
+  if (target.empty()) {
+    // Fallback to creating our own rect if no brush
+    let panRect = config.g.select<SVGRectElement>('.pan-rect');
+    if (panRect.empty()) {
+      panRect = config.g.append('rect')
+        .attr('class', 'pan-rect')
+        .attr('fill', 'transparent')
+        .style('cursor', 'grab');
+        
+      panRect.lower(); 
+      config.g.select('.grid').lower();
+    }
+    
+    panRect
+      .attr('width', config.innerWidth)
+      .attr('height', config.innerHeight);
+      
+    target = panRect;
+  } else {
+    // If using brush overlay, ensure we have the cursor style
+    // But brush overrides cursor, so we might need to handle that in the drag events
+    // (which we do: .on('start', ... style('cursor', 'grabbing')))
+  }
+
+  target.call(drag as any);
 }

@@ -6,6 +6,7 @@ import {
   ResizablePanelGroup,
 } from '@/components/ui/resizable';
 import { BasicChart } from '@/components/charts/BasicChart';
+import { GridChart } from '@/components/charts/GridChart';
 import { ChartSettings } from '@/components/chart-settings';
 import { ChartTitleSection } from '@/components/chart-title-section';
 import { ChartLegend } from '@/components/chart-legend';
@@ -15,6 +16,7 @@ import { useMemo } from 'react';
 
 export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
   const legendPosition = useChartStore( ( state ) => state.legendPosition );
+  const gridMode = useChartStore( ( state ) => state.gridMode );
   const data = useChartStore( ( state ) => state.data );
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
 
@@ -163,15 +165,19 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
       ),
       graphic: (
         <div key="graphic" className='flex flex-1 min-h-0 w-full'>
-          { legendPosition === 'left' && (
+          { legendPosition === 'left' && gridMode === 'single' && (
             <ChartLegend valueKeys={ valueKeys } />
           ) }
 
           <div className='flex-1 w-full h-full flex items-center justify-center relative'>
-            <BasicChart isVisible={ isVisible } />
+            { gridMode === 'grid' ? (
+              <GridChart isVisible={ isVisible } />
+            ) : (
+              <BasicChart isVisible={ isVisible } />
+            ) }
           </div>
 
-          { legendPosition === 'right' && (
+          { legendPosition === 'right' && gridMode === 'single' && (
             <ChartLegend valueKeys={ valueKeys } />
           ) }
         </div>

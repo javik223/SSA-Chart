@@ -16,6 +16,18 @@ import {
 } from './ui/dropdown-menu';
 import { parseFile } from '@/utils/fileParser';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Trash2 } from 'lucide-react';
 
 export function DataSidebar() {
   const {
@@ -26,12 +38,13 @@ export function DataSidebar() {
     replaceData,
     mergeData,
   } = useChartStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadMode, setUploadMode] = useState<'replace' | 'merge'>('replace');
+  const fileInputRef = useRef<HTMLInputElement>( null );
+  const [ uploadMode, setUploadMode ] = useState<'replace' | 'merge'>( 'replace' );
+  const [ isAlertOpen, setIsAlertOpen ] = useState( false );
   const { toast } = useToast();
 
   // Track which fields are expanded
-  const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>(
+  const [ expandedFields, setExpandedFields ] = useState<Record<string, boolean>>(
     {
       labels: false,
       values: false,
@@ -41,106 +54,114 @@ export function DataSidebar() {
     }
   );
 
-  const toggleField = (field: string) => {
-    setExpandedFields((prev) => ({ ...prev, [field]: !prev[field] }));
+  const toggleField = ( field: string ) => {
+    setExpandedFields( ( prev ) => ( { ...prev, [ field ]: !prev[ field ] } ) );
   };
 
-  const handleLabelsSelect = (index: number | number[]) => {
-    setColumnMapping({ labels: index as number });
+  const handleLabelsSelect = ( index: number | number[] ) => {
+    setColumnMapping( { labels: index as number } );
   };
 
-  const handleValuesSelect = (indices: number | number[]) => {
-    setColumnMapping({ values: Array.isArray(indices) ? indices : [indices] });
+  const handleValuesSelect = ( indices: number | number[] ) => {
+    setColumnMapping( { values: Array.isArray( indices ) ? indices : [ indices ] } );
   };
 
-  const handleChartsGridSelect = (index: number | number[]) => {
-    setColumnMapping({ chartsGrid: index as number });
+  const handleChartsGridSelect = ( index: number | number[] ) => {
+    setColumnMapping( { chartsGrid: index as number } );
   };
 
-  const handleRowFilterSelect = (index: number | number[]) => {
-    setColumnMapping({ rowFilter: index as number });
+  const handleRowFilterSelect = ( index: number | number[] ) => {
+    setColumnMapping( { rowFilter: index as number } );
   };
 
-  const handleCustomPopupsSelect = (index: number | number[]) => {
-    setColumnMapping({ customPopups: index as number });
+  const handleCustomPopupsSelect = ( index: number | number[] ) => {
+    setColumnMapping( { customPopups: index as number } );
   };
 
-  const getColumnLabel = (index: number | null) => {
-    if (index === null) return '';
-    return String.fromCharCode(65 + index);
+  const getColumnLabel = ( index: number | null ) => {
+    if ( index === null ) return '';
+    return String.fromCharCode( 65 + index );
   };
 
-  const getColumnRangeLabel = (indices: number[]) => {
-    if (indices.length === 0) return '';
-    if (indices.length === 1) return getColumnLabel(indices[0]);
-    const first = indices[0];
-    const last = indices[indices.length - 1];
-    return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
+  const getColumnRangeLabel = ( indices: number[] ) => {
+    if ( indices.length === 0 ) return '';
+    if ( indices.length === 1 ) return getColumnLabel( indices[ 0 ] );
+    const first = indices[ 0 ];
+    const last = indices[ indices.length - 1 ];
+    return `${ getColumnLabel( first ) }-${ getColumnLabel( last ) }`;
   };
 
-  const handleUploadClick = (mode: 'replace' | 'merge') => {
-    setUploadMode(mode);
+  const handleUploadClick = ( mode: 'replace' | 'merge' ) => {
+    setUploadMode( mode );
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const file = event.target.files?.[ 0 ];
+    if ( !file ) return;
 
     try {
-      const result = await parseFile(file);
+      const result = await parseFile( file );
 
-      if (result.success && result.data.length > 0) {
-        if (uploadMode === 'replace') {
-          replaceData(result.data);
-          toast({
+      if ( result.success && result.data.length > 0 ) {
+        if ( uploadMode === 'replace' ) {
+          replaceData( result.data );
+          toast( {
             title: 'Data uploaded successfully',
-            description: `Replaced with ${result.data.length} rows from ${file.name}`,
-          });
+            description: `Replaced with ${ result.data.length } rows from ${ file.name }`,
+          } );
         } else {
-          mergeData(result.data);
-          toast({
+          mergeData( result.data );
+          toast( {
             title: 'Data merged successfully',
-            description: `Added ${result.data.length - 1} rows from ${
-              file.name
-            }`,
-          });
+            description: `Added ${ result.data.length - 1 } rows from ${ file.name
+              }`,
+          } );
         }
       } else {
-        toast({
+        toast( {
           title: 'Upload failed',
           description: result.error || 'Failed to parse file',
           variant: 'destructive',
-        });
+        } );
       }
-    } catch (error) {
-      toast({
+    } catch ( error ) {
+      toast( {
         title: 'Upload failed',
         description:
           error instanceof Error ? error.message : 'An error occurred',
         variant: 'destructive',
-      });
+      } );
     }
 
     // Reset file input
     event.target.value = '';
   };
 
+  const handleClearData = () => {
+    replaceData( [ [] ] );
+    setIsAlertOpen( false );
+    toast( {
+      title: 'Data cleared',
+      description: 'All data has been removed from the spreadsheet',
+    } );
+  };
+
   return (
     <div className='h-full overflow-y-auto border-l bg-white p-6'>
       <div className='space-y-4'>
-        {/* Hidden file input */}
+        {/* Hidden file input */ }
         <input
-          ref={fileInputRef}
+          ref={ fileInputRef }
           type='file'
           accept='.csv,.xlsx,.xls,.tsv,.txt,.json,.geojson'
-          onChange={handleFileChange}
+          onChange={ handleFileChange }
           className='hidden'
         />
 
-        {/* Header */}
+        {/* Header */ }
         <div className='flex justify-between'>
           <h2 className='text-lg font-semibold text-zinc-900'>Data</h2>
           <div className='flex items-center gap-2'>
@@ -155,7 +176,7 @@ export function DataSidebar() {
               <DropdownMenuContent align='end'>
                 <DropdownMenuItem
                   className='flex flex-col items-start gap-1 cursor-pointer'
-                  onClick={() => handleUploadClick('replace')}
+                  onClick={ () => handleUploadClick( 'replace' ) }
                 >
                   <h3 className='text-sm font-medium'>Upload data file</h3>
                   <small className='text-slate-500 font-normal'>
@@ -166,7 +187,7 @@ export function DataSidebar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className='flex flex-col items-start gap-1 cursor-pointer'
-                  onClick={() => handleUploadClick('merge')}
+                  onClick={ () => handleUploadClick( 'merge' ) }
                 >
                   <h3 className='text-sm font-medium'>Upload data and merge</h3>
                   <small className='text-slate-500 font-normal'>
@@ -174,14 +195,52 @@ export function DataSidebar() {
                     (Excel, CSV, TSV, JSON, GeoJSON)
                   </small>
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className='flex flex-col items-start gap-1 cursor-pointer text-red-600'
+                  onSelect={ ( e ) => {
+                    e.preventDefault();
+                    setIsAlertOpen( true );
+                  } }
+                >
+                  <div className='flex items-center gap-2'>
+                    <Trash2 className='h-4 w-4' />
+                    <h3 className='text-sm font-medium'>Clear all data</h3>
+                  </div>
+                  <small className='text-slate-500 font-normal'>
+                    Remove all data from the spreadsheet
+                  </small>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Alert Dialog for Clear Confirmation */ }
+            <AlertDialog open={ isAlertOpen } onOpenChange={ setIsAlertOpen }>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete all
+                    data from your spreadsheet.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={ handleClearData }
+                    className='bg-red-600 hover:bg-red-700'
+                  >
+                    Clear All Data
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
 
         <Separator />
 
-        {/* Select Columns Section */}
+        {/* Select Columns Section */ }
         <div className='space-y-3'>
           <div className='flex items-center justify-between border-b border-b-zinc-200 pb-3'>
             <Label className='text-[10px] font-medium uppercase text-zinc-600 tracking-wider'>
@@ -191,13 +250,13 @@ export function DataSidebar() {
               variant='link'
               size='sm'
               className='h-auto p-0 text-xs'
-              onClick={autoSetColumns}
+              onClick={ autoSetColumns }
             >
               Auto-set columns
             </Button>
           </div>
 
-          {/* Labels/time */}
+          {/* Labels/time */ }
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
@@ -205,7 +264,7 @@ export function DataSidebar() {
                   Labels/time
                 </Label>
                 <button
-                  onClick={() => toggleField('labels')}
+                  onClick={ () => toggleField( 'labels' ) }
                   className='rounded-full p-0.5 hover:bg-zinc-100'
                 >
                   <CircleHelp className='h-4 w-4 text-zinc-500' />
@@ -215,9 +274,9 @@ export function DataSidebar() {
                 </span>
               </div>
               <ColumnSelector
-                availableColumns={availableColumns}
-                selectedColumns={columnMapping.labels}
-                onSelect={handleLabelsSelect}
+                availableColumns={ availableColumns }
+                selectedColumns={ columnMapping.labels }
+                onSelect={ handleLabelsSelect }
                 mode='single'
                 placeholder=''
                 color='pink'
@@ -225,7 +284,7 @@ export function DataSidebar() {
               />
             </div>
 
-            {expandedFields.labels && (
+            { expandedFields.labels && (
               <div className='space-y-2 animate-in slide-in-from-top-2'>
                 <p className='text-xs text-zinc-500'>
                   A column of names, numbers or datetimes.
@@ -292,10 +351,10 @@ export function DataSidebar() {
                   </div>
                 </div>
               </div>
-            )}
+            ) }
           </div>
 
-          {/* Values */}
+          {/* Values */ }
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <div className='flex items-center gap-2'>
@@ -303,16 +362,16 @@ export function DataSidebar() {
                   Values
                 </Label>
                 <button
-                  onClick={() => toggleField('values')}
+                  onClick={ () => toggleField( 'values' ) }
                   className='rounded-full p-0.5 hover:bg-zinc-100'
                 >
                   <CircleHelp className='h-4 w-4 text-zinc-500' />
                 </button>
               </div>
               <ColumnSelector
-                availableColumns={availableColumns}
-                selectedColumns={columnMapping.values}
-                onSelect={handleValuesSelect}
+                availableColumns={ availableColumns }
+                selectedColumns={ columnMapping.values }
+                onSelect={ handleValuesSelect }
                 mode='multiple'
                 placeholder=''
                 color='purple'
@@ -320,7 +379,7 @@ export function DataSidebar() {
               />
             </div>
 
-            {expandedFields.values && (
+            { expandedFields.values && (
               <div className='space-y-2 animate-in slide-in-from-top-2'>
                 <p className='text-xs text-zinc-500'>
                   One or more columns of numbers. The &apos;Preferred output
@@ -382,13 +441,13 @@ export function DataSidebar() {
                   </div>
                 </div>
               </div>
-            )}
+            ) }
           </div>
         </div>
 
         <Separator />
 
-        {/* Charts grid */}
+        {/* Charts grid */ }
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -396,16 +455,16 @@ export function DataSidebar() {
                 Charts grid
               </Label>
               <button
-                onClick={() => toggleField('chartsGrid')}
+                onClick={ () => toggleField( 'chartsGrid' ) }
                 className='rounded-full p-0.5 hover:bg-zinc-100'
               >
                 <CircleHelp className='h-4 w-4 text-zinc-500' />
               </button>
             </div>
             <ColumnSelector
-              availableColumns={availableColumns}
-              selectedColumns={columnMapping.chartsGrid}
-              onSelect={handleChartsGridSelect}
+              availableColumns={ availableColumns }
+              selectedColumns={ columnMapping.chartsGrid }
+              onSelect={ handleChartsGridSelect }
               mode='single'
               placeholder=''
               color='pink'
@@ -413,18 +472,18 @@ export function DataSidebar() {
             />
           </div>
 
-          {expandedFields.chartsGrid && (
+          { expandedFields.chartsGrid && (
             <div className='space-y-2 animate-in slide-in-from-top-2'>
               <p className='text-xs text-zinc-500'>
                 Optional grid column for creating a panel of charts.
               </p>
             </div>
-          )}
+          ) }
         </div>
 
         <Separator />
 
-        {/* Row filter */}
+        {/* Row filter */ }
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -432,16 +491,16 @@ export function DataSidebar() {
                 Row filter
               </Label>
               <button
-                onClick={() => toggleField('rowFilter')}
+                onClick={ () => toggleField( 'rowFilter' ) }
                 className='rounded-full p-0.5 hover:bg-zinc-100'
               >
                 <CircleHelp className='h-4 w-4 text-zinc-500' />
               </button>
             </div>
             <ColumnSelector
-              availableColumns={availableColumns}
-              selectedColumns={columnMapping.rowFilter}
-              onSelect={handleRowFilterSelect}
+              availableColumns={ availableColumns }
+              selectedColumns={ columnMapping.rowFilter }
+              onSelect={ handleRowFilterSelect }
               mode='single'
               placeholder=''
               color='blue'
@@ -449,18 +508,18 @@ export function DataSidebar() {
             />
           </div>
 
-          {expandedFields.rowFilter && (
+          { expandedFields.rowFilter && (
             <div className='space-y-2 animate-in slide-in-from-top-2'>
               <p className='text-xs text-zinc-500'>
                 Filter rows based on column values.
               </p>
             </div>
-          )}
+          ) }
         </div>
 
         <Separator />
 
-        {/* Info for custom popups */}
+        {/* Info for custom popups */ }
         <div className='space-y-2'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
@@ -468,16 +527,16 @@ export function DataSidebar() {
                 Info for custom popups
               </Label>
               <button
-                onClick={() => toggleField('customPopups')}
+                onClick={ () => toggleField( 'customPopups' ) }
                 className='rounded-full p-0.5 hover:bg-zinc-100'
               >
                 <CircleHelp className='h-4 w-4 text-zinc-500' />
               </button>
             </div>
             <ColumnSelector
-              availableColumns={availableColumns}
-              selectedColumns={columnMapping.customPopups}
-              onSelect={handleCustomPopupsSelect}
+              availableColumns={ availableColumns }
+              selectedColumns={ columnMapping.customPopups }
+              onSelect={ handleCustomPopupsSelect }
               mode='single'
               placeholder=''
               color='cyan'
@@ -485,13 +544,13 @@ export function DataSidebar() {
             />
           </div>
 
-          {expandedFields.customPopups && (
+          { expandedFields.customPopups && (
             <div className='space-y-2 animate-in slide-in-from-top-2'>
               <p className='text-xs text-zinc-500'>
                 Add custom information to display in chart popups.
               </p>
             </div>
-          )}
+          ) }
         </div>
       </div>
     </div>

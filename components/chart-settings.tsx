@@ -43,6 +43,7 @@ import { LayoutSettings } from '@/components/settings/LayoutSettings';
 import { XAxisSettings } from '@/components/settings/XAxisSettings';
 import { YAxisSettings } from '@/components/settings/YAxisSettings';
 import { LinesSettings } from '@/components/settings/LinesSettings';
+import { LabelsSettings } from '@/components/settings/LabelsSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
 import { FormField } from '@/components/ui/form-field';
 import { FormSection } from '@/components/ui/form-section';
@@ -325,6 +326,8 @@ export function ChartSettings() {
                       <YAxisSettings />
                     ) : section.value === 'lines' ? (
                       <LinesSettings />
+                    ) : section.value === 'labels' ? (
+                      <LabelsSettings />
                     ) : section.value === 'theme' ? (
                       <div className='settings-container'>
                         <FormSection title='Theme' helpIcon>

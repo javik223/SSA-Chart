@@ -16,7 +16,8 @@ import {
   renderXGrid,
   renderYGrid,
   renderLegend,
-  setupBrushZoom
+  setupBrushZoom,
+  setupPan
 } from '@/utils/chartHelpers';
 
 interface AreaChartProps {
@@ -413,6 +414,17 @@ export function AreaChart( {
           setZoomDomain
         } );
 
+        // Setup Pan
+        setupPan( {
+          g: g as any,
+          innerWidth,
+          innerHeight,
+          data,
+          zoomDomain: zoomDomain as any,
+          setZoomDomain,
+          valueKeys
+        } );
+
         // Re-render Y Axis
         renderYAxis( g as any, {
           yScale,
@@ -603,7 +615,12 @@ export function AreaChart( {
   return (
     <div className='relative w-full h-full'>
       <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data.length } />
-      <svg ref={ svgRef } width={ propWidth } height={ propHeight } className='overflow-visible w-full h-full' />
+      <svg
+        ref={ svgRef }
+        viewBox={ `0 0 ${ propWidth } ${ propHeight }` }
+        preserveAspectRatio="xMidYMid meet"
+        className='w-full h-full overflow-visible'
+      />
     </div>
   );
 }

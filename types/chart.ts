@@ -39,7 +39,11 @@ export type LineBarPieChartType =
   | 'survey-bars'
   | 'performance-vs-target'
   | 'seismogram'
-  | 'step-chart';
+  | 'step-chart'
+  | 'circular-barplot'
+  | 'radial-bar'
+  | 'polar-area'
+  | 'radar';
 
 // Scatter and Distribution Charts
 export type ScatterDistributionChartType =
