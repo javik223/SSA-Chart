@@ -15,6 +15,11 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const aggregationMode = useChartStore( ( state ) => state.aggregationMode );
   const previewWidth = useChartStore( ( state ) => state.previewWidth );
   const previewHeight = useChartStore( ( state ) => state.previewHeight );
+  const desktopViewBoxWidth = useChartStore( ( state ) => state.desktopViewBoxWidth );
+  const desktopViewBoxHeight = useChartStore( ( state ) => state.desktopViewBoxHeight );
+  const mobileViewBoxWidth = useChartStore( ( state ) => state.mobileViewBoxWidth );
+  const mobileViewBoxHeight = useChartStore( ( state ) => state.mobileViewBoxHeight );
+  const previewDevice = useChartStore( ( state ) => state.previewDevice );
   const colorPalette = useChartStore( ( state ) => state.colorPalette );
   const colorMode = useChartStore( ( state ) => state.colorMode );
 
@@ -241,8 +246,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     data: chartData,
     labelKey,
     valueKeys,
-    width: previewWidth,
-    height: previewHeight,
+    width: previewDevice === 'mobile' ? mobileViewBoxWidth : desktopViewBoxWidth,
+    height: previewDevice === 'mobile' ? mobileViewBoxHeight : desktopViewBoxHeight,
     colors: palette.colors,
     colorMode,
     isFloatingPreview,

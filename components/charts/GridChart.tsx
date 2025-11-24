@@ -12,7 +12,11 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const gridSplitBy = useChartStore( ( state ) => state.gridSplitBy );
   const gridColumns = useChartStore( ( state ) => state.gridColumns );
   const gridAspectRatio = useChartStore( ( state ) => state.gridAspectRatio );
-  const previewWidth = useChartStore( ( state ) => state.previewWidth );
+  const desktopViewBoxWidth = useChartStore( ( state ) => state.desktopViewBoxWidth );
+  const desktopViewBoxHeight = useChartStore( ( state ) => state.desktopViewBoxHeight );
+  const mobileViewBoxWidth = useChartStore( ( state ) => state.mobileViewBoxWidth );
+  const mobileViewBoxHeight = useChartStore( ( state ) => state.mobileViewBoxHeight );
+  const previewDevice = useChartStore( ( state ) => state.previewDevice );
 
   // Get all chart settings from store (matching BasicChart)
   const colorPalette = useChartStore( ( state ) => state.colorPalette );
@@ -222,9 +226,7 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
     6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
   }[ gridColumns ] || 'grid-cols-2';
 
-  // Calculate approximate dimensions for each chart
-  const chartWidth = Math.floor( previewWidth / gridColumns - 40 );
-  const chartHeight = Math.floor( chartWidth / aspectRatioValue - 40 );
+
 
   // Create yAxis config object (matching BasicChart)
   const yAxis = {
@@ -294,8 +296,8 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
                 data={ group.data }
                 labelKey={ group.labelKey }
                 valueKeys={ group.valueKeys }
-                width={ chartWidth }
-                height={ chartHeight }
+                width={ previewDevice === 'mobile' ? mobileViewBoxWidth : desktopViewBoxWidth }
+                height={ previewDevice === 'mobile' ? mobileViewBoxHeight : desktopViewBoxHeight }
                 colors={ group.colorIndex !== undefined ? [ palette.colors[ group.colorIndex ] ] : palette.colors }
                 colorMode={ colorMode }
                 legendShow={ false }

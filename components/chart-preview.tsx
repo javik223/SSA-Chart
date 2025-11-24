@@ -19,6 +19,7 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
   const gridMode = useChartStore( ( state ) => state.gridMode );
   const data = useChartStore( ( state ) => state.data );
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const previewDevice = useChartStore( ( state ) => state.previewDevice );
 
   // Layout Settings
   const layoutMainFont = useChartStore( ( state ) => state.layoutMainFont );
@@ -80,6 +81,21 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
       String( headers[ idx ] || `value${ idx }` )
     );
   }, [ data, columnMapping ] );
+
+  // Calculate device width
+  const getDeviceWidth = () => {
+    switch ( previewDevice ) {
+      case 'mobile':
+        return '375px';
+      case 'tablet':
+        return '768px';
+      case 'desktop':
+        return '1920px';
+      case 'viewport':
+      default:
+        return '100%';
+    }
+  };
 
   // Calculate container styles
   const containerStyle: React.CSSProperties = {
@@ -232,9 +248,9 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
               className='flex flex-col shadow-sm transition-all duration-200'
               style={ {
                 ...containerStyle,
-                width: '100%',
+                width: getDeviceWidth(),
                 height: '100%',
-                maxWidth: '100%',
+                maxWidth: previewDevice === 'viewport' ? '100%' : getDeviceWidth(),
                 maxHeight: '100%',
               } }
             >

@@ -75,7 +75,7 @@ export function ChartZoomControls( { xScale, yScale, dataLength, isFloatingPrevi
 
 
   return (
-    <motion.div drag className={ `absolute top-4 right-4 flex flex-col gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-zinc-200 p-1 z-10 justify-center items-center ${ isFloatingPreview ? 'scale-75' : '' }` } dragListener={ false } dragControls={ controls }>
+    <motion.div drag className={ `absolute top-4 right-4 flex flex-col gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-zinc-200 p-1 z-10 justify-center items-center origin-top-right ${ isFloatingPreview ? 'scale-75' : 'scale-75 md:scale-100' }` } dragListener={ false } dragControls={ controls }>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

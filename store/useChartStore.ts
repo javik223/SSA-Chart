@@ -157,8 +157,19 @@ interface ChartStore {
   previewHeight: number;
   setPreviewHeight: (height: number) => void;
 
-  previewDevice: 'mobile' | 'tablet' | 'desktop';
-  setPreviewDevice: (device: 'mobile' | 'tablet' | 'desktop') => void;
+  // SVG Viewport settings (internal viewBox)
+  desktopViewBoxWidth: number;
+  setDesktopViewBoxWidth: (width: number) => void;
+  desktopViewBoxHeight: number;
+  setDesktopViewBoxHeight: (height: number) => void;
+
+  mobileViewBoxWidth: number;
+  setMobileViewBoxWidth: (width: number) => void;
+  mobileViewBoxHeight: number;
+  setMobileViewBoxHeight: (height: number) => void;
+
+  previewDevice: 'viewport' | 'mobile' | 'tablet' | 'desktop';
+  setPreviewDevice: (device: 'viewport' | 'mobile' | 'tablet' | 'desktop') => void;
 
   colorblindMode:
     | 'none'
@@ -1147,7 +1158,18 @@ export const useChartStore = create<ChartStore>()(
       previewHeight: 1080,
       setPreviewHeight: (height) => set({ previewHeight: height }),
 
-      previewDevice: 'desktop',
+      // SVG Viewport defaults
+      desktopViewBoxWidth: 800,
+      setDesktopViewBoxWidth: (width) => set({ desktopViewBoxWidth: width }),
+      desktopViewBoxHeight: 600,
+      setDesktopViewBoxHeight: (height) => set({ desktopViewBoxHeight: height }),
+
+      mobileViewBoxWidth: 400,
+      setMobileViewBoxWidth: (width) => set({ mobileViewBoxWidth: width }),
+      mobileViewBoxHeight: 400,
+      setMobileViewBoxHeight: (height) => set({ mobileViewBoxHeight: height }),
+
+      previewDevice: 'viewport',
       setPreviewDevice: (device) => set({ previewDevice: device }),
 
       colorblindMode: 'none',

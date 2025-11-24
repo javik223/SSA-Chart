@@ -9,6 +9,7 @@ import { FormSection } from '@/components/ui/form-section';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { Monitor, Smartphone, Tablet } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function PreviewSettings() {
   const previewWidth = useChartStore( ( state ) => state.previewWidth );
@@ -45,41 +46,105 @@ export function PreviewSettings() {
           <FormCol span={ 3 }>
             <ButtonGroup className='flex'>
               <Button
+                variant={ previewDevice === 'viewport' ? 'default' : 'outline' }
+                size='icon'
+                onClick={ () => setPreviewDevice( 'viewport' ) }
+                title='Viewport (Responsive)'
+              >
+                <svg className='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={ 2 } d='M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4' />
+                </svg>
+              </Button>
+              <Button
                 variant={ previewDevice === 'mobile' ? 'default' : 'outline' }
                 size='icon'
-                onClick={ () => {
-                  setPreviewDevice( 'mobile' );
-                  setPreviewWidth( 375 );
-                  setPreviewHeight( 667 );
-                } }
+                onClick={ () => setPreviewDevice( 'mobile' ) }
+                title='Mobile (375px)'
               >
                 <Smartphone className='' />
               </Button>
               <Button
                 variant={ previewDevice === 'tablet' ? 'default' : 'outline' }
                 size='icon'
-                onClick={ () => {
-                  setPreviewDevice( 'tablet' );
-                  setPreviewWidth( 768 );
-                  setPreviewHeight( 1024 );
-                } }
+                onClick={ () => setPreviewDevice( 'tablet' ) }
+                title='Tablet (768px)'
               >
                 <Tablet />
               </Button>
               <Button
                 variant={ previewDevice === 'desktop' ? 'default' : 'outline' }
                 size='icon'
-                onClick={ () => {
-                  setPreviewDevice( 'desktop' );
-                  setPreviewWidth( 1920 );
-                  setPreviewHeight( 1080 );
-                } }
+                onClick={ () => setPreviewDevice( 'desktop' ) }
+                title='Desktop (1920px)'
               >
                 <Monitor />
               </Button>
             </ButtonGroup>
           </FormCol>
         </FormRow>
+      </FormSection>
+
+      <Separator />
+
+      <FormSection title='Viewport (SVG ViewBox)'>
+        <Tabs defaultValue='desktop' className='w-full'>
+          <TabsList className='grid w-full grid-cols-2 mb-4'>
+            <TabsTrigger value='desktop'>Desktop</TabsTrigger>
+            <TabsTrigger value='mobile'>Mobile</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value='desktop'>
+            <FormRow gap='sm'>
+              <FormCol span='auto'>
+                <FormField
+                  type='number'
+                  value={ useChartStore( ( state ) => state.desktopViewBoxWidth ) }
+                  onChange={ ( v ) => useChartStore.getState().setDesktopViewBoxWidth( v ?? 800 ) }
+                  placeholder='Width'
+                  label='Desktop Width'
+                />
+              </FormCol>
+              <FormCol span='auto'>
+                <FormField
+                  type='number'
+                  value={ useChartStore( ( state ) => state.desktopViewBoxHeight ) }
+                  onChange={ ( v ) => useChartStore.getState().setDesktopViewBoxHeight( v ?? 600 ) }
+                  placeholder='Height'
+                  label='Desktop Height'
+                />
+              </FormCol>
+            </FormRow>
+            <p className='text-xs text-zinc-500 mt-2'>
+              Used for Desktop, Tablet, and Viewport modes.
+            </p>
+          </TabsContent>
+
+          <TabsContent value='mobile'>
+            <FormRow gap='sm'>
+              <FormCol span='auto'>
+                <FormField
+                  type='number'
+                  value={ useChartStore( ( state ) => state.mobileViewBoxWidth ) }
+                  onChange={ ( v ) => useChartStore.getState().setMobileViewBoxWidth( v ?? 400 ) }
+                  placeholder='Width'
+                  label='Mobile Width'
+                />
+              </FormCol>
+              <FormCol span='auto'>
+                <FormField
+                  type='number'
+                  value={ useChartStore( ( state ) => state.mobileViewBoxHeight ) }
+                  onChange={ ( v ) => useChartStore.getState().setMobileViewBoxHeight( v ?? 400 ) }
+                  placeholder='Height'
+                  label='Mobile Height'
+                />
+              </FormCol>
+            </FormRow>
+            <p className='text-xs text-zinc-500 mt-2'>
+              Used when Preview Device is set to Mobile.
+            </p>
+          </TabsContent>
+        </Tabs>
       </FormSection>
 
       {/* <FormSection title='Colorblind check' helpIcon>
