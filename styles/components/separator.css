@@ -1,0 +1,11 @@
+@layer components {
+  [data-slot="separator"] {
+    @apply bg-border shrink-0;
+  }
+  [data-slot="separator"][data-orientation="horizontal"] {
+    @apply h-px w-full;
+  }
+  [data-slot="separator"][data-orientation="vertical"] {
+    @apply h-full w-px;
+  }
+}

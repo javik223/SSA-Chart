@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@import '../styles/settings.css';
+@import '../styles/components/chart-settings.css';
 @import '../styles/theme.css';
 
 .data-table-container {
@@ -76,5 +76,53 @@
 
 /* Resize Handle */
 .data-table-resize-handle {
-  @apply w-0 bg-transparent;
+  @apply w-0 bg-transparent hidden md:flex;
+}
+
+/* Resizable Layout */
+.data-table-resizable-group {
+  @apply flex-col! md:flex-row! gap-4;
+}
+
+.data-table-grid-panel {
+  @apply basis-auto! md:basis-0! overflow-auto max-md:h-screen shrink-0;
+}
+
+/* Loading Overlay */
+.data-table-loading-overlay {
+  @apply absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm;
+}
+
+.data-table-loading-content {
+  @apply flex flex-col items-center gap-2;
+}
+
+.data-table-loading-spinner {
+  @apply h-8 w-8 animate-spin text-primary;
+}
+
+.data-table-loading-text {
+  @apply text-sm text-muted-foreground font-medium;
+}
+
+/* Pagination */
+.data-table-pagination {
+  @apply flex items-center gap-1;
+}
+
+.data-table-pagination-info {
+  @apply text-xs text-zinc-500 px-2;
+}
+
+/* Chart Preview Floating Window */
+.data-table-chart-preview {
+  @apply shadow-2xl rounded-lg overflow-hidden border border-gray-200 bg-white z-50;
+}
+
+.data-table-chart-preview-content {
+  @apply w-full h-full p-4;
+}
+
+.data-table-sidebar-panel {
+  @apply basis-auto! md:basis-0!;
 }

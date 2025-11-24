@@ -107,9 +107,9 @@ export function XAxisSettings() {
               value={ xAxisPosition }
               onChange={ setXAxisPosition as ( value: string ) => void }
               options={ [
-                { value: 'top', icon: <ArrowUp className='h-4 w-4' /> },
-                { value: 'bottom', icon: <ArrowDown className='h-4 w-4' /> },
-                { value: 'hidden', icon: <EyeOff className='h-4 w-4' /> },
+                { value: 'top', icon: <ArrowUp className='icon-sm' /> },
+                { value: 'bottom', icon: <ArrowDown className='icon-sm' /> },
+                { value: 'hidden', icon: <EyeOff className='icon-sm' /> },
               ] }
             />
           </FormCol>
@@ -125,11 +125,11 @@ export function XAxisSettings() {
           value={ xAxisScaleType }
           onChange={ setXAxisScaleType as ( value: string ) => void }
           options={ [
-            { value: 'linear', icon: <TrendingUp className='h-4 w-4' />, tooltip: 'Linear' },
-            { value: 'log', icon: <Activity className='h-4 w-4' />, tooltip: 'Logarithmic' },
-            { value: 'time', icon: <span className='text-xs font-bold'>T</span>, tooltip: 'Time' },
-            { value: 'band', icon: <span className='text-xs font-bold'>B</span>, tooltip: 'Band' },
-            { value: 'point', icon: <span className='text-xs font-bold'>P</span>, tooltip: 'Point' },
+            { value: 'linear', icon: <TrendingUp className='icon-sm' />, tooltip: 'Linear' },
+            { value: 'log', icon: <Activity className='icon-sm' />, tooltip: 'Logarithmic' },
+            { value: 'time', icon: <span className='icon-text'>T</span>, tooltip: 'Time' },
+            { value: 'band', icon: <span className='icon-text'>B</span>, tooltip: 'Band' },
+            { value: 'point', icon: <span className='icon-text'>P</span>, tooltip: 'Point' },
           ] }
         />
         <FormGrid columns={ 2 }>

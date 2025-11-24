@@ -69,6 +69,10 @@ export interface ChartComponentProps {
   legendGap?: number;
   config?: any;
   yAxis?: YAxisConfig;
+  colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
+  isFloatingPreview?: boolean;
+  [key: string]: any;
 }
 
 /**

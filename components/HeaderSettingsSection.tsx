@@ -110,9 +110,9 @@ const CustomStyle = ( props: CustomStyleProps ) => {
                 value={ fontWeight }
                 onChange={ setFontWeight }
                 options={ [
-                  { value: 'bold', icon: <Bold className='h-3 w-3' /> },
+                  { value: 'bold', icon: <Bold className='icon-xs' /> },
                   { value: 'medium', label: 'M' },
-                  { value: 'regular', icon: <Type className='h-3 w-3' /> },
+                  { value: 'regular', icon: <Type className='icon-xs' /> },
                 ] }
               />
             </FormCol>
@@ -144,10 +144,10 @@ const CustomStyle = ( props: CustomStyleProps ) => {
             value={ spaceAbove }
             onChange={ setSpaceAbove }
             options={ [
-              { value: 'slim', icon: <Minus className='h-4 w-4' /> },
-              { value: 'medium', icon: <Maximize2 className='h-4 w-4' /> },
-              { value: 'large', icon: <Maximize className='h-4 w-4' /> },
-              { value: 'none', icon: <Square className='h-4 w-4' /> },
+              { value: 'slim', icon: <Minus className='icon-sm' /> },
+              { value: 'medium', icon: <Maximize2 className='icon-sm' /> },
+              { value: 'large', icon: <Maximize className='icon-sm' /> },
+              { value: 'none', icon: <Square className='icon-sm' /> },
             ] }
           />
         </FormSection>
@@ -326,9 +326,9 @@ export function HeaderSettingsSection() {
         value={ headerAlignment }
         onChange={ setHeaderAlignment }
         options={ [
-          { value: 'left', icon: <AlignLeft className='h-4 w-4' /> },
-          { value: 'center', icon: <AlignCenter className='h-4 w-4' /> },
-          { value: 'right', icon: <AlignRight className='h-4 w-4' /> },
+          { value: 'left', icon: <AlignLeft className='icon-sm' /> },
+          { value: 'center', icon: <AlignCenter className='icon-sm' /> },
+          { value: 'right', icon: <AlignRight className='icon-sm' /> },
         ] }
       />
 
@@ -542,9 +542,9 @@ export function HeaderSettingsSection() {
               value={ headerLogoPosition }
               onChange={ setHeaderLogoPosition }
               options={ [
-                { value: 'top', icon: <ArrowUp className='h-4 w-4' /> },
-                { value: 'left', icon: <ArrowLeft className='h-4 w-4' /> },
-                { value: 'right', icon: <ArrowRight className='h-4 w-4' /> },
+                { value: 'top', icon: <ArrowUp className='icon-sm' /> },
+                { value: 'left', icon: <ArrowLeft className='icon-sm' /> },
+                { value: 'right', icon: <ArrowRight className='icon-sm' /> },
               ] }
             />
             <FormGrid columns={ 4 }>

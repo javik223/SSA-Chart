@@ -9,7 +9,7 @@ export default function Home() {
   const [ activeTab, setActiveTab ] = useState( 'data' );
 
   return (
-    <main className='flex flex-col h-screen'>
+    <main className='flex flex-col h-[200vh] md:h-screen'>
       <PageHeader />
       <div className='w-full'>
         <ToggleGroup
@@ -20,10 +20,10 @@ export default function Home() {
             if ( value ) setActiveTab( value );
           } }
         >
-          <ToggleGroupItem className='min-w-60 bg-white' value='preview'>
+          <ToggleGroupItem className='min-w-40 md:min-w-60 bg-white' value='preview'>
             Preview
           </ToggleGroupItem>
-          <ToggleGroupItem className='min-w-60 bg-white' value='data'>
+          <ToggleGroupItem className='min-w-40 md:min-w-60 bg-white' value='data'>
             Data
           </ToggleGroupItem>
         </ToggleGroup>

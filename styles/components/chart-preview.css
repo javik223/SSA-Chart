@@ -1,0 +1,29 @@
+@layer components {
+  .chart-preview-container {
+    @apply flex h-full flex-col bg-zinc-100;
+  }
+
+  .chart-preview-area {
+    @apply w-full h-full overflow-auto flex items-center justify-center p-4 md:p-8;
+  }
+
+  .chart-preview-card {
+    @apply flex flex-col shadow-sm transition-all duration-200;
+  }
+
+  .chart-preview-content-col {
+    @apply flex flex-col w-full h-full;
+  }
+
+  .chart-preview-content-row {
+    @apply flex flex-row w-full h-full;
+  }
+
+  .chart-preview-graphic-wrapper {
+    @apply flex flex-1 min-h-0 w-full;
+  }
+
+  .chart-preview-graphic {
+    @apply flex-1 w-full h-full flex items-center justify-center relative;
+  }
+}

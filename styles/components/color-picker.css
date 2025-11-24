@@ -1,0 +1,8 @@
+@layer components {
+  .color-picker-popover-content {
+    @apply w-full;
+  }
+  .color-picker-button {
+    @apply block;
+  }
+}

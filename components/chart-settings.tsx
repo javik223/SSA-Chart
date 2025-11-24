@@ -40,6 +40,7 @@ import { LayoutSettings } from '@/components/settings/LayoutSettings';
 import { XAxisSettings } from '@/components/settings/XAxisSettings';
 import { YAxisSettings } from '@/components/settings/YAxisSettings';
 import { LinesSettings } from '@/components/settings/LinesSettings';
+import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
 import { FormField } from '@/components/ui/form-field';
@@ -103,10 +104,10 @@ export function ChartSettings() {
       return {
         value: chart.type,
         label: (
-          <span className='flex items-center gap-2'>
+          <span className='settings-header'>
             { chart.name }
             { statusLabel && (
-              <span className='text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600'>
+              <span className='status-badge'>
                 { statusLabel }
               </span>
             ) }
@@ -280,11 +281,11 @@ export function ChartSettings() {
 
       {/* Scrollable Content */ }
       <div className='flex-1 overflow-y-auto'>
-        <div className='space-y-4'>
+        <div className='settings-content'>
           {/* Accordion Sections */ }
           <Accordion
             type='multiple'
-            className='w-full'
+            className='settings-trigger'
             value={ activeValue }
             onValueChange={ setOpenSections }
           >
@@ -334,7 +335,7 @@ export function ChartSettings() {
                             </FormCol>
                             <FormCol span={ 1 }>
                               <Button variant='outline' size='sm' className='h-8 w-8 p-0'>
-                                <RefreshCw className='h-3 w-3' />
+                                <RefreshCw className='icon-xs' />
                               </Button>
                             </FormCol>
                           </FormRow>
@@ -357,7 +358,7 @@ export function ChartSettings() {
                             onClick={ resetZoom }
                             className='w-full mt-2'
                           >
-                            <RefreshCw className='h-4 w-4 mr-2' />
+                            <RefreshCw className='icon-sm mr-2' />
                             Reset Zoom
                           </Button>
                         ) }
@@ -458,149 +459,7 @@ export function ChartSettings() {
                         <PreviewSettings />
                       </div>
                     ) : section.value === 'legend' ? (
-                      <div className='settings-container'>
-                        <FormField
-                          label='Show Legend'
-                          type='switch'
-                          checked={ legendShow }
-                          onChange={ setLegendShow }
-                        />
-
-                        { legendShow && (
-                          <>
-                            <Separator />
-
-                            <FormSection>
-                              <FormRow gap='md'>
-                                <FormCol span='auto'>
-                                  <FormField
-                                    type='button-group'
-                                    label='Position'
-                                    value={ legendPosition }
-                                    onChange={ setLegendPosition }
-                                    options={ [
-                                      {
-                                        value: 'top',
-                                        icon: <ArrowUp className='h-4 w-4' />,
-                                      },
-                                      {
-                                        value: 'right',
-                                        icon: (
-                                          <ArrowRight className='h-4 w-4' />
-                                        ),
-                                      },
-                                      {
-                                        value: 'bottom',
-                                        icon: <ArrowDown className='h-4 w-4' />,
-                                      },
-                                      {
-                                        value: 'left',
-                                        icon: <ArrowLeft className='h-4 w-4' />,
-                                      },
-                                    ] }
-                                  />
-                                </FormCol>
-
-                                <FormCol span='auto'>
-                                  <FormField
-                                    type='button-group'
-                                    label='Alignment'
-                                    value={ legendAlignment }
-                                    onChange={ setLegendAlignment }
-                                    options={ [
-                                      {
-                                        value: 'start',
-                                        icon: <AlignLeft className='h-4 w-4' />,
-                                      },
-                                      {
-                                        value: 'center',
-                                        icon: (
-                                          <AlignCenter className='h-4 w-4' />
-                                        ),
-                                      },
-                                      {
-                                        value: 'end',
-                                        icon: (
-                                          <AlignRight className='h-4 w-4' />
-                                        ),
-                                      },
-                                    ] }
-                                  />
-                                </FormCol>
-                              </FormRow>
-                            </FormSection>
-
-                            <Separator />
-
-                            <FormSection title='Spacing'>
-                              <FormGrid columns={ 2 }>
-                                <FormField
-                                  type='number'
-                                  label='Size'
-                                  value={ legendFontSize }
-                                  onChange={ ( v ) => setLegendFontSize( v ?? 1 ) }
-                                  min={ 0.1 }
-                                  max={ 10.0 }
-                                  step={ 0.1 }
-                                />
-                                <FormField
-                                  type='number'
-                                  label='Gap (px)'
-                                  value={ legendGap }
-                                  onChange={ ( v ) => setLegendGap( v ?? 5 ) }
-                                  min={ 5 }
-                                  max={ 50 }
-                                />
-                              </FormGrid>
-                            </FormSection>
-
-                            <Separator />
-
-                            <FormField
-                              label='Show Values'
-                              description='Display numeric values next to legend items'
-                              type='switch'
-                              checked={ legendShowValues }
-                              onChange={ setLegendShowValues }
-                            />
-
-                            <Separator />
-
-                            <FormSection title='Padding (px)'>
-                              <FormGrid columns={ 4 }>
-                                <FormField
-                                  type='number'
-                                  label='Top'
-                                  value={ legendPaddingTop }
-                                  onChange={ ( v ) => setLegendPaddingTop( v ?? 0 ) }
-                                  min={ 0 }
-                                />
-                                <FormField
-                                  type='number'
-                                  label='Right'
-                                  value={ legendPaddingRight }
-                                  onChange={ ( v ) => setLegendPaddingRight( v ?? 0 ) }
-                                  min={ 0 }
-                                />
-                                <FormField
-                                  type='number'
-                                  label='Bottom'
-                                  value={ legendPaddingBottom }
-                                  onChange={ ( v ) => setLegendPaddingBottom( v ?? 0 ) }
-                                  min={ 0 }
-                                />
-                                <FormField
-                                  type='number'
-                                  label='Left'
-                                  value={ legendPaddingLeft }
-                                  onChange={ ( v ) => setLegendPaddingLeft( v ?? 0 ) }
-                                  min={ 0 }
-                                />
-                              </FormGrid>
-                            </FormSection>
-                          </>
-                        ) }
-                      </div>
+                      <LegendSettings />
                     ) : (
                       <div className='text-xs text-zinc-500 py-2'>
                         { section.description }
@@ -617,7 +476,7 @@ export function ChartSettings() {
       {/* Footer with Search */ }
       <div className='border-t p-4 space-y-3'>
         <div className='relative'>
-          <Search className='absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400' />
+          <Search className='search-icon' />
           <Input
             placeholder='Search for setting'
             className='h-9 pl-9 pr-9 text-xs'
@@ -629,7 +488,7 @@ export function ChartSettings() {
               onClick={ () => setSearchQuery( '' ) }
               className='absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600'
             >
-              <X className='h-4 w-4' />
+              <X className='icon-sm' />
             </button>
           ) }
         </div>
@@ -639,7 +498,7 @@ export function ChartSettings() {
           size='sm'
           className='w-full bg-blue-600 hover:bg-blue-700 text-white h-9'
         >
-          <HelpCircle className='h-4 w-4 mr-2' />
+          <HelpCircle className='icon-sm mr-2' />
           Help
         </Button>
       </div>

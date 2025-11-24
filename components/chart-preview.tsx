@@ -180,12 +180,12 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
         </div>
       ),
       graphic: (
-        <div key="graphic" className='flex flex-1 min-h-0 w-full'>
+        <div key="graphic" className='chart-preview-graphic-wrapper'>
           { legendPosition === 'left' && gridMode === 'single' && (
             <ChartLegend valueKeys={ valueKeys } />
           ) }
 
-          <div className='flex-1 w-full h-full flex items-center justify-center relative'>
+          <div className='chart-preview-graphic'>
             { gridMode === 'grid' ? (
               <GridChart isVisible={ isVisible } />
             ) : (
@@ -204,8 +204,8 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
     // Special case for Grid Mode
     if ( layoutOrder === 'grid-mode-primary-graphic-right' ) {
       return (
-        <div className={ `flex flex-row w-full h-full ${ getSpacingClass() }` }>
-          <div className={ `flex flex-col flex-1 ${ getSpacingClass() }` }>
+        <div className={ `chart-preview-content-row ${ getSpacingClass() }` }>
+          <div className={ `chart-preview-content-col ${ getSpacingClass() }` }>
             { components.header }
             { components.controls }
             { components.legend }
@@ -231,27 +231,28 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
     const currentOrder = orderMap[ layoutOrder ] || orderMap[ 'header-controls-legend-primary-graphic-footer' ];
 
     return (
-      <div className={ `flex flex-col w-full h-full ${ getSpacingClass() }` }>
+      <div className={ `chart-preview-content-col ${ getSpacingClass() }` }>
         { currentOrder.map( key => components[ key as keyof typeof components ] ) }
       </div>
     );
   };
 
   return (
-    <div className='flex h-full flex-col bg-zinc-100'>
-      <ResizablePanelGroup direction='horizontal'>
+    <div className='chart-preview-container'>
+      <ResizablePanelGroup direction='horizontal' className="flex-col! md:flex-row! gap-4">
         {/* Chart Display Area */ }
-        <ResizablePanel defaultSize={ 75 } minSize={ 50 }>
-          <div className='w-full h-full overflow-auto flex items-center justify-center p-8'>
+        <ResizablePanel defaultSize={ 75 } minSize={ 50 } className="basis-auto! md:basis-0! overflow-auto max-md:h-screen shrink-0">
+          <div className='chart-preview-area'>
             <div
               data-chart-container
-              className='flex flex-col shadow-sm transition-all duration-200'
+              className='chart-preview-card max-h-auto! md:max-h-full h-auto! md:h-full max-md:overflow-auto'
               style={ {
                 ...containerStyle,
                 width: getDeviceWidth(),
-                height: '100%',
+                // height: 'auto',
                 maxWidth: previewDevice === 'viewport' ? '100%' : getDeviceWidth(),
-                maxHeight: '100%',
+                // maxHeight: 'auto',
+                // overflow: 'auto',
               } }
             >
               { renderContent() }
@@ -260,10 +261,10 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
         </ResizablePanel>
 
         {/* Resize Handle */ }
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle className="hidden md:flex" />
 
         {/* Settings Panel */ }
-        <ResizablePanel defaultSize={ 25 } minSize={ 20 } maxSize={ 40 }>
+        <ResizablePanel defaultSize={ 25 } minSize={ 20 } maxSize={ 40 } className="basis-auto! md:basis-0!">
           <ChartSettings />
         </ResizablePanel>
       </ResizablePanelGroup>

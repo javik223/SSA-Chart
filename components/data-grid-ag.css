@@ -67,3 +67,70 @@
   text-transform: uppercase !important;
   letter-spacing: 0.5x;
 }
+
+/* Editable Header Components */
+.ag-header-wrapper {
+  @apply flex items-center w-full h-full justify-between;
+}
+
+.ag-header-left-section {
+  @apply flex items-center flex-1 overflow-hidden cursor-pointer;
+}
+
+.ag-header-type-badge {
+  @apply mr-1.5 inline-flex items-center justify-center;
+}
+
+.ag-header-text {
+  @apply font-bold text-xs overflow-hidden text-ellipsis whitespace-nowrap flex-1;
+}
+
+.ag-header-input {
+  @apply flex-1 border border-blue-500 rounded-sm px-1 py-0.5 text-xs font-bold outline-none mr-1;
+  display: none;
+}
+
+.ag-header-input.editing {
+  display: block;
+}
+
+.ag-header-text.editing {
+  display: none;
+}
+
+/* Row Number Styling */
+.ag-row-number-cell {
+  @apply bg-gray-50 text-gray-400 font-normal text-right pr-2 flex items-center justify-end border-r border-gray-200;
+}
+
+.ag-row-number-header {
+  @apply bg-gray-50 text-gray-400 font-normal text-right pr-2 flex items-center justify-end border-r border-gray-200;
+}
+
+/* Toolbar */
+.data-grid-toolbar {
+  @apply flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-gray-50;
+}
+
+.data-grid-toolbar-left {
+  @apply flex items-center gap-2;
+}
+
+/* Grid Container */
+.data-grid-container {
+  @apply w-full h-full flex flex-col;
+}
+
+.data-grid-wrapper {
+  @apply flex-1;
+}
+
+/* Empty State */
+.data-grid-empty {
+  @apply w-full h-full flex items-center justify-center text-gray-500;
+}
+
+/* Export Icon */
+.data-grid-export-icon {
+  @apply h-4 w-4 mr-1;
+}

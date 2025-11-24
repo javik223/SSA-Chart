@@ -42,7 +42,7 @@ const ColorPicker = forwardRef<
       <Popover onOpenChange={setOpen} open={open}>
         <PopoverTrigger asChild disabled={disabled} onBlur={onBlur}>
           <Button
-            className={cn('block', className)}
+            className={cn('color-picker-button', className)}
             name={name}
             onClick={() => {
               setOpen(true);
@@ -56,7 +56,7 @@ const ColorPicker = forwardRef<
             <div />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className='w-full'>
+        <PopoverContent className='color-picker-popover-content'>
           <HexColorPicker color={parsedValue} onChange={onChange} />
           <Input
             maxLength={7}

@@ -1,0 +1,19 @@
+@layer components {
+  [data-slot="chart-footer"] {
+    @apply border-t border-zinc-200;
+    padding-top: 16px;
+  }
+
+  [data-slot="chart-footer-textarea"] {
+    @apply w-full text-xs text-zinc-500;
+    @apply border-2 border-blue-500 rounded px-2 py-1;
+    @apply focus:outline-none resize-none overflow-hidden;
+    min-height: 2rem;
+  }
+
+  [data-slot="chart-footer-text"] {
+    @apply text-xs text-zinc-500 cursor-text;
+    @apply hover:bg-zinc-50 rounded px-2 py-1 -mx-2;
+    @apply transition-colors whitespace-pre-wrap;
+  }
+}

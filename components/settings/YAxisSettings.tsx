@@ -105,9 +105,9 @@ export function YAxisSettings() {
               value={ yAxisPosition }
               onChange={ setYAxisPosition as ( value: string ) => void }
               options={ [
-                { value: 'left', icon: <ArrowLeft className='h-4 w-4' /> },
-                { value: 'right', icon: <ArrowRight className='h-4 w-4' /> },
-                { value: 'hidden', icon: <EyeOff className='h-4 w-4' /> },
+                { value: 'left', icon: <ArrowLeft className='icon-sm' /> },
+                { value: 'right', icon: <ArrowRight className='icon-sm' /> },
+                { value: 'hidden', icon: <EyeOff className='icon-sm' /> },
               ] }
             />
           </FormCol>

@@ -1,35 +1,34 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Rnd } from 'react-rnd';
-import { DataGridTanstack } from '@/components/data-grid-tanstack';
+import { BasicChart } from '@/components/charts/BasicChart';
 import { DataGridAG } from '@/components/data-grid-ag';
 import { DataSidebar } from '@/components/data-sidebar';
-import { BasicChart } from '@/components/charts/BasicChart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from '@/components/ui/resizable';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from '@/components/ui/resizable';
+import { useDataSync } from '@/hooks/useDataSync';
+import { useVirtualData } from '@/hooks/useVirtualData';
+import { useChartStore } from '@/store/useChartStore';
+import debounce from 'lodash.debounce';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
   Plus,
   Search,
   X,
-  Loader2,
-  ChevronLeft,
-  ChevronRight,
 } from 'lucide-react';
-import { useChartStore } from '@/store/useChartStore';
-import { useDataSync } from '@/hooks/useDataSync';
-import { useVirtualData } from '@/hooks/useVirtualData';
-import debounce from 'lodash.debounce';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Rnd } from 'react-rnd';
 import './data-table.css';
 
 export function DataTable() {
@@ -53,15 +52,15 @@ export function DataTable() {
   const [ shouldNavigate, setShouldNavigate ] = useState( false );
   const [ isSearching, setIsSearching ] = useState( false );
   const [ rowCount, setRowCount ] = useState( 1 );
-  const [ chartPreviewPosition, setChartPreviewPosition ] = useState({ x: 0, y: 0 });
+  const [ chartPreviewPosition, setChartPreviewPosition ] = useState( { x: 0, y: 0 } );
 
   // Set initial position for chart preview (client-side only)
-  useEffect(() => {
-    setChartPreviewPosition({
+  useEffect( () => {
+    setChartPreviewPosition( {
       x: window.innerWidth - 520,
       y: window.innerHeight - 420,
-    });
-  }, []);
+    } );
+  }, [] );
 
   const handleAddRows = () => {
     const count = Math.max( 1, Math.min( 1000, rowCount ) ); // Min 1, max 1000 rows
@@ -104,28 +103,36 @@ export function DataTable() {
     setFilterValue( '' );
   }, [ setFilterValue ] );
 
+  const handleRowCountChange = useCallback( ( e: React.ChangeEvent<HTMLInputElement> ) => {
+    setRowCount( parseInt( e.target.value ) || 1 );
+  }, [] );
+
+  const handlePrevPage = useCallback( () => {
+    setCurrentPage( Math.max( 0, currentPage - 1 ) );
+  }, [ currentPage, setCurrentPage ] );
+
+  const handleNextPage = useCallback( () => {
+    setCurrentPage( currentPage + 1 );
+  }, [ currentPage, setCurrentPage ] );
+
+  const handleSearchInputChange = useCallback( ( e: React.ChangeEvent<HTMLInputElement> ) => {
+    handleSearch( e.target.value );
+  }, [ handleSearch ] );
+
   return (
     <div className='data-table-container relative'>
       {/* Main Content: Resizable Grid + Sidebar */ }
       <div className='data-table-content'>
-        <ResizablePanelGroup direction='horizontal'>
+        <ResizablePanelGroup direction='horizontal' className='data-table-resizable-group'>
           {/* Grid Area */ }
-          <ResizablePanel defaultSize={ 75 } minSize={ 30 }>
+          <ResizablePanel defaultSize={ 75 } minSize={ 30 } className="data-table-grid-panel">
             <div className='data-table-grid-area'>
-              {/* Data Grid - fills available space */ }
               <div className='data-table-grid-wrapper'>
-                {/* <DataGridTanstack
-                  searchQuery={searchQuery}
-                  shouldNavigate={shouldNavigate}
-                  onNavigated={() => setShouldNavigate(false)}
-                  virtualData={virtualData}
-                /> */}
-                {/* Loading State Overlay */ }
                 { !virtualData.hasLoaded && (
-                  <div className='absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm'>
-                    <div className='flex flex-col items-center gap-2'>
-                      <Loader2 className='h-8 w-8 animate-spin text-primary' />
-                      <p className='text-sm text-muted-foreground font-medium'>
+                  <div className='data-table-loading-overlay'>
+                    <div className='data-table-loading-content'>
+                      <Loader2 className='data-table-loading-spinner' />
+                      <p className='data-table-loading-text'>
                         Loading data...
                       </p>
                     </div>
@@ -146,22 +153,22 @@ export function DataTable() {
                     min={ 1 }
                     max={ 1000 }
                     value={ rowCount }
-                    onChange={ ( e ) => setRowCount( parseInt( e.target.value ) || 1 ) }
+                    onChange={ handleRowCountChange }
                     className='data-table-row-count-input'
                   />
                 </div>
 
                 {/* Pagination controls */ }
-                <div className='flex items-center gap-1'>
+                <div className='data-table-pagination'>
                   <Button
                     variant='ghost'
                     size='sm'
-                    onClick={ () => setCurrentPage( Math.max( 0, currentPage - 1 ) ) }
+                    onClick={ handlePrevPage }
                     disabled={ currentPage === 0 }
                   >
-                    <ChevronLeft className='h-4 w-4' />
+                    <ChevronLeft className='data-table-icon' />
                   </Button>
-                  <span className='text-xs text-zinc-500 px-2'>
+                  <span className='data-table-pagination-info'>
                     Page { currentPage + 1 } of{ ' ' }
                     { Math.ceil( dataRowCount / pageSize ) || 1 } (
                     { dataRowCount.toLocaleString() } rows)
@@ -169,10 +176,10 @@ export function DataTable() {
                   <Button
                     variant='ghost'
                     size='sm'
-                    onClick={ () => setCurrentPage( currentPage + 1 ) }
+                    onClick={ handleNextPage }
                     disabled={ ( currentPage + 1 ) * pageSize >= dataRowCount }
                   >
-                    <ChevronRight className='h-4 w-4' />
+                    <ChevronRight className='data-table-icon' />
                   </Button>
                 </div>
 
@@ -199,7 +206,7 @@ export function DataTable() {
                         <Input
                           placeholder='Search...'
                           value={ searchInput }
-                          onChange={ ( e ) => handleSearch( e.target.value ) }
+                          onChange={ handleSearchInputChange }
                           onKeyDown={ handleSearchKeyDown }
                           className='data-table-search-input'
                           autoFocus
@@ -229,31 +236,31 @@ export function DataTable() {
           <ResizableHandle withHandle className='data-table-resize-handle' />
 
           {/* Sidebar */ }
-          <ResizablePanel defaultSize={ 25 } minSize={ 20 } maxSize={ 40 }>
+          <ResizablePanel defaultSize={ 25 } minSize={ 20 } maxSize={ 40 } className="data-table-sidebar-panel">
             <DataSidebar />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
 
       {/* Chart Preview - Bottom Right */ }
-      {chartPreviewPosition.x > 0 && (
+      { chartPreviewPosition.x > 0 && (
         <Rnd
-          default={{
+          default={ {
             x: chartPreviewPosition.x,
             y: chartPreviewPosition.y,
             width: 500,
             height: 400,
-          }}
-          minWidth={300}
-          minHeight={200}
-          className='shadow-2xl rounded-lg overflow-hidden border border-gray-200 bg-white z-50'
-          style={{ position: 'fixed' }}
+          } }
+          minWidth={ 300 }
+          minHeight={ 200 }
+          className='data-table-chart-preview'
+          style={ { position: 'fixed' } }
         >
-          <div className='w-full h-full p-4'>
+          <div className='data-table-chart-preview-content'>
             <BasicChart isFloatingPreview />
           </div>
         </Rnd>
-      )}
+      ) }
     </div>
   );
 }

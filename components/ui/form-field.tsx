@@ -110,7 +110,7 @@ export function FormField( props: FormFieldProps ) {
 
       case 'button-group':
         return (
-          <ButtonGroup className='w-full gap-0'>
+          <ButtonGroup className='form-group-full'>
             { props.options.map( ( option ) => (
               <Button
                 key={ option.value }
@@ -183,11 +183,11 @@ export function FormField( props: FormFieldProps ) {
           <div className='space-y-3'>
             {/* Color palette selector */ }
             <Select value={ props.value.name } onValueChange={ props.onChange }>
-              <SelectTrigger className='w-full h-auto p-1.5 border border-zinc-200 rounded-md relative'>
-                <span className='absolute my-auto pl-2 text-black text-xs font-medium mix-blend-plus-soft-light opacity-70'>
+              <SelectTrigger className='color-palette-trigger'>
+                <span className='color-palette-label'>
                   { props.value.name }
                 </span>
-                <div className='flex-1 flex items-center'>
+                <div className='color-palette-preview'>
                   { props.value.colors.map( ( color, index ) => (
                     <ColorPalettePreview key={ index } color={ color } />
                   ) ) }
@@ -196,8 +196,8 @@ export function FormField( props: FormFieldProps ) {
               <SelectContent id={ props.id }>
                 { props.options.map( ( palette ) => (
                   <SelectItem key={ palette.id } value={ palette.id }>
-                    <div className='flex items-center gap-2'>
-                      <div className='flex'>
+                    <div className='color-palette-item'>
+                      <div className='color-palette-colors'>
                         { palette.colors.slice( 0, 6 ).map( ( color, index ) => (
                           <ColorPaletteSelectItem key={ index } color={ color } />
                         ) ) }
@@ -229,7 +229,7 @@ export function FormField( props: FormFieldProps ) {
         </FieldLabel>
       ) }
       { renderField() }
-      { description && <FieldDescription className='-mt-2!'>{ description }</FieldDescription> }
+      { description && <FieldDescription className='form-field-description'>{ description }</FieldDescription> }
     </Field>
   );
 }

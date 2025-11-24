@@ -111,10 +111,10 @@ export function LinesSettings() {
                   value={ pointShape }
                   onChange={ setPointShape as ( value: string ) => void }
                   options={ [
-                    { value: 'circle', icon: <Circle className='h-3 w-3' /> },
-                    { value: 'square', icon: <Square className='h-3 w-3' /> },
-                    { value: 'diamond', icon: <Diamond className='h-3 w-3' /> },
-                    { value: 'triangle', icon: <Triangle className='h-3 w-3' /> },
+                    { value: 'circle', icon: <Circle className='icon-xs' /> },
+                    { value: 'square', icon: <Square className='icon-xs' /> },
+                    { value: 'diamond', icon: <Diamond className='icon-xs' /> },
+                    { value: 'triangle', icon: <Triangle className='icon-xs' /> },
                   ] }
                 />
               </FormCol>

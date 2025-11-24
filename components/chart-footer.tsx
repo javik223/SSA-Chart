@@ -64,35 +64,25 @@ export const ChartFooter = memo( function ChartFooter() {
 
   return (
     <div
-      className={ cn( 'border-t border-zinc-200' ) }
+      data-slot="chart-footer"
       style={ {
         paddingLeft: `${ layoutPaddingLeft }px`,
         paddingRight: `${ layoutPaddingRight }px`,
-        paddingTop: '16px',
       } }
     >
       { isEditing ? (
         <textarea
           ref={ textareaRef }
+          data-slot="chart-footer-textarea"
           value={ tempValue }
           onChange={ ( e ) => setTempValue( e.target.value ) }
           onBlur={ saveEdit }
           onKeyDown={ handleKeyDown }
-          className={ cn(
-            'w-full text-xs text-zinc-500',
-            'border-2 border-blue-500 rounded px-2 py-1',
-            'focus:outline-none resize-none overflow-hidden'
-          ) }
           placeholder='Enter chart footer (Cmd/Ctrl+Enter to save)'
-          style={ { minHeight: '2rem' } }
         />
       ) : (
         <p
-          className={ cn(
-            'text-xs text-zinc-500 cursor-text',
-            'hover:bg-zinc-50 rounded px-2 py-1 -mx-2',
-            'transition-colors whitespace-pre-wrap'
-          ) }
+          data-slot="chart-footer-text"
           onDoubleClick={ handleDoubleClick }
           title='Double-click to edit'
         >

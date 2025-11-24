@@ -109,3 +109,71 @@
 .settings-input-number {
   @apply h-8 text-xs w-full;
 }
+
+/* Header Styles */
+.settings-header {
+  @apply flex items-center gap-2;
+}
+
+/* Trigger Styles */
+.settings-trigger {
+  @apply w-full;
+}
+
+/* Content Styles */
+.settings-content {
+  @apply space-y-4;
+}
+
+/* Icon Sizes */
+.icon-xs {
+  @apply h-3 w-3;
+}
+
+.icon-sm {
+  @apply h-4 w-4;
+}
+
+.icon-text {
+  @apply text-xs font-bold;
+}
+
+/* Form Field Specifics */
+.form-group-full {
+  @apply w-full gap-0;
+}
+
+.form-field-description {
+  @apply -mt-2!;
+}
+
+/* Color Palette Selector */
+.color-palette-trigger {
+  @apply w-full h-auto p-1.5 border border-zinc-200 rounded-md relative;
+}
+
+.color-palette-label {
+  @apply absolute my-auto pl-2 text-black text-xs font-medium mix-blend-overlay opacity-70;
+}
+
+.color-palette-preview {
+  @apply flex-1 flex items-center;
+}
+
+.color-palette-item {
+  @apply flex items-center gap-2;
+}
+
+.color-palette-colors {
+  @apply flex;
+}
+
+/* Status Badge */
+.status-badge {
+  @apply text-[10px] px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600;
+}
+
+/* Search Icon */
+.search-icon {
+  @apply absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400;
+}

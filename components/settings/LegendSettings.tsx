@@ -63,19 +63,19 @@ export function LegendSettings() {
                   options={ [
                     {
                       value: 'top',
-                      icon: <ArrowUp className='h-4 w-4' />,
+                      icon: <ArrowUp className='icon-sm' />,
                     },
                     {
                       value: 'right',
-                      icon: <ArrowRight className='h-4 w-4' />,
+                      icon: <ArrowRight className='icon-sm' />,
                     },
                     {
                       value: 'bottom',
-                      icon: <ArrowDown className='h-4 w-4' />,
+                      icon: <ArrowDown className='icon-sm' />,
                     },
                     {
                       value: 'left',
-                      icon: <ArrowLeft className='h-4 w-4' />,
+                      icon: <ArrowLeft className='icon-sm' />,
                     },
                   ] }
                 />
@@ -90,15 +90,15 @@ export function LegendSettings() {
                   options={ [
                     {
                       value: 'start',
-                      icon: <AlignLeft className='h-4 w-4' />,
+                      icon: <AlignLeft className='icon-sm' />,
                     },
                     {
                       value: 'center',
-                      icon: <AlignCenter className='h-4 w-4' />,
+                      icon: <AlignCenter className='icon-sm' />,
                     },
                     {
                       value: 'end',
-                      icon: <AlignRight className='h-4 w-4' />,
+                      icon: <AlignRight className='icon-sm' />,
                     },
                   ] }
                 />

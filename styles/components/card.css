@@ -1,0 +1,32 @@
+@layer components {
+  [data-slot="card"] {
+    @apply bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm;
+  }
+  [data-slot="card-header"] {
+    @apply grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6;
+  }
+  [data-slot="card-header"]:has([data-slot="card-action"]) {
+    @apply grid-cols-[1fr_auto];
+  }
+  .border-b [data-slot="card-header"] {
+    @apply pb-6;
+  }
+  [data-slot="card-title"] {
+    @apply leading-none font-semibold;
+  }
+  [data-slot="card-description"] {
+    @apply text-muted-foreground text-sm;
+  }
+  [data-slot="card-action"] {
+    @apply col-start-2 row-span-2 row-start-1 self-start justify-self-end;
+  }
+  [data-slot="card-content"] {
+    @apply px-6;
+  }
+  [data-slot="card-footer"] {
+    @apply flex items-center px-6;
+  }
+  .border-t [data-slot="card-footer"] {
+    @apply pt-6;
+  }
+}

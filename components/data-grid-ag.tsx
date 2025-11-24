@@ -56,29 +56,16 @@ class EditableHeader {
 
     // Create main container
     this.eGui = document.createElement( 'div' );
-    this.eGui.className = 'ag-header-cell-comp-wrapper';
-    this.eGui.style.display = 'flex';
-    this.eGui.style.alignItems = 'center';
-    this.eGui.style.width = '100%';
-    this.eGui.style.height = '100%';
-    this.eGui.style.justifyContent = 'space-between';
+    this.eGui.className = 'ag-header-wrapper';
 
     // Create left section (text + sort)
     const eLeftSection = document.createElement( 'div' );
-    eLeftSection.style.display = 'flex';
-    eLeftSection.style.alignItems = 'center';
-    eLeftSection.style.flex = '1';
-    eLeftSection.style.overflow = 'hidden';
-    eLeftSection.style.cursor = 'pointer';
+    eLeftSection.className = 'ag-header-left-section';
 
     // Create type badge
     this.eTypeBadge = document.createElement( 'span' );
-    this.eTypeBadge.className = 'data-grid-type-badge';
+    this.eTypeBadge.className = 'data-grid-type-badge ag-header-type-badge';
     this.eTypeBadge.title = params.dataType;
-    this.eTypeBadge.style.marginRight = '6px';
-    this.eTypeBadge.style.display = 'inline-flex';
-    this.eTypeBadge.style.alignItems = 'center';
-    this.eTypeBadge.style.justifyContent = 'center';
 
     // Use Calendar icon for date type, otherwise use text icon
     if ( params.dataType === 'date' ) {
@@ -97,27 +84,13 @@ class EditableHeader {
     // Create text element
     this.eText = document.createElement( 'span' );
     this.eText.textContent = params.displayName;
-    this.eText.className = 'ag-header-cell-text';
-    this.eText.style.fontWeight = 'bold';
-    this.eText.style.fontSize = '12px';
-    this.eText.style.overflow = 'hidden';
-    this.eText.style.textOverflow = 'ellipsis';
-    this.eText.style.whiteSpace = 'nowrap';
-    this.eText.style.flex = '1';
+    this.eText.className = 'ag-header-cell-text ag-header-text';
 
     // Create input element (hidden initially)
     this.eInput = document.createElement( 'input' );
     this.eInput.type = 'text';
     this.eInput.value = params.displayName;
-    this.eInput.style.flex = '1';
-    this.eInput.style.border = '1px solid #3b82f6';
-    this.eInput.style.borderRadius = '2px';
-    this.eInput.style.padding = '2px 4px';
-    this.eInput.style.fontSize = '12px';
-    this.eInput.style.fontWeight = 'bold';
-    this.eInput.style.display = 'none';
-    this.eInput.style.outline = 'none';
-    this.eInput.style.marginRight = '4px';
+    this.eInput.className = 'ag-header-input';
 
     // Create sort indicator
     this.eSortIcon = document.createElement( 'div' );
@@ -206,8 +179,8 @@ class EditableHeader {
 
   private startEditing() {
     this.isEditing = true;
-    this.eText.style.display = 'none';
-    this.eInput.style.display = 'block';
+    this.eText.classList.add( 'editing' );
+    this.eInput.classList.add( 'editing' );
     this.eInput.value = this.eText.textContent || '';
     this.eInput.focus();
     this.eInput.select();
@@ -224,8 +197,8 @@ class EditableHeader {
       this.params.onRename( this.params.colIndex, newValue );
     }
 
-    this.eInput.style.display = 'none';
-    this.eText.style.display = 'block';
+    this.eInput.classList.remove( 'editing' );
+    this.eText.classList.remove( 'editing' );
   }
 
   refresh( params: EditableHeaderParams ) {
@@ -274,6 +247,18 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
   const gridRef = useRef<AgGridReact>( null );
   const [ gridApi, setGridApi ] = useState<GridApi | null>( null );
 
+  // Error handlers
+  const handleSyncError = useCallback( ( err: unknown ) => {
+    console.error(
+      '[DataGridAG] Failed to sync to DuckDB:',
+      err
+    );
+  }, [] );
+
+  const handleUpdateCellError = useCallback( ( err: unknown ) => {
+    console.error( '[DataGridAG] Failed to update cell:', err );
+  }, [] );
+
   // Handle column rename
   const handleRenameColumn = useCallback(
     ( colIndex: number, newName: string ) => {
@@ -287,16 +272,13 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
       // Sync to DuckDB in background
       if ( virtualData ) {
-        virtualData.syncToDuckDB( currentData ).catch( ( err ) => {
-          console.error(
-            '[DataGridAG] Failed to sync column rename to DuckDB:',
-            err
-          );
-        } );
+        virtualData.syncToDuckDB( currentData ).catch( handleSyncError );
       }
     },
     [ data, setData, virtualData ]
   );
+
+
 
   // Convert data format: first row is header, rest is data
   const { headers, rowData } = useMemo( () => {
@@ -316,6 +298,25 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
     return { headers, rowData };
   }, [ data ] );
 
+  // Cell class generator
+  const getCellClass = useCallback(
+    ( colIndex: number ) => {
+      const isLabelColumn = columnMapping.labels === colIndex;
+      const isValueColumn = columnMapping.values.includes( colIndex );
+      const classes = [];
+      if ( isLabelColumn ) classes.push( 'bg-pink-50' );
+      if ( isValueColumn ) classes.push( 'bg-purple-50' );
+      return classes;
+    },
+    [ columnMapping ]
+  );
+
+  // Value formatter
+  const formatCellValue = useCallback( ( params: ValueFormatterParams ) => {
+    if ( params.value === null || params.value === undefined ) return '';
+    return String( params.value );
+  }, [] );
+
   // Generate column definitions
   const columnDefs: ColDef[] = useMemo( () => {
     if ( headers.length === 0 ) return [];
@@ -332,16 +333,14 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
         sortable: false,
         filter: false,
         editable: false,
-        cellClass: 'ag-row-number-cell bg-gray-50 text-gray-400 font-normal text-right pr-2 flex items-center justify-end border-r border-gray-200',
-        headerClass: 'ag-row-number-header bg-gray-50 text-gray-400 font-normal text-right pr-2 flex items-center justify-end border-r border-gray-200',
+        cellClass: 'ag-row-number-cell',
+        headerClass: 'ag-row-number-header',
       },
     ];
 
     const dataCols = headers.map( ( header, index ) => {
       const colId = `col_${ index }`;
       const type = columnTypes[ index ]?.type || 'text';
-      const isLabelColumn = columnMapping.labels === index;
-      const isValueColumn = columnMapping.values.includes( index );
 
       return {
         field: colId,
@@ -356,25 +355,19 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
         sortable: true,
         filter: true,
         resizable: true,
-        cellClass: () => {
-          const classes = [];
-          if ( isLabelColumn ) classes.push( 'bg-pink-50' );
-          if ( isValueColumn ) classes.push( 'bg-purple-50' );
-          return classes;
-        },
+        cellClass: getCellClass( index ),
         cellDataType:
           type === 'number' ? 'number' : type === 'date' ? 'date' : 'text',
-        valueFormatter: ( params: ValueFormatterParams ) => {
-          if ( params.value === null || params.value === undefined ) return '';
-          return String( params.value );
-        },
+        valueFormatter: formatCellValue,
         headerClass: 'font-semibold',
         ...( index == 0 ? { rowDrag: true, pinned: 'left' as const } : {} ),
       };
     } );
 
     return [ ...defs, ...dataCols ];
-  }, [ headers, columnTypes, columnMapping, handleRenameColumn ] );
+  }, [ headers, columnTypes, columnMapping, handleRenameColumn, getCellClass ] );
+
+
 
   // Default column configuration
   const defaultColDef: ColDef = useMemo(
@@ -431,13 +424,13 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
       // Then sync to DuckDB in background
       if ( virtualData ) {
-        virtualData.updateCell( rowIndex, colIndex, newValue ).catch( ( err ) => {
-          console.error( '[DataGridAG] Failed to update cell:', err );
-        } );
+        virtualData.updateCell( rowIndex, colIndex, newValue ).catch( handleUpdateCellError );
       }
     },
     [ data, setData, virtualData ]
   );
+
+
 
   // Handle row reordering
   const onRowDragEnd = useCallback(
@@ -469,12 +462,7 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
       // Sync to DuckDB in background
       if ( virtualData ) {
-        virtualData.syncToDuckDB( newData ).catch( ( err ) => {
-          console.error(
-            '[DataGridAG] Failed to sync row reorder to DuckDB:',
-            err
-          );
-        } );
+        virtualData.syncToDuckDB( newData ).catch( handleSyncError );
       }
     },
     [ data, setData, virtualData ]
@@ -502,16 +490,24 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
       // Sync to DuckDB in background
       if ( virtualData ) {
-        virtualData.syncToDuckDB( updatedData ).catch( ( err ) => {
-          console.error(
-            '[DataGridAG] Failed to sync fill operation to DuckDB:',
-            err
-          );
-        } );
+        virtualData.syncToDuckDB( updatedData ).catch( handleSyncError );
       }
     },
     [ data, headers, setData, virtualData ]
   );
+
+  // Context menu actions
+  const handleCopyAction = useCallback( ( api: GridApi | undefined ) => {
+    api?.copySelectedRangeToClipboard();
+  }, [] );
+
+  const handleCopyWithHeadersAction = useCallback( ( api: GridApi | undefined ) => {
+    api?.copySelectedRangeToClipboard( { includeHeaders: true } );
+  }, [] );
+
+  const handlePasteAction = useCallback( ( api: GridApi | undefined ) => {
+    api?.pasteFromClipboard();
+  }, [] );
 
   // Context menu
   const getContextMenuItems = useCallback(
@@ -519,14 +515,13 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
       const result: MenuItemDef[] = [
         {
           name: 'Copy',
-          action: () => params.api?.copySelectedRangeToClipboard(),
+          action: () => handleCopyAction( params.api ),
         },
         {
           name: 'Copy with Headers',
-          action: () =>
-            params.api?.copySelectedRangeToClipboard( { includeHeaders: true } ),
+          action: () => handleCopyWithHeadersAction( params.api ),
         },
-        { name: 'Paste', action: () => params.api?.pasteFromClipboard() },
+        { name: 'Paste', action: () => handlePasteAction( params.api ) },
         {
           name: '',
           disabled: true,
@@ -748,7 +743,7 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
       return result;
     },
-    [ data, headers, setData, virtualData, handleRenameColumn ]
+    [ data, headers, setData, virtualData, handleRenameColumn, handleCopyAction, handleCopyWithHeadersAction, handlePasteAction ]
   );
 
   // Export to CSV
@@ -759,9 +754,14 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
     } );
   }, [ gridApi ] );
 
+  // Row ID getter
+  const getRowId = useCallback( ( params: any ) => {
+    return String( params.data._rowIndex );
+  }, [] );
+
   if ( !data || data.length === 0 ) {
     return (
-      <div className='w-full h-full flex items-center justify-center text-gray-500'>
+      <div className='data-grid-empty'>
         <p>No data loaded. Upload a file to get started.</p>
       </div>
     );
@@ -790,19 +790,19 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
   } );
 
   return (
-    <div className='w-full h-full flex flex-col'>
+    <div className='data-grid-container'>
       {/* Toolbar */ }
-      <div className='flex items-center justify-between px-4 py-2 border-b border-border bg-gray-50'>
-        <div className='flex items-center gap-2'>
+      <div className='data-grid-toolbar'>
+        <div className='data-grid-toolbar-left'>
           <Button variant='outline' size='sm' onClick={ handleExport }>
-            <Download className='h-4 w-4 mr-1' />
+            <Download className='data-grid-export-icon' />
             Export CSV
           </Button>
         </div>
       </div>
 
       {/* Grid */ }
-      <div className='flex-1 ag-theme-alpine'>
+      <div className='data-grid-wrapper ag-theme-alpine'>
         <AgGridReact
           ref={ gridRef }
           rowData={ rowData }
@@ -829,7 +829,7 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
           undoRedoCellEditingLimit={ 20 }
           animateRows={ true }
           suppressMoveWhenRowDragging={ true }
-          getRowId={ ( params ) => String( params.data._rowIndex ) }
+          getRowId={ getRowId }
           theme={ myTheme }
           pagination={ true }
           paginationPageSize={ 100 }

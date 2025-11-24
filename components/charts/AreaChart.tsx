@@ -334,7 +334,7 @@ export function AreaChart( {
               .transition()
               .duration( 100 )
               .style( 'opacity', 0 )
-              .on( 'end', function ( d: any, i: number ) {
+              .on( 'end', function ( this: any, d: any, i: number ) {
                 d3.select( this )
                   .attr( 'transform', `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
                   .transition()

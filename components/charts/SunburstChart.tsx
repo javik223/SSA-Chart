@@ -93,7 +93,7 @@ export function SunburstChart( {
       .sum( ( d ) => d.value || 0 )
       .sort( ( a, b ) => ( b.value || 0 ) - ( a.value || 0 ) );
 
-    const partition = d3.partition()
+    const partition = d3.partition<HierarchyNode>()
       .size( [ 2 * Math.PI, root.height + 1 ] );
 
     partition( root );
@@ -181,8 +181,8 @@ export function SunburstChart( {
           const i = d3.interpolate( d.current, d.target );
           return ( t: number ) => d.current = i( t );
         } )
-        .filter( function ( d: any ) {
-          return +this.getAttribute( 'fill-opacity' ) || arcVisible( d.target );
+        .filter( function ( this: any, d: any ) {
+          return !!( +this.getAttribute( 'fill-opacity' ) || arcVisible( d.target ) );
         } )
         .attr( 'fill-opacity', ( d: any ) => arcVisible( d.target ) ? ( d.children ? 0.6 : 1.0 ) : 0 )
         .attr( 'pointer-events', ( d: any ) => arcVisible( d.target ) ? 'auto' : 'none' )
