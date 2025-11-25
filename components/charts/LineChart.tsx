@@ -42,6 +42,7 @@ interface LineChartProps {
   // X Axis
   xAxisShow?: boolean;
   xAxisTitle?: string;
+  xAxisName?: string;
   xAxisShowGrid?: boolean;
   xAxisShowDomain?: boolean;
   xAxisTickCount?: number | null;
@@ -95,6 +96,7 @@ export function LineChart( {
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
+  xAxisName,
   xAxisShowGrid = true,
   xAxisShowDomain = true,
   xAxisTickCount = 10,
@@ -386,7 +388,8 @@ export function LineChart( {
           yScale,
           innerWidth,
           innerHeight,
-          yAxis
+          yAxis,
+          xAxisPosition
         } );
 
         // Re-render X axis
@@ -412,6 +415,8 @@ export function LineChart( {
             xAxisTitleWeight,
             xAxisTitleColor,
             xAxisTitlePadding,
+            xAxisName,
+            yAxisPosition: yAxis.position,
             xAxisShowDomain
           } );
 
@@ -476,7 +481,8 @@ export function LineChart( {
       yScale,
       innerWidth,
       innerHeight,
-      yAxis
+      yAxis,
+      xAxisPosition
     } );
 
 
@@ -505,6 +511,8 @@ export function LineChart( {
         xAxisTitleWeight,
         xAxisTitleColor,
         xAxisTitlePadding,
+        xAxisName,
+        yAxisPosition: yAxis.position,
         xAxisShowDomain
       } );
 

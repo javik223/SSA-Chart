@@ -26,8 +26,11 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   // X Axis settings
   const xAxisShow = useChartStore( ( state ) => state.xAxisShow );
   const xAxisTitle = useChartStore( ( state ) => state.xAxisTitle );
+  const xAxisName = useChartStore( ( state ) => state.xAxisName );
+  const xAxisShowLabel = useChartStore( ( state ) => state.xAxisShowLabel );
   const xAxisShowGrid = useChartStore( ( state ) => state.xAxisShowGrid );
   const xAxisShowDomain = useChartStore( ( state ) => state.xAxisShowDomain );
+  const xAxisDomainColor = useChartStore( ( state ) => state.xAxisDomainColor );
   const xAxisTickCount = useChartStore( ( state ) => state.xAxisTickCount );
   const xAxisTickSize = useChartStore( ( state ) => state.xAxisTickSize );
   const xAxisTickPadding = useChartStore( ( state ) => state.xAxisTickPadding );
@@ -44,6 +47,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const xAxisTitleColor = useChartStore( ( state ) => state.xAxisTitleColor );
   const xAxisTitleSize = useChartStore( ( state ) => state.xAxisTitleSize );
   const xAxisTitlePadding = useChartStore( ( state ) => state.xAxisTitlePadding );
+  const xAxisTitleAlignment = useChartStore( ( state ) => state.xAxisTitleAlignment );
+  const xAxisTitleArrow = useChartStore( ( state ) => state.xAxisTitleArrow );
 
   // X Axis Tick & Label Styling
   const xAxisTickPosition = useChartStore( ( state ) => state.xAxisTickPosition );
@@ -61,8 +66,11 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   // Y Axis settings
   const yAxisShow = useChartStore( ( state ) => state.yAxisShow );
   const yAxisTitle = useChartStore( ( state ) => state.yAxisTitle );
+  const yAxisName = useChartStore( ( state ) => state.yAxisName );
+  const yAxisShowLabel = useChartStore( ( state ) => state.yAxisShowLabel );
   const yAxisShowGrid = useChartStore( ( state ) => state.yAxisShowGrid );
   const yAxisShowDomain = useChartStore( ( state ) => state.yAxisShowDomain );
+  const yAxisDomainColor = useChartStore( ( state ) => state.yAxisDomainColor );
   const yAxisTickCount = useChartStore( ( state ) => state.yAxisTickCount );
   const yAxisTickSize = useChartStore( ( state ) => state.yAxisTickSize );
   const yAxisTickPadding = useChartStore( ( state ) => state.yAxisTickPadding );
@@ -85,6 +93,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const yAxisTitleColor = useChartStore( ( state ) => state.yAxisTitleColor );
   const yAxisTitleSize = useChartStore( ( state ) => state.yAxisTitleSize );
   const yAxisTitlePadding = useChartStore( ( state ) => state.yAxisTitlePadding );
+  const yAxisTitleAlignment = useChartStore( ( state ) => state.yAxisTitleAlignment );
+  const yAxisTitleArrow = useChartStore( ( state ) => state.yAxisTitleArrow );
 
   // Y Axis Tick & Label Styling
   const yAxisTickPosition = useChartStore( ( state ) => state.yAxisTickPosition );
@@ -302,8 +312,10 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     // X Axis
     xAxisShow,
     xAxisTitle,
+    xAxisName: xAxisShowLabel ? ( xAxisName || labelKey ) : undefined,
     xAxisShowGrid,
     xAxisShowDomain,
+    xAxisDomainColor,
     xAxisTickCount,
     xAxisTickSize,
     xAxisTickPadding,
@@ -318,6 +330,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     xAxisTitleColor,
     xAxisTitleSize,
     xAxisTitlePadding,
+    xAxisTitleAlignment,
+    xAxisTitleArrow,
     xAxisTickPosition,
     xAxisLabelWeight,
     xAxisLabelColor,
@@ -363,12 +377,15 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
       roundMin: yAxisRoundMin,
       roundMax: yAxisRoundMax,
       title: yAxisTitle,
+      name: yAxisShowLabel ? ( yAxisName || ( valueKeys.length > 0 ? valueKeys[ 0 ] : '' ) ) : undefined,
       titleType: yAxisTitleType,
       titlePosition: yAxisTitlePosition,
       titleWeight: yAxisTitleWeight,
       titleColor: yAxisTitleColor,
       titleSize: yAxisTitleSize,
       titlePadding: yAxisTitlePadding,
+      titleAlignment: yAxisTitleAlignment,
+      titleArrow: yAxisTitleArrow,
       tickPosition: yAxisTickPosition,
       labelSize: yAxisLabelSize,
       labelWeight: yAxisLabelWeight,
@@ -388,6 +405,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
       tickLength: yAxisTickLength,
       showGrid: yAxisShowGrid,
       showDomain: yAxisShowDomain,
+      domainColor: yAxisDomainColor,
       showAxisLine: yAxisShowAxisLine,
       gridColor: yAxisGridColor,
       gridStyle: yAxisGridStyle,

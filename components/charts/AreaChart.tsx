@@ -43,6 +43,7 @@ interface AreaChartProps {
   // X Axis
   xAxisShow?: boolean;
   xAxisTitle?: string;
+  xAxisName?: string;
   xAxisShowGrid?: boolean;
   xAxisShowDomain?: boolean;
   xAxisTickCount?: number;
@@ -96,6 +97,7 @@ export function AreaChart( {
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
+  xAxisName,
   xAxisShowGrid = true,
   xAxisShowDomain = true,
   xAxisTickCount = 10,
@@ -399,6 +401,8 @@ export function AreaChart( {
             xAxisTitleWeight,
             xAxisTitleColor,
             xAxisTitlePadding,
+            xAxisName,
+            yAxisPosition: yAxis.position,
             xAxisShowDomain
           } );
         }
@@ -430,7 +434,8 @@ export function AreaChart( {
           yScale,
           innerWidth,
           innerHeight,
-          yAxis
+          yAxis,
+          xAxisPosition
         } );
 
         return; // Skip the rest of the rendering
@@ -560,6 +565,8 @@ export function AreaChart( {
       xAxisTitleWeight,
       xAxisTitleColor,
       xAxisTitlePadding,
+      xAxisName,
+      yAxisPosition: yAxis.position,
       xAxisShowDomain
     } );
 
@@ -568,7 +575,8 @@ export function AreaChart( {
       yScale,
       innerWidth,
       innerHeight,
-      yAxis
+      yAxis,
+      xAxisPosition
     } );
 
     // Legend (using utility)

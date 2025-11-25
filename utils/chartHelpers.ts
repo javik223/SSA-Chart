@@ -119,7 +119,12 @@ interface XAxisConfig {
   xAxisTitleWeight: 'bold' | 'regular';
   xAxisTitleColor: string;
   xAxisTitlePadding: number;
+  xAxisTitleAlignment?: 'start' | 'center' | 'end';
+  xAxisTitleArrow?: boolean;
+  xAxisName?: string;
+  yAxisPosition?: 'left' | 'right' | 'hidden'; // To determine X-axis label placement
   xAxisShowDomain: boolean;
+  xAxisDomainColor?: string;
 }
 
 /**
@@ -237,34 +242,86 @@ export function renderXAxis(
       ? -config.xAxisTitlePadding
       : config.innerHeight + config.xAxisTitlePadding;
 
+    // Calculate X position based on alignment
+    let titleX = config.innerWidth / 2;
+    let textAnchor = 'middle';
+
+    if (config.xAxisTitleAlignment === 'start') {
+      titleX = 0;
+      textAnchor = 'start';
+    } else if (config.xAxisTitleAlignment === 'end') {
+      titleX = config.innerWidth;
+      textAnchor = 'end';
+    }
+
     // Remove existing title if any
     g.select('.x-axis-title').remove();
 
+    let titleText = config.xAxisTitle;
+    if (config.xAxisTitleArrow) {
+      titleText = `${titleText} ->`;
+    }
+
     g.append('text')
       .attr('class', 'x-axis-title')
-      .attr('x', config.innerWidth / 2)
+      .attr('x', titleX)
       .attr('y', titleY)
-      .style('text-anchor', 'middle')
+      .style('text-anchor', textAnchor)
       .style('font-size', `${config.xAxisTitleSize}px`)
       .style('font-weight', config.xAxisTitleWeight)
       .style('fill', config.xAxisTitleColor)
-      .text(config.xAxisTitle);
+      .text(titleText);
   } else {
     // Remove title if xAxisTitle is empty
     g.select('.x-axis-title').remove();
   }
 
+  // Add Axis Label (Name) - distinct from Title
+  // Position adapts based on Y-axis position to avoid overlap
+  if (config.xAxisName) {
+    // Remove existing label if any
+    g.select('.x-axis-label').remove();
+
+    // Position above the domain line (at the end of the axis)
+    // For bottom axis: position above the axis (negative offset from innerHeight)
+    // For top axis: position below the axis line
+    const labelY = config.xAxisPosition === 'top'
+      ? (config.xAxisTickSize || 6) + (config.xAxisTickPadding || 3) + 12
+      : config.innerHeight - (config.xAxisTickSize || 6) - (config.xAxisTickPadding || 3) - 3;
+
+    // X position: opposite side from Y-axis to avoid overlap
+    // Default to right if Y-axis is hidden or left
+    const labelX = config.yAxisPosition === 'right' ? 0 : config.innerWidth;
+    const textAnchor = config.yAxisPosition === 'right' ? 'start' : 'end';
+
+    g.append('text')
+      .attr('class', 'x-axis-label')
+      .attr('x', labelX)
+      .attr('y', labelY)
+      .style('text-anchor', textAnchor)
+      .style('font-size', `${config.xAxisLabelSize}px`)
+      .style('font-weight', '600') // Slightly bolder than tick labels
+      .style('fill', config.xAxisLabelColor)
+      .text(config.xAxisName);
+  } else {
+    g.select('.x-axis-label').remove();
+  }
+
   // Hide domain line if needed
   if (!config.xAxisShowDomain) {
     xAxisGroup.select('.domain').remove();
+  } else if (config.xAxisDomainColor) {
+    // Apply domain color if specified
+    xAxisGroup.select('.domain').attr('stroke', config.xAxisDomainColor);
   }
 }
 
-interface RenderYAxisConfig {
+interface YAxisRenderConfig {
   yScale: any;
   innerWidth: number;
   innerHeight: number;
   yAxis: YAxisConfig;
+  xAxisPosition?: 'bottom' | 'top' | 'hidden'; // To determine Y-axis label placement
 }
 
 /**
@@ -333,28 +390,104 @@ export function renderYAxis(
 
   // Add Y axis title
   if (yAxis.title) {
-    const titleX = yAxis.position === 'left' ? -yAxis.titlePadding : config.innerWidth + yAxis.titlePadding;
-    const titleY = config.innerHeight / 2;
-
     // Remove existing title if any
     g.select('.y-axis-title').remove();
 
-    g.append('text')
-      .attr('class', 'y-axis-title')
-      .attr('transform', `translate(${titleX},${titleY}) rotate(-90)`)
-      .style('text-anchor', 'middle')
-      .style('font-size', `${yAxis.titleSize}px`)
-      .style('font-weight', yAxis.titleWeight)
-      .style('fill', yAxis.titleColor)
-      .text(yAxis.title);
+    let titleText = yAxis.title;
+    if (yAxis.titleArrow) {
+      titleText = `↑ ${titleText}`;
+    }
+
+    if (yAxis.titlePosition === 'top-bottom') {
+      // Horizontal title at the top of the axis
+      const titleX = yAxis.position === 'left' ? 0 : config.innerWidth;
+      const titleY = -yAxis.titlePadding / 2; // Position slightly above axis
+
+      g.append('text')
+        .attr('class', 'y-axis-title')
+        .attr('x', titleX)
+        .attr('y', titleY)
+        .style('text-anchor', yAxis.position === 'left' ? 'start' : 'end') // Align with axis
+        .style('font-size', `${yAxis.titleSize}px`)
+        .style('font-weight', yAxis.titleWeight)
+        .style('fill', yAxis.titleColor)
+        .text(titleText);
+    } else {
+      // Standard rotated title on the side
+      const titleX = yAxis.position === 'left' ? -yAxis.titlePadding : config.innerWidth + yAxis.titlePadding;
+      
+      // Calculate Y position based on alignment (remember it's rotated -90deg)
+      // In rotated space: 
+      // start (bottom) -> x = 0 (which maps to y=height in unrotated)
+      // center -> x = -height/2
+      // end (top) -> x = -height
+      
+      // Wait, let's look at the transform: `translate(${titleX},${titleY}) rotate(-90)`
+      // If we translate first, then rotate:
+      // The coordinate system rotates. +x becomes +y (down), +y becomes -x (left).
+      // Standard implementation was: translate(titleX, innerHeight/2) rotate(-90)
+      
+      let titleY = config.innerHeight / 2;
+      let textAnchor = 'middle';
+
+      if (yAxis.titleAlignment === 'start') {
+        titleY = config.innerHeight;
+        textAnchor = 'start';
+      } else if (yAxis.titleAlignment === 'end') {
+        titleY = 0;
+        textAnchor = 'end';
+      }
+
+      g.append('text')
+        .attr('class', 'y-axis-title')
+        .attr('transform', `translate(${titleX},${titleY}) rotate(-90)`)
+        .style('text-anchor', textAnchor)
+        .style('font-size', `${yAxis.titleSize}px`)
+        .style('font-weight', yAxis.titleWeight)
+        .style('fill', yAxis.titleColor)
+        .text(titleText);
+    }
   } else {
     // Remove title if yAxis.title is empty
     g.select('.y-axis-title').remove();
   }
 
+  // Add Axis Label (Name) - distinct from Title
+  // Position adapts based on X-axis position to avoid overlap
+  if (yAxis.name) {
+    // Remove existing label if any
+    g.select('.y-axis-label').remove();
+
+    // Position inside the chart area, next to the domain line
+    const labelX = yAxis.position === 'left'
+      ? (yAxis.tickSize || 6) + (yAxis.tickPadding || 8) + 5 // Inside, to the right of domain
+      : config.innerWidth - (yAxis.tickSize || 6) - (yAxis.tickPadding || 8) - 5; // Inside, to the left of domain
+
+    // Y position: opposite side from X-axis to avoid overlap
+    // If X-axis is at top, place Y-axis label at bottom; if X-axis is at bottom, place at top
+    const labelY = config.xAxisPosition === 'top' ? config.innerHeight : 0;
+    const dy = config.xAxisPosition === 'top' ? '-0.32em' : '0.32em';
+
+    g.append('text')
+      .attr('class', 'y-axis-label')
+      .attr('x', labelX)
+      .attr('y', labelY)
+      .attr('dy', dy) // Vertical centering adjustment
+      .style('text-anchor', yAxis.position === 'left' ? 'start' : 'end')
+      .style('font-size', `${yAxis.labelSize}px`)
+      .style('font-weight', '600') // Slightly bolder than tick labels
+      .style('fill', yAxis.labelColor)
+      .text(yAxis.name);
+  } else {
+    g.select('.y-axis-label').remove();
+  }
+
   // Hide domain line if needed
   if (!yAxis.showDomain) {
     yAxisGroup.select('.domain').remove();
+  } else if (yAxis.domainColor) {
+    // Apply domain color if specified
+    yAxisGroup.select('.domain').attr('stroke', yAxis.domainColor);
   }
 
   // Apply axis line color/width if shown

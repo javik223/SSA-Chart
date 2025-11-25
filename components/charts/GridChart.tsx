@@ -98,6 +98,9 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const yAxisTickLength = useChartStore( ( state ) => state.yAxisTickLength );
   const yAxisShowAxisLine = useChartStore( ( state ) => state.yAxisShowAxisLine );
   const yAxisEdgePadding = useChartStore( ( state ) => state.yAxisEdgePadding );
+  const yAxisTitleAlignment = useChartStore( ( state ) => state.yAxisTitleAlignment );
+  const yAxisTitleArrow = useChartStore( ( state ) => state.yAxisTitleArrow );
+  const yAxisDomainColor = useChartStore( ( state ) => state.yAxisDomainColor );
 
   // Line settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -218,21 +221,21 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const palette = getColorPalette( colorPalette );
 
   // Map grid columns to Tailwind classes with mobile support
-  const getMobileClass = (cols: number) => {
-    return `grid-cols-${cols}`;
+  const getMobileClass = ( cols: number ) => {
+    return `grid-cols-${ cols }`;
   };
 
-  const getDesktopClass = (cols: number) => {
-    if (cols === 1) return 'md:grid-cols-1';
-    if (cols === 2) return 'md:grid-cols-2';
-    if (cols === 3) return 'md:grid-cols-2 lg:grid-cols-3';
-    if (cols === 4) return 'md:grid-cols-2 lg:grid-cols-4';
-    if (cols === 5) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
-    if (cols === 6) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6';
+  const getDesktopClass = ( cols: number ) => {
+    if ( cols === 1 ) return 'md:grid-cols-1';
+    if ( cols === 2 ) return 'md:grid-cols-2';
+    if ( cols === 3 ) return 'md:grid-cols-2 lg:grid-cols-3';
+    if ( cols === 4 ) return 'md:grid-cols-2 lg:grid-cols-4';
+    if ( cols === 5 ) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+    if ( cols === 6 ) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6';
     return 'md:grid-cols-2';
   };
 
-  const gridColsClass = `${getMobileClass(gridColumnsMobile)} ${getDesktopClass(gridColumns)}`;
+  const gridColsClass = `${ getMobileClass( gridColumnsMobile ) } ${ getDesktopClass( gridColumns ) }`;
 
 
 
@@ -254,6 +257,8 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
     titleColor: yAxisTitleColor,
     titleSize: yAxisTitleSize,
     titlePadding: yAxisTitlePadding,
+    titleAlignment: yAxisTitleAlignment,
+    titleArrow: yAxisTitleArrow,
     tickPosition: yAxisTickPosition,
     labelSize: yAxisLabelSize,
     labelColor: yAxisLabelColor,
@@ -273,6 +278,8 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
     tickLength: yAxisTickLength,
     showGrid: yAxisShowGrid,
     showDomain: yAxisShowDomain,
+    domainColor: yAxisDomainColor,
+    name: undefined, // GridChart doesn't use axis labels
     showAxisLine: yAxisShowAxisLine,
     gridColor: yAxisGridColor,
     gridStyle: yAxisGridStyle,

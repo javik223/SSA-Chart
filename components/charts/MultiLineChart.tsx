@@ -47,6 +47,7 @@ export function MultiLineChart( {
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
+  xAxisName,
   xAxisShowGrid = true,
   xAxisShowDomain = true,
   xAxisTickCount = 10,
@@ -68,6 +69,8 @@ export function MultiLineChart( {
   xAxisTitleWeight = 'regular',
   xAxisTitleColor = '#000',
   xAxisTitleSize = 12,
+  xAxisTitleAlignment = 'center',
+  xAxisTitleArrow = false,
   xAxisTickPosition = 'outside',
   xAxisLabelWeight = 'regular',
   xAxisLabelColor = '#000',
@@ -88,6 +91,14 @@ export function MultiLineChart( {
   const curveType = useChartStore( ( state ) => state.curveType );
   const lineWidth = useChartStore( ( state ) => state.lineWidth );
   const lineStyle = useChartStore( ( state ) => state.lineStyle );
+  const showPoints = useChartStore( ( state ) => state.showPoints );
+  const pointSize = useChartStore( ( state ) => state.pointSize );
+  const pointShape = useChartStore( ( state ) => state.pointShape );
+  const pointColor = useChartStore( ( state ) => state.pointColor );
+  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
+  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
+  const showArea = useChartStore( ( state ) => state.showArea );
+  const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
 
@@ -239,7 +250,7 @@ export function MultiLineChart( {
         // Re-render Y Grid
         renderYGrid( g as any, { yScale, innerWidth, innerHeight, yAxis } );
         // Re-render Y Axis
-        renderYAxis( g as any, { yScale, innerWidth, innerHeight, yAxis } );
+        renderYAxis( g as any, { yScale, innerWidth, innerHeight, yAxis, xAxisPosition } );
 
         // Re-render X axis
         if ( xAxisShow && xAxisPosition !== 'hidden' ) {
@@ -249,7 +260,8 @@ export function MultiLineChart( {
             xAxisScaleType, xAxisLabelSize, xAxisLabelWeight,
             xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing,
             xAxisTitle, xAxisTitleSize, xAxisTitleWeight,
-            xAxisTitleColor, xAxisTitlePadding, xAxisShowDomain
+            xAxisTitleColor, xAxisTitlePadding, xAxisTitleAlignment, xAxisTitleArrow,
+            xAxisName, yAxisPosition: yAxis.position, xAxisShowDomain
           } );
           renderXGrid( g as any, {
             xScale, innerWidth, innerHeight, xAxisShowGrid,
@@ -301,7 +313,7 @@ export function MultiLineChart( {
     }
 
     // Axes
-    renderYAxis( g, { yScale, innerWidth, innerHeight, yAxis } );
+    renderYAxis( g, { yScale, innerWidth, innerHeight, yAxis, xAxisPosition } );
     if ( xAxisShow && xAxisPosition !== 'hidden' ) {
       renderXAxis( g, {
         xScale, innerWidth, innerHeight, xAxisShow, xAxisPosition,
@@ -309,7 +321,8 @@ export function MultiLineChart( {
         xAxisScaleType, xAxisLabelSize, xAxisLabelWeight,
         xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing,
         xAxisTitle, xAxisTitleSize, xAxisTitleWeight,
-        xAxisTitleColor, xAxisTitlePadding, xAxisShowDomain
+        xAxisTitleColor, xAxisTitlePadding, xAxisTitleAlignment, xAxisTitleArrow,
+        xAxisName, yAxisPosition: yAxis.position, xAxisShowDomain
       } );
     }
 
@@ -321,26 +334,78 @@ export function MultiLineChart( {
       .attr( 'class', 'content-group' )
       .attr( 'clip-path', `url(#${ clipId })` );
 
-    // Draw Lines
+    // Draw Lines and Areas
     const lines: any[] = [];
     valueKeys.forEach( ( key, index ) => {
       const color = colors.length > 1 ? colors[ index % colors.length ] : 'steelblue';
 
+      // Area generator (if showArea is true)
+      if ( showArea ) {
+        const area = d3.area<any>()
+          .x( d => getXPosition( d ) )
+          .y0( innerHeight )
+          .y1( d => yScale( Number( d[ key ] ) ) );
+
+        // Apply curve type
+        if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
+        else if ( curveType === 'step' ) area.curve( d3.curveStep );
+        else if ( curveType === 'linear' ) area.curve( d3.curveLinear );
+        else area.curve( d3.curveBasis );
+
+        contentGroup.append( 'path' )
+          .datum( filteredData )
+          .attr( 'class', `area-series area-${ index }` )
+          .attr( 'fill', color )
+          .attr( 'fill-opacity', areaOpacity )
+          .attr( 'd', area );
+      }
+
+      // Line generator
       const line = d3.line<any>()
         .x( d => getXPosition( d ) )
-        .y( d => yScale( Number( d[ key ] ) ) )
-        .curve( d3.curveBasis );
+        .y( d => yScale( Number( d[ key ] ) ) );
+
+      // Apply curve type
+      if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
+      else if ( curveType === 'step' ) line.curve( d3.curveStep );
+      else if ( curveType === 'linear' ) line.curve( d3.curveLinear );
+      else line.curve( d3.curveBasis );
+
+      // Apply line style
+      const strokeDasharray = lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0';
 
       const path = contentGroup.append( 'path' )
         .datum( filteredData )
         .attr( 'class', `line-series line-${ index }` )
         .attr( 'fill', 'none' )
         .attr( 'stroke', color )
-        .attr( 'stroke-width', 1.5 )
+        .attr( 'stroke-width', lineWidth )
+        .attr( 'stroke-dasharray', strokeDasharray )
         .attr( 'stroke-linejoin', 'round' )
         .attr( 'stroke-linecap', 'round' )
         .attr( 'stroke-opacity', 1 )
         .attr( 'd', line );
+
+      // Draw points (if showPoints is true)
+      if ( showPoints ) {
+        const symbolGenerator = d3.symbol().type(
+          pointShape === 'square' ? d3.symbolSquare :
+            pointShape === 'diamond' ? d3.symbolDiamond :
+              pointShape === 'triangle' ? d3.symbolTriangle :
+                d3.symbolCircle
+        ).size( Math.PI * Math.pow( pointSize, 2 ) );
+
+        contentGroup.selectAll( `.point-${ index }` )
+          .data( filteredData )
+          .enter()
+          .append( 'path' )
+          .attr( 'class', `point-series point-${ index }` )
+          .attr( 'transform', d => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+          .attr( 'fill', pointColor || color )
+          .attr( 'stroke', pointOutlineColor )
+          .attr( 'stroke-width', pointOutlineWidth )
+          .attr( 'd', symbolGenerator );
+      }
 
       lines.push( { path, key, color, index } );
     } );

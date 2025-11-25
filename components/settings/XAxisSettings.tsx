@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowUp, ArrowDown, EyeOff, TrendingUp, Activity } from 'lucide-react';
+import { ArrowUp, ArrowDown, EyeOff, TrendingUp, Activity, AlignLeft, AlignCenter, AlignRight, MoveRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { FormField } from '@/components/ui/form-field';
@@ -31,6 +31,10 @@ export function XAxisSettings() {
   // Title
   const xAxisTitle = useChartStore( ( state ) => state.xAxisTitle );
   const setXAxisTitle = useChartStore( ( state ) => state.setXAxisTitle );
+  const xAxisName = useChartStore( ( state ) => state.xAxisName );
+  const setXAxisName = useChartStore( ( state ) => state.setXAxisName );
+  const xAxisShowLabel = useChartStore( ( state ) => state.xAxisShowLabel );
+  const setXAxisShowLabel = useChartStore( ( state ) => state.setXAxisShowLabel );
 
   // Title Styling
   const xAxisTitleType = useChartStore( ( state ) => state.xAxisTitleType );
@@ -43,6 +47,10 @@ export function XAxisSettings() {
   const setXAxisTitleSize = useChartStore( ( state ) => state.setXAxisTitleSize );
   const xAxisTitlePadding = useChartStore( ( state ) => state.xAxisTitlePadding );
   const setXAxisTitlePadding = useChartStore( ( state ) => state.setXAxisTitlePadding );
+  const xAxisTitleAlignment = useChartStore( ( state ) => state.xAxisTitleAlignment );
+  const setXAxisTitleAlignment = useChartStore( ( state ) => state.setXAxisTitleAlignment );
+  const xAxisTitleArrow = useChartStore( ( state ) => state.xAxisTitleArrow );
+  const setXAxisTitleArrow = useChartStore( ( state ) => state.setXAxisTitleArrow );
 
   // Tick & Label Styling
   const xAxisTickPosition = useChartStore( ( state ) => state.xAxisTickPosition );
@@ -71,6 +79,8 @@ export function XAxisSettings() {
   const setXAxisShowGrid = useChartStore( ( state ) => state.setXAxisShowGrid );
   const xAxisShowDomain = useChartStore( ( state ) => state.xAxisShowDomain );
   const setXAxisShowDomain = useChartStore( ( state ) => state.setXAxisShowDomain );
+  const xAxisDomainColor = useChartStore( ( state ) => state.xAxisDomainColor );
+  const setXAxisDomainColor = useChartStore( ( state ) => state.setXAxisDomainColor );
 
   // Ticks
   const xAxisTickCount = useChartStore( ( state ) => state.xAxisTickCount );
@@ -163,6 +173,23 @@ export function XAxisSettings() {
 
         <FormField
           type='switch'
+          label='Show Axis Label'
+          checked={ xAxisShowLabel }
+          onChange={ setXAxisShowLabel }
+        />
+
+        { xAxisShowLabel && (
+          <FormField
+            type='text'
+            label='Custom Label'
+            value={ xAxisName }
+            onChange={ setXAxisName }
+            placeholder='Defaults to column name'
+          />
+        ) }
+
+        <FormField
+          type='switch'
           label='Custom Style'
           checked={ xAxisTitleType !== 'auto' }
           onChange={ ( enabled ) => setXAxisTitleType( enabled ? 'custom' : 'auto' ) }
@@ -213,6 +240,30 @@ export function XAxisSettings() {
                   value={ xAxisTitlePadding }
                   onChange={ ( v ) => setXAxisTitlePadding( v ?? 0 ) }
                   min={ 0 }
+                />
+              </FormCol>
+            </FormRow>
+
+            <FormRow>
+              <FormCol span={ 8 }>
+                <FormField
+                  type='button-group'
+                  label='Alignment'
+                  value={ xAxisTitleAlignment }
+                  onChange={ setXAxisTitleAlignment as ( value: string ) => void }
+                  options={ [
+                    { value: 'start', icon: <AlignLeft className='icon-sm' /> },
+                    { value: 'center', icon: <AlignCenter className='icon-sm' /> },
+                    { value: 'end', icon: <AlignRight className='icon-sm' /> },
+                  ] }
+                />
+              </FormCol>
+              <FormCol span='auto'>
+                <FormField
+                  type='switch'
+                  label='Arrow'
+                  checked={ xAxisTitleArrow }
+                  onChange={ setXAxisTitleArrow }
                 />
               </FormCol>
             </FormRow>
@@ -287,7 +338,7 @@ export function XAxisSettings() {
 
       <Separator />
 
-      <FormSection title='Labels'>
+      <FormSection title='Tick Labels'>
         <FormRow>
           <FormCol span={ 10 }>
             <FormField
@@ -367,6 +418,19 @@ export function XAxisSettings() {
             />
           </FormCol>
         </FormRow>
+
+        { xAxisShowDomain && (
+          <FormRow>
+            <FormCol span={ 6 }>
+              <FormField
+                type='color'
+                label='Domain Color'
+                value={ xAxisDomainColor }
+                onChange={ setXAxisDomainColor }
+              />
+            </FormCol>
+          </FormRow>
+        ) }
 
         { xAxisShowGrid && (
           <>

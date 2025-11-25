@@ -44,6 +44,7 @@ interface BarChartProps {
   // X Axis
   xAxisShow?: boolean;
   xAxisTitle?: string;
+  xAxisName?: string;
   xAxisShowGrid?: boolean;
   xAxisShowDomain?: boolean;
   xAxisTickCount?: number;
@@ -97,6 +98,7 @@ export function BarChart( {
   // X Axis
   xAxisShow = true,
   xAxisTitle = '',
+  xAxisName,
   xAxisShowGrid = true,
   xAxisShowDomain = true,
   xAxisTickCount = 10,
@@ -241,6 +243,8 @@ export function BarChart( {
         xAxisTitleWeight,
         xAxisTitleColor,
         xAxisTitlePadding,
+        xAxisName,
+        yAxisPosition: yAxis.position,
         xAxisShowDomain
       } );
 
@@ -249,7 +253,8 @@ export function BarChart( {
         yScale,
         innerWidth,
         innerHeight,
-        yAxis
+        yAxis,
+        xAxisPosition
       } );
 
       // Re-render X Grid
@@ -379,6 +384,8 @@ export function BarChart( {
         xAxisTitleWeight,
         xAxisTitleColor,
         xAxisTitlePadding,
+        xAxisName,
+        yAxisPosition: yAxis.position,
         xAxisShowDomain
       } );
 
@@ -386,7 +393,8 @@ export function BarChart( {
         yScale,
         innerWidth,
         innerHeight,
-        yAxis
+        yAxis,
+        xAxisPosition
       } );
     }
 

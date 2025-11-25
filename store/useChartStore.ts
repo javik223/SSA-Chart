@@ -564,11 +564,20 @@ interface ChartStore {
   xAxisTitle: string;
   setXAxisTitle: (title: string) => void;
 
+  xAxisName: string;
+  setXAxisName: (name: string) => void;
+
+  xAxisShowLabel: boolean;
+  setXAxisShowLabel: (show: boolean) => void;
+
   xAxisShowGrid: boolean;
   setXAxisShowGrid: (show: boolean) => void;
 
   xAxisShowDomain: boolean;
   setXAxisShowDomain: (show: boolean) => void;
+
+  xAxisDomainColor: string;
+  setXAxisDomainColor: (color: string) => void;
 
   xAxisTickCount: number | null;
   setXAxisTickCount: (count: number | null) => void;
@@ -612,6 +621,12 @@ interface ChartStore {
   
   xAxisTitlePadding: number;
   setXAxisTitlePadding: (padding: number) => void;
+
+  xAxisTitleAlignment: 'start' | 'center' | 'end';
+  setXAxisTitleAlignment: (alignment: 'start' | 'center' | 'end') => void;
+
+  xAxisTitleArrow: boolean;
+  setXAxisTitleArrow: (arrow: boolean) => void;
   
   // X Axis Tick & Label Styling
   xAxisTickPosition: 'outside' | 'inside' | 'cross';
@@ -649,11 +664,20 @@ interface ChartStore {
   yAxisTitle: string;
   setYAxisTitle: (title: string) => void;
 
+  yAxisName: string;
+  setYAxisName: (name: string) => void;
+
+  yAxisShowLabel: boolean;
+  setYAxisShowLabel: (show: boolean) => void;
+
   yAxisShowGrid: boolean;
   setYAxisShowGrid: (show: boolean) => void;
 
   yAxisShowDomain: boolean;
   setYAxisShowDomain: (show: boolean) => void;
+
+  yAxisDomainColor: string;
+  setYAxisDomainColor: (color: string) => void;
 
   yAxisTickCount: number | null;
   setYAxisTickCount: (count: number | null) => void;
@@ -713,6 +737,12 @@ interface ChartStore {
   
   yAxisTitlePadding: number;
   setYAxisTitlePadding: (padding: number) => void;
+
+  yAxisTitleAlignment: 'start' | 'center' | 'end';
+  setYAxisTitleAlignment: (alignment: 'start' | 'center' | 'end') => void;
+
+  yAxisTitleArrow: boolean;
+  setYAxisTitleArrow: (arrow: boolean) => void;
   
   // Y Axis Tick & Label Styling
   yAxisTickPosition: 'outside' | 'inside' | 'cross';
@@ -1566,11 +1596,20 @@ export const useChartStore = create<ChartStore>()(
       xAxisTitle: '',
       setXAxisTitle: (title) => set({ xAxisTitle: title }),
 
+      xAxisName: '',
+      setXAxisName: (name) => set({ xAxisName: name }),
+
+      xAxisShowLabel: false,
+      setXAxisShowLabel: (show) => set({ xAxisShowLabel: show }),
+
       xAxisShowGrid: true,
       setXAxisShowGrid: (show) => set({ xAxisShowGrid: show }),
 
       xAxisShowDomain: true,
       setXAxisShowDomain: (show) => set({ xAxisShowDomain: show }),
+
+      xAxisDomainColor: '#000000',
+      setXAxisDomainColor: (color) => set({ xAxisDomainColor: color }),
 
       xAxisTickCount: 10,
       setXAxisTickCount: (count) => set({ xAxisTickCount: count }),
@@ -1614,6 +1653,12 @@ export const useChartStore = create<ChartStore>()(
       
       xAxisTitlePadding: 35,
       setXAxisTitlePadding: (padding) => set({ xAxisTitlePadding: padding }),
+
+      xAxisTitleAlignment: 'center',
+      setXAxisTitleAlignment: (alignment) => set({ xAxisTitleAlignment: alignment }),
+
+      xAxisTitleArrow: false,
+      setXAxisTitleArrow: (arrow) => set({ xAxisTitleArrow: arrow }),
       
       // X Axis Tick & Label Styling
       xAxisTickPosition: 'outside',
@@ -1651,11 +1696,20 @@ export const useChartStore = create<ChartStore>()(
       yAxisTitle: '',
       setYAxisTitle: (title) => set({ yAxisTitle: title }),
 
+      yAxisName: '',
+      setYAxisName: (name) => set({ yAxisName: name }),
+
+      yAxisShowLabel: false,
+      setYAxisShowLabel: (show) => set({ yAxisShowLabel: show }),
+
       yAxisShowGrid: true,
       setYAxisShowGrid: (show) => set({ yAxisShowGrid: show }),
 
       yAxisShowDomain: true,
       setYAxisShowDomain: (show) => set({ yAxisShowDomain: show }),
+
+      yAxisDomainColor: '#000000',
+      setYAxisDomainColor: (color) => set({ yAxisDomainColor: color }),
 
       yAxisTickCount: 10,
       setYAxisTickCount: (count) => set({ yAxisTickCount: count }),
@@ -1715,6 +1769,12 @@ export const useChartStore = create<ChartStore>()(
       
       yAxisTitlePadding: 40,
       setYAxisTitlePadding: (padding) => set({ yAxisTitlePadding: padding }),
+
+      yAxisTitleAlignment: 'center',
+      setYAxisTitleAlignment: (alignment) => set({ yAxisTitleAlignment: alignment }),
+
+      yAxisTitleArrow: false,
+      setYAxisTitleArrow: (arrow) => set({ yAxisTitleArrow: arrow }),
       
       // Y Axis Tick & Label Styling
       yAxisTickPosition: 'outside',

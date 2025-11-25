@@ -18,8 +18,11 @@ export interface BaseChartProps {
   // X Axis
   xAxisShow?: boolean;
   xAxisTitle?: string;
+  xAxisName?: string;
+  xAxisShowLabel?: boolean;
   xAxisShowGrid?: boolean;
   xAxisShowDomain?: boolean;
+  xAxisDomainColor?: string;
   xAxisTickCount?: number | null;
   xAxisTickSize?: number;
   xAxisTickPadding?: number;
@@ -29,7 +32,10 @@ export interface BaseChartProps {
   xAxisTitleWeight?: 'bold' | 'regular';
   xAxisTitleColor?: string;
   xAxisTitleSize?: number;
+
   xAxisTitlePadding?: number;
+  xAxisTitleAlignment?: 'start' | 'center' | 'end';
+  xAxisTitleArrow?: boolean;
   xAxisTickPosition?: 'outside' | 'inside' | 'cross';
   xAxisLabelWeight?: 'bold' | 'regular';
   xAxisLabelColor?: string;
@@ -60,12 +66,16 @@ export interface YAxisConfig {
 
   // Title
   title: string;
+  name?: string;
+  showLabel?: boolean;
   titleType: 'auto' | 'custom';
   titlePosition: 'side' | 'top-bottom';
   titleWeight: 'bold' | 'regular';
   titleColor: string;
   titleSize: number;
   titlePadding: number;
+  titleAlignment: 'start' | 'center' | 'end';
+  titleArrow: boolean;
 
   // Ticks & Labels
   tickPosition: 'outside' | 'inside' | 'cross';
@@ -91,6 +101,7 @@ export interface YAxisConfig {
   // Grid & Lines
   showGrid: boolean;
   showDomain: boolean;
+  domainColor: string;
   showAxisLine: boolean;
   gridColor: string;
   gridStyle: 'solid' | 'dashed' | 'dotted';
@@ -114,12 +125,16 @@ export const DEFAULT_Y_AXIS_CONFIG: YAxisConfig = {
   roundMin: false,
   roundMax: false,
   title: '',
+  name: '',
+  showLabel: false,
   titleType: 'auto',
   titlePosition: 'side',
   titleWeight: 'regular',
   titleColor: '#666666',
   titleSize: 12,
   titlePadding: 40,
+  titleAlignment: 'center',
+  titleArrow: false,
   tickPosition: 'outside',
   labelSize: 12,
   labelWeight: 'regular',
@@ -138,8 +153,9 @@ export const DEFAULT_Y_AXIS_CONFIG: YAxisConfig = {
   tickFormat: '',
   tickLength: 6,
   showGrid: true,
-  showDomain: true,
-  showAxisLine: true,
+  showDomain: false,
+  domainColor: '#000000',
+  showAxisLine: false,
   gridColor: '#e5e7eb',
   gridStyle: 'solid',
   gridWidth: 1,

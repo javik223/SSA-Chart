@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, EyeOff } from 'lucide-react';
+import { ArrowLeft, ArrowRight, EyeOff, AlignLeft, AlignCenter, AlignRight, RotateCcw, MoveUp } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
 import { FormField } from '@/components/ui/form-field';
@@ -31,6 +31,10 @@ export function YAxisSettings() {
   // Title
   const yAxisTitle = useChartStore( ( state ) => state.yAxisTitle );
   const setYAxisTitle = useChartStore( ( state ) => state.setYAxisTitle );
+  const yAxisName = useChartStore( ( state ) => state.yAxisName );
+  const setYAxisName = useChartStore( ( state ) => state.setYAxisName );
+  const yAxisShowLabel = useChartStore( ( state ) => state.yAxisShowLabel );
+  const setYAxisShowLabel = useChartStore( ( state ) => state.setYAxisShowLabel );
 
   // Title Styling
   const yAxisTitleType = useChartStore( ( state ) => state.yAxisTitleType );
@@ -43,6 +47,12 @@ export function YAxisSettings() {
   const setYAxisTitleSize = useChartStore( ( state ) => state.setYAxisTitleSize );
   const yAxisTitlePadding = useChartStore( ( state ) => state.yAxisTitlePadding );
   const setYAxisTitlePadding = useChartStore( ( state ) => state.setYAxisTitlePadding );
+  const yAxisTitleAlignment = useChartStore( ( state ) => state.yAxisTitleAlignment );
+  const setYAxisTitleAlignment = useChartStore( ( state ) => state.setYAxisTitleAlignment );
+  const yAxisTitleArrow = useChartStore( ( state ) => state.yAxisTitleArrow );
+  const setYAxisTitleArrow = useChartStore( ( state ) => state.setYAxisTitleArrow );
+  const yAxisTitlePosition = useChartStore( ( state ) => state.yAxisTitlePosition );
+  const setYAxisTitlePosition = useChartStore( ( state ) => state.setYAxisTitlePosition );
 
   // Tick & Label Styling
   const yAxisTickPosition = useChartStore( ( state ) => state.yAxisTickPosition );
@@ -69,6 +79,8 @@ export function YAxisSettings() {
   const setYAxisShowGrid = useChartStore( ( state ) => state.setYAxisShowGrid );
   const yAxisShowDomain = useChartStore( ( state ) => state.yAxisShowDomain );
   const setYAxisShowDomain = useChartStore( ( state ) => state.setYAxisShowDomain );
+  const yAxisDomainColor = useChartStore( ( state ) => state.yAxisDomainColor );
+  const setYAxisDomainColor = useChartStore( ( state ) => state.setYAxisDomainColor );
 
   // Ticks
   const yAxisTickCount = useChartStore( ( state ) => state.yAxisTickCount );
@@ -145,6 +157,23 @@ export function YAxisSettings() {
           onChange={ setYAxisTitle }
           placeholder='Enter axis title'
         />
+
+        <FormField
+          type='switch'
+          label='Show Axis Label'
+          checked={ yAxisShowLabel }
+          onChange={ setYAxisShowLabel }
+        />
+
+        { yAxisShowLabel && (
+          <FormField
+            type='text'
+            label='Custom Label'
+            value={ yAxisName }
+            onChange={ setYAxisName }
+            placeholder='Defaults to column name'
+          />
+        ) }
 
         <FormField
           type='switch'
@@ -267,7 +296,7 @@ export function YAxisSettings() {
 
       <Separator />
 
-      <FormSection title='Labels'>
+      <FormSection title='Tick Labels'>
         <FormRow>
           <FormCol span={ 10 }>
             <FormField
@@ -342,6 +371,20 @@ export function YAxisSettings() {
             onChange={ setYAxisShowDomain }
           />
         </FormGrid>
+
+        { yAxisShowDomain && (
+          <>
+            <Separator />
+            <FormGrid columns={ 2 }>
+              <FormField
+                type='color'
+                label='Domain Color'
+                value={ yAxisDomainColor }
+                onChange={ setYAxisDomainColor }
+              />
+            </FormGrid>
+          </>
+        ) }
 
         { yAxisShowGrid && (
           <>
