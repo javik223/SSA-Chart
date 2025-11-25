@@ -5,3 +5,4 @@ export { AreaChart } from './AreaChart';
 export { MultiLineChart } from './MultiLineChart';
 export { PieChart } from './PieChart';
 export { DonutChart } from './DonutChart';
+export { DivergingBarChart } from './DivergingBarChart';

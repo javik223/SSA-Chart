@@ -20,6 +20,7 @@ import { CircularBarPlotChart } from '@/components/charts/CircularBarPlotChart';
 import { RadialBarChart } from '@/components/charts/RadialBarChart';
 import { PolarAreaChart } from '@/components/charts/PolarAreaChart';
 import { RadarChart } from '@/components/charts/RadarChart';
+import { DivergingBarChart } from '@/components/charts/DivergingBarChart';
 
 /**
  * Register all charts
@@ -201,6 +202,21 @@ export function initializeCharts() {
       supportsAnimation: false,
       status: 'stable',
       tags: ['radar', 'spider', 'multivariate', 'comparison'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'diverging-bar',
+      name: 'Diverging bar chart',
+      category: 'line-bar-pie',
+      description: 'Compare positive and negative values from a central baseline',
+      component: DivergingBarChart,
+      supportsMultipleSeries: false,
+      supportsAnimation: true,
+      status: 'stable',
+      tags: ['diverging', 'comparison', 'positive-negative', 'variance'],
       requiredColumns: {
         label: true,
         value: true,

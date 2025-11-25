@@ -118,6 +118,9 @@ interface ChartStore {
   chartConfig: ChartConfig;
   setChartConfig: (config: Partial<ChartConfig>) => void;
 
+  showOnChartControls: boolean;
+  setShowOnChartControls: (show: boolean) => void;
+
   chartData: ChartData | null;
   setChartData: (data: ChartData | null) => void;
 
@@ -898,6 +901,22 @@ interface ChartStore {
   labelFontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
   setLabelFontWeight: (weight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900') => void;
 
+  // Diverging Bar Chart specific settings
+  divergingBarSortBy: 'none' | 'value' | 'ascending' | 'descending';
+  setDivergingBarSortBy: (sortBy: 'none' | 'value' | 'ascending' | 'descending') => void;
+
+  divergingBarLabelPosition: 'inside' | 'outside';
+  setDivergingBarLabelPosition: (position: 'inside' | 'outside') => void;
+
+  divergingBarUseGradientColors: boolean;
+  setDivergingBarUseGradientColors: (use: boolean) => void;
+
+  divergingBarPositiveColor: string;
+  setDivergingBarPositiveColor: (color: string) => void;
+
+  divergingBarNegativeColor: string;
+  setDivergingBarNegativeColor: (color: string) => void;
+
   // UI state
   isDataPanelOpen: boolean;
   toggleDataPanel: () => void;
@@ -1152,6 +1171,9 @@ export const useChartStore = create<ChartStore>()(
         set((state) => ({
           chartConfig: { ...state.chartConfig, ...config },
         })),
+
+      showOnChartControls: false,
+      setShowOnChartControls: (show) => set({ showOnChartControls: show }),
 
       chartData: null,
       setChartData: (data) => set({ chartData: data }),
@@ -1933,6 +1955,22 @@ export const useChartStore = create<ChartStore>()(
 
       labelFontWeight: 'normal',
       setLabelFontWeight: (weight) => set({ labelFontWeight: weight }),
+
+      // Diverging Bar Chart settings
+      divergingBarSortBy: 'ascending',
+      setDivergingBarSortBy: (sortBy) => set({ divergingBarSortBy: sortBy }),
+
+      divergingBarLabelPosition: 'outside',
+      setDivergingBarLabelPosition: (position) => set({ divergingBarLabelPosition: position }),
+
+      divergingBarUseGradientColors: true,
+      setDivergingBarUseGradientColors: (use) => set({ divergingBarUseGradientColors: use }),
+
+      divergingBarPositiveColor: '#3b82f6',
+      setDivergingBarPositiveColor: (color) => set({ divergingBarPositiveColor: color }),
+
+      divergingBarNegativeColor: '#dc2626',
+      setDivergingBarNegativeColor: (color) => set({ divergingBarNegativeColor: color }),
 
       // Initial UI state
       isDataPanelOpen: true,

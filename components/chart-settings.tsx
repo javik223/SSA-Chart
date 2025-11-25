@@ -42,6 +42,7 @@ import { YAxisSettings } from '@/components/settings/YAxisSettings';
 import { LinesSettings } from '@/components/settings/LinesSettings';
 import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
+import { DivergingBarSettings } from '@/components/settings/DivergingBarSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
 import { FormField } from '@/components/ui/form-field';
 import { FormSection } from '@/components/ui/form-section';
@@ -121,7 +122,7 @@ export function ChartSettings() {
   } ) );
 
   // Define all accordion sections with searchable content
-  const accordionSections = [
+  const allAccordionSections = [
     {
       value: 'preview',
       title: 'Preview',
@@ -170,6 +171,12 @@ export function ChartSettings() {
       title: 'Labels',
       description: 'Customize data point labels',
       keywords: [ 'labels', 'text', 'annotations', 'data points' ],
+    },
+    {
+      value: 'diverging-bar',
+      title: 'Diverging Bar Options',
+      description: 'Configure diverging bar chart specific settings',
+      keywords: [ 'diverging', 'bar', 'sort', 'gradient', 'colors', 'labels' ],
     },
     {
       value: 'x-axis',
@@ -252,8 +259,12 @@ export function ChartSettings() {
     },
   ];
 
+  const accordionSections = allAccordionSections.filter( section =>
+    section.value !== 'diverging-bar' || chartType === 'diverging-bar'
+  );
+
   // Check if a section matches the search query
-  const doesSectionMatch = ( section: ( typeof accordionSections )[ 0 ] ) => {
+  const doesSectionMatch = ( section: ( typeof allAccordionSections )[ 0 ] ) => {
     if ( !searchQuery.trim() ) return true;
     const query = searchQuery.toLowerCase();
     return (
@@ -319,6 +330,8 @@ export function ChartSettings() {
                       <LinesSettings />
                     ) : section.value === 'labels' ? (
                       <LabelsSettings />
+                    ) : section.value === 'diverging-bar' ? (
+                      <DivergingBarSettings />
                     ) : section.value === 'theme' ? (
                       <div className='settings-container'>
                         <FormSection title='Theme' helpIcon>

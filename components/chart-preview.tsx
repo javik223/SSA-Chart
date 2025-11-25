@@ -13,6 +13,7 @@ import { ChartLegend } from '@/components/chart-legend';
 import { ChartFooterSection } from '@/components/chart-footer-section';
 import { useChartStore } from '@/store/useChartStore';
 import { useMemo } from 'react';
+import { ChartControls } from '@/components/chart-controls';
 
 export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
   const legendPosition = useChartStore( ( state ) => state.legendPosition );
@@ -172,7 +173,7 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
     // Components map
     const components = {
       header: <ChartHeaderSection key="header" />,
-      controls: null, // Placeholder for controls
+      controls: <ChartControls key="controls" />,
       legend: (
         <div key="legend" className="w-full">
           { legendPosition === 'top' && <ChartLegend valueKeys={ valueKeys } /> }
@@ -241,7 +242,7 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
     <div className='chart-preview-container'>
       <ResizablePanelGroup direction='horizontal' className="flex-col! md:flex-row! gap-4">
         {/* Chart Display Area */ }
-        <ResizablePanel defaultSize={ 75 } minSize={ 50 } className="basis-auto! md:basis-0! shrink-0 h-full overflow-auto">
+        <ResizablePanel defaultSize={ 75 } minSize={ 50 } className="basis-auto! md:basis-0! shrink-0 h-full overflow-auto!">
           <div className='chart-preview-area'>
             <div
               data-chart-container

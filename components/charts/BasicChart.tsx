@@ -150,6 +150,13 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const labelColor = useChartStore( ( state ) => state.labelColor );
   const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
 
+  // Diverging Bar Chart settings
+  const divergingBarSortBy = useChartStore( ( state ) => state.divergingBarSortBy );
+  const divergingBarLabelPosition = useChartStore( ( state ) => state.divergingBarLabelPosition );
+  const divergingBarUseGradientColors = useChartStore( ( state ) => state.divergingBarUseGradientColors );
+  const divergingBarPositiveColor = useChartStore( ( state ) => state.divergingBarPositiveColor );
+  const divergingBarNegativeColor = useChartStore( ( state ) => state.divergingBarNegativeColor );
+
   // Transform data for chart
   const { chartData, valueKeys } = useMemo( () => {
     // Skip calculation if not visible
@@ -364,6 +371,14 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     labelFontSize,
     labelColor,
     labelFontWeight,
+
+    // Diverging Bar Chart settings
+    sortBy: divergingBarSortBy,
+    labelPosition: divergingBarLabelPosition,
+    useGradientColors: divergingBarUseGradientColors,
+    positiveColor: divergingBarPositiveColor,
+    negativeColor: divergingBarNegativeColor,
+    showLabels: labelShow,
 
     // Y Axis Config
     yAxis: {

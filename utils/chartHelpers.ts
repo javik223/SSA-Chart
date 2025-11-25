@@ -972,3 +972,187 @@ export function setupPan(config: PanConfig): void {
 
   target.call(drag as any);
 }
+
+/**
+ * Setup brush zoom interaction for Y-axis (drag vertically to select region)
+ */
+export function setupBrushZoomY(config: BrushZoomConfig): void {
+  const brush = d3.brushY()
+    .extent([[0, 0], [config.innerWidth, config.innerHeight]])
+    .filter((event) => !event.shiftKey && !event.button) // Normal drag without Shift
+    .on('end', (event) => {
+      // Handle zoom reset on double-click (empty selection)
+      if (!event.selection) {
+        const svgNode = config.g.node() as any;
+        
+        if (!svgNode.__idleTimeout) {
+          svgNode.__idleTimeout = setTimeout(() => {
+            svgNode.__idleTimeout = null;
+          }, 350);
+          return;
+        }
+        
+        svgNode.__idleTimeout = null;
+
+        // Reset to full domain
+        // For Y-axis zoom (categories), we reset the Y domain indices
+        config.setZoomDomain({
+          x: [0, 0], // Dummy value, not used for Y-only zoom
+          y: [0, config.data.length - 1] // Reset Y to full range indices
+        });
+        return;
+      }
+
+      const [y0, y1] = event.selection as [number, number];
+
+      // Convert pixel coordinates to data indices
+      const allLabels = config.data.map((d) => String(d[config.labelKey]));
+      const yScaleFull = d3.scaleBand()
+        .domain(allLabels)
+        .range([0, config.innerHeight])
+        .padding(0.2); // Match the chart's padding
+
+      // Find the indices of the selected range
+      let startIndex = config.data.length - 1;
+      let endIndex = 0;
+
+      allLabels.forEach((label, i) => {
+        const pos = (yScaleFull(label) || 0);
+        const bandwidth = yScaleFull.bandwidth();
+        const center = pos + bandwidth / 2;
+        
+        if (center >= y0 && i < startIndex) startIndex = i;
+        if (center <= y1) endIndex = i;
+      });
+
+      if (startIndex > endIndex) {
+        const midpoint = (y0 + y1) / 2;
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        allLabels.forEach((label, i) => {
+          const pos = (yScaleFull(label) || 0);
+          const center = pos + yScaleFull.bandwidth() / 2;
+          const distance = Math.abs(center - midpoint);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+          }
+        });
+
+        startIndex = closestIndex;
+        endIndex = closestIndex;
+      }
+
+      config.setZoomDomain({
+        x: [0, 0], 
+        y: [startIndex, endIndex],
+      });
+
+      config.g.select('.brush').call(brush.move as any, null);
+    });
+
+  let brushGroup = config.g.select<SVGGElement>('.brush');
+  if (brushGroup.empty()) {
+    brushGroup = config.g.append('g').attr('class', 'brush');
+  }
+  
+  brushGroup.call(brush);
+  brushGroup.raise();
+}
+
+/**
+ * Setup drag panning interaction for Y-axis (Shift+Drag vertically)
+ */
+export function setupPanY(config: PanConfig): void {
+  let isDragging = false;
+  let accumulatedDy = 0;
+
+  const drag = d3.drag()
+    .filter((event) => event.shiftKey && !event.button)
+    .on('start', function() {
+      isDragging = true;
+      accumulatedDy = 0;
+      d3.select(this).style('cursor', 'grabbing');
+    })
+    .on('drag', (event) => {
+      if (!isDragging) return;
+
+      const [currentStart, currentEnd] = config.zoomDomain?.y || [0, config.data.length - 1];
+      const range = currentEnd - currentStart;
+
+      accumulatedDy += event.dy;
+
+      const dataPointsPerPixel = range / config.innerHeight;
+      const sensitivity = 3; 
+      const indexDelta = Math.round(-accumulatedDy * dataPointsPerPixel * sensitivity);
+
+      if (indexDelta === 0) return;
+
+      accumulatedDy = 0;
+
+      let newStart = currentStart + indexDelta;
+      let newEnd = currentEnd + indexDelta;
+
+      if (newStart < 0) {
+        newStart = 0;
+        newEnd = range;
+      }
+      if (newEnd > config.data.length - 1) {
+        newEnd = config.data.length - 1;
+        newStart = newEnd - range;
+      }
+
+      if (newStart === currentStart && newEnd === currentEnd) return;
+
+      config.setZoomDomain({
+        x: [0, 0],
+        y: [newStart, newEnd]
+      });
+    })
+    .on('end', function(event) {
+      isDragging = false;
+      accumulatedDy = 0;
+      if (event.sourceEvent && event.sourceEvent.shiftKey) {
+        d3.select(this).style('cursor', 'grab');
+      } else {
+        d3.select(this).style('cursor', 'crosshair');
+      }
+    });
+
+  let target = config.g.select<SVGRectElement>('.brush .overlay');
+
+  if (target.empty()) {
+    let panRect = config.g.select<SVGRectElement>('.pan-rect');
+    if (panRect.empty()) {
+      panRect = config.g.append('rect')
+        .attr('class', 'pan-rect')
+        .attr('fill', 'transparent');
+
+      panRect.lower();
+      config.g.select('.grid').lower();
+    }
+
+    panRect
+      .attr('width', config.innerWidth)
+      .attr('height', config.innerHeight)
+      .style('cursor', 'grab');
+
+    target = panRect;
+  } else {
+    target
+      .style('cursor', 'crosshair')
+      .on('mouseenter', function() {
+        d3.select(this).style('cursor', 'crosshair');
+      })
+      .on('mousemove', function(event) {
+        if (event.shiftKey) {
+          d3.select(this).style('cursor', 'grab');
+        } else {
+          d3.select(this).style('cursor', 'crosshair');
+        }
+      });
+  }
+
+  target.call(drag as any);
+}
