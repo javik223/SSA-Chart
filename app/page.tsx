@@ -9,7 +9,7 @@ export default function Home() {
   const [ activeTab, setActiveTab ] = useState( 'data' );
 
   return (
-    <main className='flex flex-col h-[200vh] md:h-screen'>
+    <main className='flex flex-col md:h-screen'>
       <PageHeader />
       <div className='w-full'>
         <ToggleGroup

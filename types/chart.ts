@@ -5,6 +5,7 @@
 // Line, Bar, and Pie Charts
 export type LineBarPieChartType =
   | 'line'
+  | 'multi-line'
   | 'line-stacked'
   | 'line-projected'
   | 'line-with-dots'

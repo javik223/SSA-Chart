@@ -141,41 +141,87 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
 
   // Transform data for chart
-  const chartData = useMemo( () => {
+  const { chartData, valueKeys } = useMemo( () => {
     // Skip calculation if not visible
-    if ( !isVisible ) return [];
+    if ( !isVisible ) return { chartData: [], valueKeys: [] };
 
-    if ( !data || data.length < 2 ) return [];
+    if ( !data || data.length < 2 ) return { chartData: [], valueKeys: [] };
     if ( columnMapping.labels === null || columnMapping.values.length === 0 ) {
-      return [];
+      return { chartData: [], valueKeys: [] };
     }
 
     const headers = data[ 0 ];
     const labelIndex = columnMapping.labels;
     const valueIndices = columnMapping.values;
+    const seriesIndex = columnMapping.series;
 
     // Get label column name
     const labelKey = String( headers[ labelIndex ] || 'label' );
 
-    // Get value column names
-    const valueKeys = valueIndices.map( ( idx ) => String( headers[ idx ] || `value${ idx }` ) );
+    // Standard value keys (for wide format)
+    const standardValueKeys = valueIndices.map( ( idx ) => String( headers[ idx ] || `value${ idx }` ) );
 
     // Transform data rows
     const rows = data.slice( 1 );
 
+    // Handle Long Format (Pivoting) if Series is selected
+    if ( seriesIndex !== null && seriesIndex !== undefined ) {
+      const valueIndex = valueIndices[ 0 ]; // Use the first value column for pivoting
+      const seriesKey = String( headers[ seriesIndex ] || 'series' );
+
+      // Group by label
+      const groupedByLabel: Record<string, Record<string, number>> = {};
+      const uniqueSeries = new Set<string>();
+
+      rows.forEach( ( row ) => {
+        const label = String( row[ labelIndex ] || '' );
+        const series = String( row[ seriesIndex ] || '' );
+        const value = parseFloat( String( row[ valueIndex ] || '0' ) );
+
+        if ( !groupedByLabel[ label ] ) {
+          groupedByLabel[ label ] = {};
+        }
+
+        if ( series ) {
+          const key = `${ seriesKey }: ${ series }`;
+          groupedByLabel[ label ][ key ] = isNaN( value ) ? 0 : value;
+          uniqueSeries.add( key );
+        }
+      } );
+
+      const pivotedData = Object.entries( groupedByLabel ).map( ( [ label, seriesValues ] ) => {
+        return {
+          [ labelKey ]: label,
+          ...seriesValues,
+        };
+      } );
+
+      console.log( '[BasicChart] Pivoted Data:', JSON.stringify( {
+        rows: pivotedData.length,
+        keys: Array.from( uniqueSeries ).sort()
+      } ) );
+
+      return {
+        chartData: pivotedData,
+        valueKeys: Array.from( uniqueSeries ).sort()
+      };
+    }
+
+    // Standard Wide Format Handling
     if ( aggregationMode === 'none' ) {
       // No aggregation - use data as is
-      return rows.map( ( row ) => {
+      const processedData = rows.map( ( row ) => {
         const item: Record<string, string | number> = {};
         item[ labelKey ] = String( row[ labelIndex ] || '' );
 
         valueIndices.forEach( ( idx, i ) => {
           const value = parseFloat( String( row[ idx ] || '0' ) );
-          item[ valueKeys[ i ] ] = isNaN( value ) ? 0 : value;
+          item[ standardValueKeys[ i ] ] = isNaN( value ) ? 0 : value;
         } );
 
         return item;
       } );
+      return { chartData: processedData, valueKeys: standardValueKeys };
     } else {
       // Aggregate data by label
       const aggregated: Record<string, Record<string, number[]>> = {};
@@ -184,7 +230,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
         const label = String( row[ labelIndex ] || '' );
         if ( !aggregated[ label ] ) {
           aggregated[ label ] = {};
-          valueKeys.forEach( ( key ) => {
+          standardValueKeys.forEach( ( key ) => {
             aggregated[ label ][ key ] = [];
           } );
         }
@@ -192,17 +238,17 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
         valueIndices.forEach( ( idx, i ) => {
           const value = parseFloat( String( row[ idx ] ) );
           if ( !isNaN( value ) ) {
-            aggregated[ label ][ valueKeys[ i ] ].push( value );
+            aggregated[ label ][ standardValueKeys[ i ] ].push( value );
           }
         } );
       } );
 
       // Calculate aggregation
-      return Object.entries( aggregated ).map( ( [ label, values ] ) => {
+      const aggregatedData = Object.entries( aggregated ).map( ( [ label, values ] ) => {
         const item: Record<string, string | number> = {};
         item[ labelKey ] = label;
 
-        valueKeys.forEach( ( key ) => {
+        standardValueKeys.forEach( ( key ) => {
           const nums = values[ key ];
           if ( nums.length === 0 ) {
             item[ key ] = 0;
@@ -217,6 +263,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
 
         return item;
       } );
+      return { chartData: aggregatedData, valueKeys: standardValueKeys };
     }
   }, [ data, columnMapping, aggregationMode, isVisible ] );
 
@@ -237,7 +284,6 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
 
   const headers = data[ 0 ];
   const labelKey = String( headers[ columnMapping.labels! ] || 'label' );
-  const valueKeys = columnMapping.values.map( ( idx ) => String( headers[ idx ] || `value${ idx }` ) );
 
   // Get colors from selected palette
   const palette = getColorPalette( colorPalette );

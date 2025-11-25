@@ -1,0 +1,17 @@
+@import 'tailwindcss';
+
+.tab-content-root {
+  @apply w-full h-full flex-1 relative;
+}
+
+.tab-content-panel {
+  @apply absolute inset-0 w-full h-full;
+}
+
+.tab-content-panel-active {
+  @apply z-10;
+}
+
+.tab-content-panel-inactive {
+  @apply z-0 invisible;
+}

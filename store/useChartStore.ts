@@ -48,6 +48,7 @@ const bigIntSafeStorage = {
 export interface ColumnMapping {
   labels: number | null; // Column index for labels/time
   values: number[]; // Column indices for values
+  series: number | null; // Column index for series (for long-format data)
   chartsGrid: number | null;
   rowFilter: number | null;
   customPopups: number | null;
@@ -132,7 +133,10 @@ interface ChartStore {
   
   gridColumns: number;
   setGridColumns: (columns: number) => void;
-  
+
+  gridColumnsMobile: number;
+  setGridColumnsMobile: (columns: number) => void;
+
   gridAspectRatio: string;
   setGridAspectRatio: (ratio: string) => void;
 
@@ -931,6 +935,7 @@ export const useChartStore = create<ChartStore>()(
 
             newMapping = {
               labels: adjustIndex(columnMapping.labels),
+              series: adjustIndex(columnMapping.series),
               chartsGrid: adjustIndex(columnMapping.chartsGrid),
               rowFilter: adjustIndex(columnMapping.rowFilter),
               customPopups: adjustIndex(columnMapping.customPopups),
@@ -946,6 +951,10 @@ export const useChartStore = create<ChartStore>()(
               labels:
                 columnMapping.labels !== null && columnMapping.labels <= maxIndex
                   ? columnMapping.labels
+                  : null,
+              series:
+                columnMapping.series !== null && columnMapping.series <= maxIndex
+                  ? columnMapping.series
                   : null,
               values: columnMapping.values.filter((idx) => idx <= maxIndex),
               chartsGrid:
@@ -974,6 +983,7 @@ export const useChartStore = create<ChartStore>()(
             columnMapping: {
               labels: null,
               values: [],
+              series: null,
               chartsGrid: null,
               rowFilter: null,
               customPopups: null,
@@ -1025,14 +1035,8 @@ export const useChartStore = create<ChartStore>()(
       },
 
       // Initial column mapping
-      columnMapping: {
-        labels: null,
-        values: [],
-        chartsGrid: null,
-        rowFilter: null,
-        customPopups: null,
-        // Initial mapping is empty
-      },
+      columnMapping: { labels: null, values: [], series: null, chartsGrid: null, rowFilter: null, customPopups: null },
+
       setColumnMapping: (mapping) =>
         set((state) => ({
           columnMapping: { ...state.columnMapping, ...mapping },
@@ -1048,6 +1052,7 @@ export const useChartStore = create<ChartStore>()(
             columnMapping: {
               labels,
               values,
+              series: null,
               chartsGrid: null,
               rowFilter: null,
               customPopups: null,
@@ -1127,13 +1132,16 @@ export const useChartStore = create<ChartStore>()(
 
       gridMode: 'single',
       setGridMode: (mode) => set({ gridMode: mode }),
-      
-      gridSplitBy: 'label',
+
+      gridSplitBy: 'value',
       setGridSplitBy: (splitBy) => set({ gridSplitBy: splitBy }),
       
       gridColumns: 2,
       setGridColumns: (columns) => set({ gridColumns: columns }),
-      
+
+      gridColumnsMobile: 1,
+      setGridColumnsMobile: (columns) => set({ gridColumnsMobile: columns }),
+
       gridAspectRatio: '16/9',
       setGridAspectRatio: (ratio) => set({ gridAspectRatio: ratio }),
 

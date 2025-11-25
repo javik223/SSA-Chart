@@ -1,0 +1,23 @@
+.chart-zoom-controls-container {
+  @apply absolute top-4 right-4 flex flex-col gap-1 bg-white/90 backdrop-blur-sm rounded-lg shadow-sm border border-zinc-200 p-1 z-10 justify-center items-center origin-top-right;
+}
+
+.chart-zoom-controls-container-floating {
+  @apply scale-75;
+}
+
+.chart-zoom-controls-container-not-floating {
+  @apply scale-75 md:scale-100;
+}
+
+.chart-zoom-controls-button {
+  @apply md:size-8 hover:bg-zinc-100;
+}
+
+.chart-zoom-controls-icon {
+  @apply size-3 md:size-4 text-zinc-700;
+}
+
+.chart-zoom-controls-grip-icon {
+  @apply text-gray-300;
+}

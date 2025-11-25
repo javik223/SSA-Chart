@@ -8,7 +8,7 @@
 }
 
 .data-table-content {
-  @apply flex-1 overflow-hidden;
+  @apply flex-1 md:overflow-hidden;
 }
 
 .data-table-grid-area {
@@ -76,7 +76,7 @@
 
 /* Resize Handle */
 .data-table-resize-handle {
-  @apply w-0 bg-transparent hidden md:flex;
+  @apply hidden md:flex;
 }
 
 /* Resizable Layout */

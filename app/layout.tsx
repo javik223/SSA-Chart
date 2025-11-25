@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import { Toaster } from '@/components/ui/sonner';
 import { ChartInitializer } from '@/components/ChartInitializer';
 import '@/styles/globals.css';
 
-const canvaSans = localFont({
+const canvaSans = localFont( {
   src: [
     {
       path: '../public/fonts/CanvaSans-Regular.woff2',
@@ -39,7 +39,7 @@ const canvaSans = localFont({
   ],
   variable: '--font-canva-sans',
   display: 'swap',
-});
+} );
 
 export const metadata: Metadata = {
   title: 'Claude Charts - Data Visualization Studio',
@@ -47,19 +47,25 @@ export const metadata: Metadata = {
     'A frontend-only web application for creating advanced, interactive data visualizations',
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export default function RootLayout( {
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}> ) {
   return (
     <html lang='en'>
       <body
-        className={`${canvaSans.variable} font-sans antialiased`}
+        className={ `${ canvaSans.variable } font-sans antialiased` }
         suppressHydrationWarning
       >
         <ChartInitializer />
-        {children}
+        { children }
         <Toaster />
       </body>
     </html>

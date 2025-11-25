@@ -1,0 +1,13 @@
+.chart-description-wrapper {
+  @apply border-b-zinc-200 border-b;
+  padding-bottom: 16px;
+}
+
+.chart-description-editing {
+  @apply w-full text-sm text-zinc-600 border-2 border-blue-500 rounded px-2 py-1 focus:outline-none resize-none overflow-hidden;
+  min-height: 3rem;
+}
+
+.chart-description-display {
+  @apply text-xs md:text-sm text-zinc-600 cursor-text hover:bg-zinc-50 rounded px-2 py-1 -mx-2 transition-colors whitespace-pre-wrap;
+}

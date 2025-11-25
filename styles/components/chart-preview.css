@@ -1,14 +1,15 @@
 @layer components {
   .chart-preview-container {
-    @apply flex h-full flex-col bg-zinc-100;
+    @apply flex min-h-full flex-col bg-zinc-100  md:h-full md:overflow-hidden;
   }
 
   .chart-preview-area {
-    @apply w-full h-full overflow-auto flex items-center justify-center p-4 md:p-8;
+    /* @apply w-full h-full overflow-auto flex items-center justify-center p-4 md:p-8; */
+    @apply w-full p-4 overflow-auto;
   }
 
   .chart-preview-card {
-    @apply flex flex-col shadow-sm transition-all duration-200;
+    @apply flex flex-col shadow-sm transition-all duration-200 mx-auto!;
   }
 
   .chart-preview-content-col {

@@ -1,0 +1,11 @@
+.base-chart-container {
+  @apply w-full h-full relative;
+}
+
+.base-chart-svg {
+  @apply block overflow-hidden;
+}
+
+.base-chart-brush-overlay {
+  pointer-events: all;
+}

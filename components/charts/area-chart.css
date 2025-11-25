@@ -1,0 +1,7 @@
+.area-chart-container {
+  @apply relative w-full h-full;
+}
+
+.area-chart-svg {
+  @apply w-full h-full overflow-visible;
+}

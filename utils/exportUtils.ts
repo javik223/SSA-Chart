@@ -4,6 +4,7 @@
 
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import { toast } from 'sonner';
 
 export type ExportFormat = 'svg' | 'png' | 'jpg' | 'pdf';
 
@@ -76,9 +77,11 @@ export async function exportAsSVG(
     downloadFile(blob, `${filename}.svg`);
 
     restoreContainer(resizeHandle, originalDisplay);
+    toast.success('Chart exported as SVG');
   } catch (error) {
     restoreContainer(resizeHandle, originalDisplay);
     console.error('Error exporting as SVG:', error);
+    toast.error(`Failed to export SVG: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 }
@@ -97,6 +100,11 @@ export async function exportAsPNG(
   try {
     const rect = containerElement.getBoundingClientRect();
     const originalWidth = rect.width;
+    const originalHeight = rect.height;
+
+    if (originalWidth === 0 || originalHeight === 0) {
+      throw new Error('Chart container has 0 width or height');
+    }
 
     // Calculate pixel ratio based on export width
     let pixelRatio = 2; // Default 2x for retina
@@ -104,13 +112,36 @@ export async function exportAsPNG(
       pixelRatio = exportWidth / originalWidth;
     }
 
-    const blob = await htmlToImage.toBlob(containerElement, {
-      quality: 1,
-      pixelRatio: pixelRatio,
-    });
+    // Wait a moment for any transitions to finish
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    let blob;
+    try {
+      blob = await htmlToImage.toBlob(containerElement, {
+        quality: 1,
+        pixelRatio: pixelRatio,
+        skipAutoScale: true,
+        cacheBust: true,
+      });
+    } catch (e) {
+      console.warn('Initial export failed, retrying without images and fonts...', e);
+      // Retry ignoring images and fonts if first attempt fails
+      blob = await htmlToImage.toBlob(containerElement, {
+        quality: 1,
+        pixelRatio: pixelRatio,
+        skipAutoScale: true,
+        cacheBust: true,
+        skipFonts: true,
+        filter: (node) => {
+          return node.tagName !== 'IMG';
+        }
+      });
+      toast.info('Export succeeded with reduced fidelity (fonts/images excluded)');
+    }
 
     if (blob) {
       downloadFile(blob, `${filename}.png`);
+      toast.success('Chart exported as PNG');
     } else {
       throw new Error('Failed to create PNG blob');
     }
@@ -119,6 +150,7 @@ export async function exportAsPNG(
   } catch (error) {
     restoreContainer(resizeHandle, originalDisplay);
     console.error('Error exporting as PNG:', error);
+    toast.error(`Failed to export PNG: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 }
@@ -158,9 +190,11 @@ export async function exportAsJPG(
     downloadFile(blob, `${filename}.jpg`);
 
     restoreContainer(resizeHandle, originalDisplay);
+    toast.success('Chart exported as JPG');
   } catch (error) {
     restoreContainer(resizeHandle, originalDisplay);
     console.error('Error exporting as JPG:', error);
+    toast.error(`Failed to export JPG: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 }
@@ -217,9 +251,11 @@ export async function exportAsPDF(
     pdf.save(`${filename}.pdf`);
 
     restoreContainer(resizeHandle, originalDisplay);
+    toast.success('Chart exported as PDF');
   } catch (error) {
     restoreContainer(resizeHandle, originalDisplay);
     console.error('Error exporting as PDF:', error);
+    toast.error(`Failed to export PDF: ${error instanceof Error ? error.message : String(error)}`);
     throw error;
   }
 }

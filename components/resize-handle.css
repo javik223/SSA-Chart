@@ -1,0 +1,9 @@
+.resize-handle-root {
+  @apply absolute bottom-0 right-0 w-6 h-6 cursor-ew-resize;
+  @apply hover:bg-zinc-100 active:bg-zinc-200;
+  @apply flex items-center justify-center group transition-colors;
+}
+
+.resize-handle-icon {
+  @apply w-4 h-4 text-zinc-400 group-hover:text-zinc-600 rotate-90;
+}

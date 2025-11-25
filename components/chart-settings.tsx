@@ -62,6 +62,8 @@ export function ChartSettings() {
     setGridSplitBy,
     gridColumns,
     setGridColumns,
+    gridColumnsMobile,
+    setGridColumnsMobile,
     gridAspectRatio,
     setGridAspectRatio,
     showZoomControls,
@@ -400,6 +402,27 @@ export function ChartSettings() {
                               </FormCol>
                               <FormCol>
                                 <FormField
+                                  type='select'
+                                  label='Aspect ratio'
+                                  value={ gridAspectRatio }
+                                  onChange={ setGridAspectRatio }
+                                  options={ [
+                                    { value: '16/9', label: '16:9 (Widescreen)' },
+                                    { value: '4/3', label: '4:3 (Standard)' },
+                                    { value: '1/1', label: '1:1 (Square)' },
+                                    { value: '21/9', label: '21:9 (Ultrawide)' },
+                                    { value: '3/2', label: '3:2 (Classic)' },
+                                    { value: '2/1', label: '2:1 (Panoramic)' },
+                                  ] }
+                                />
+                              </FormCol>
+                            </FormRow>
+                          ) }
+
+                          { gridMode === 'grid' && (
+                            <FormRow>
+                              <FormCol>
+                                <FormField
                                   type='number'
                                   label='Grid columns'
                                   value={ gridColumns }
@@ -408,24 +431,17 @@ export function ChartSettings() {
                                   max={ 6 }
                                 />
                               </FormCol>
+                              <FormCol>
+                                <FormField
+                                  type='number'
+                                  label='Grid columns (Mobile)'
+                                  value={ gridColumnsMobile }
+                                  onChange={ ( value ) => setGridColumnsMobile( Number( value ) ) }
+                                  min={ 1 }
+                                  max={ 6 }
+                                />
+                              </FormCol>
                             </FormRow>
-                          ) }
-
-                          { gridMode === 'grid' && (
-                            <FormField
-                              type='select'
-                              label='Aspect ratio'
-                              value={ gridAspectRatio }
-                              onChange={ setGridAspectRatio }
-                              options={ [
-                                { value: '16/9', label: '16:9 (Widescreen)' },
-                                { value: '4/3', label: '4:3 (Standard)' },
-                                { value: '1/1', label: '1:1 (Square)' },
-                                { value: '21/9', label: '21:9 (Ultrawide)' },
-                                { value: '3/2', label: '3:2 (Classic)' },
-                                { value: '2/1', label: '2:1 (Panoramic)' },
-                              ] }
-                            />
                           ) }
 
                           <FormField

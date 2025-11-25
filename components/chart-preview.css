@@ -1,0 +1,73 @@
+@import 'tailwindcss';
+
+@layer components {
+  /* .chart-preview-container {
+    @apply flex h-full flex-col bg-zinc-100;
+  }
+
+  .chart-preview-area {
+    @apply w-full h-full overflow-auto flex items-center justify-center p-4 md:p-8;
+  } */
+
+  .chart-preview-card {
+    @apply flex flex-col shadow-sm transition-all duration-200;
+  }
+
+  /* .chart-preview-content-col {
+    @apply flex flex-col w-full h-full;
+  }
+
+  .chart-preview-content-row {
+    @apply flex flex-row w-full h-full;
+  } */
+
+  /* .chart-preview-graphic-wrapper {
+    @apply flex flex-1 min-h-0 w-full;
+  }
+
+  .chart-preview-graphic {
+    @apply flex-1 w-full h-full flex items-center justify-center relative;
+  } */
+
+  .chart-preview-legend-wrapper {
+    @apply w-full;
+  }
+
+  .chart-preview-grid-graphic-wrapper {
+      @apply flex-1 h-full;
+  }
+
+  .chart-preview-resizable-group {
+      @apply flex-col! md:flex-row! gap-4;
+  }
+
+  .chart-preview-resizable-panel-main {
+      @apply basis-auto! md:basis-0! overflow-auto max-md:h-screen shrink-0;
+  }
+
+  .chart-preview-card-dynamic {
+      @apply max-h-auto! md:max-h-full h-auto! md:h-full max-md:overflow-auto;
+  }
+
+  .chart-preview-resizable-handle {
+      @apply hidden md:flex;
+  }
+
+  .chart-preview-resizable-panel-settings {
+      @apply basis-auto! md:basis-0!;
+  }
+
+  /* Spacing classes */
+  .chart-preview-spacing-tight {
+      @apply gap-2;
+  }
+  .chart-preview-spacing-loose {
+      @apply gap-6;
+  }
+  .chart-preview-spacing-large {
+      @apply gap-10;
+  }
+  .chart-preview-spacing-none {
+      @apply gap-0;
+  }
+}

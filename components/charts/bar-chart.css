@@ -1,0 +1,7 @@
+.bar-chart-container {
+  @apply relative w-full h-full;
+}
+
+.bar-chart-svg {
+  @apply w-full h-full overflow-visible;
+}

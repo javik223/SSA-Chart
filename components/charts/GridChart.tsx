@@ -11,6 +11,7 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const chartType = useChartStore( ( state ) => state.chartType );
   const gridSplitBy = useChartStore( ( state ) => state.gridSplitBy );
   const gridColumns = useChartStore( ( state ) => state.gridColumns );
+  const gridColumnsMobile = useChartStore( ( state ) => state.gridColumnsMobile );
   const gridAspectRatio = useChartStore( ( state ) => state.gridAspectRatio );
   const desktopViewBoxWidth = useChartStore( ( state ) => state.desktopViewBoxWidth );
   const desktopViewBoxHeight = useChartStore( ( state ) => state.desktopViewBoxHeight );
@@ -216,15 +217,22 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   // Get colors from palette
   const palette = getColorPalette( colorPalette );
 
-  // Map grid columns to Tailwind classes
-  const gridColsClass = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 md:grid-cols-2',
-    3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
-    5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
-    6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
-  }[ gridColumns ] || 'grid-cols-2';
+  // Map grid columns to Tailwind classes with mobile support
+  const getMobileClass = (cols: number) => {
+    return `grid-cols-${cols}`;
+  };
+
+  const getDesktopClass = (cols: number) => {
+    if (cols === 1) return 'md:grid-cols-1';
+    if (cols === 2) return 'md:grid-cols-2';
+    if (cols === 3) return 'md:grid-cols-2 lg:grid-cols-3';
+    if (cols === 4) return 'md:grid-cols-2 lg:grid-cols-4';
+    if (cols === 5) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+    if (cols === 6) return 'md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6';
+    return 'md:grid-cols-2';
+  };
+
+  const gridColsClass = `${getMobileClass(gridColumnsMobile)} ${getDesktopClass(gridColumns)}`;
 
 
 

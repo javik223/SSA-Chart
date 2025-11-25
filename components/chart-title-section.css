@@ -1,0 +1,7 @@
+.chart-title-section-root {
+    @apply relative flex flex-col;
+}
+
+.chart-title-section-text-content {
+    @apply flex flex-col w-full;
+}

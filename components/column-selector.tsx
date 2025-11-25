@@ -15,11 +15,12 @@ import { ChevronDown, X, Check } from "lucide-react";
 interface ColumnSelectorProps {
   availableColumns: string[];
   selectedColumns: number | number[] | null;
-  onSelect: (index: number | number[]) => void;
+  onSelect: ( index: number | number[] | null ) => void;
   mode?: "single" | "multiple";
   placeholder?: string;
-  color?: "pink" | "purple" | "blue" | "cyan";
+  color?: "pink" | "purple" | "blue" | "cyan" | "orange";
   compact?: boolean;
+  allowClear?: boolean;
 }
 
 const colorClasses = {
@@ -27,9 +28,10 @@ const colorClasses = {
   purple: "bg-purple-200 text-purple-900",
   blue: "bg-blue-200 text-blue-900",
   cyan: "bg-cyan-200 text-cyan-900",
+  orange: "bg-orange-200 text-orange-900",
 };
 
-export function ColumnSelector({
+export function ColumnSelector( {
   availableColumns,
   selectedColumns,
   onSelect,
@@ -37,139 +39,158 @@ export function ColumnSelector({
   placeholder = "Select column",
   color = "pink",
   compact = false,
-}: ColumnSelectorProps) {
-  const lastClickedIndexRef = useRef<number | null>(null);
+  allowClear = false,
+}: ColumnSelectorProps ) {
+  const lastClickedIndexRef = useRef<number | null>( null );
 
-  const getColumnLabel = (index: number) => {
-    return String.fromCharCode(65 + index); // A, B, C, etc.
+  const getColumnLabel = ( index: number ) => {
+    return String.fromCharCode( 65 + index ); // A, B, C, etc.
   };
 
   const getSelectedLabel = () => {
-    if (selectedColumns === null) return "";
-    if (Array.isArray(selectedColumns)) {
-      if (selectedColumns.length === 0) return "";
-      if (selectedColumns.length === 1) return getColumnLabel(selectedColumns[0]);
+    if ( selectedColumns === null ) return "";
+    if ( Array.isArray( selectedColumns ) ) {
+      if ( selectedColumns.length === 0 ) return "";
+      if ( selectedColumns.length === 1 ) return getColumnLabel( selectedColumns[ 0 ] );
 
       // Check if columns are consecutive
-      const isConsecutive = selectedColumns.every((val, i, arr) =>
-        i === 0 || val === arr[i - 1] + 1
+      const isConsecutive = selectedColumns.every( ( val, i, arr ) =>
+        i === 0 || val === arr[ i - 1 ] + 1
       );
 
       // If consecutive and more than 2 columns, show as range
-      if (isConsecutive && selectedColumns.length > 2) {
-        const first = selectedColumns[0];
-        const last = selectedColumns[selectedColumns.length - 1];
-        return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
+      if ( isConsecutive && selectedColumns.length > 2 ) {
+        const first = selectedColumns[ 0 ];
+        const last = selectedColumns[ selectedColumns.length - 1 ];
+        return `${ getColumnLabel( first ) }-${ getColumnLabel( last ) }`;
       }
 
       // Otherwise show individual letters if 5 or fewer
-      if (selectedColumns.length <= 5) {
-        return selectedColumns.map(idx => getColumnLabel(idx)).join(',');
+      if ( selectedColumns.length <= 5 ) {
+        return selectedColumns.map( idx => getColumnLabel( idx ) ).join( ',' );
       }
 
       // For non-consecutive > 5, still show range with first and last
-      const first = selectedColumns[0];
-      const last = selectedColumns[selectedColumns.length - 1];
-      return `${getColumnLabel(first)}-${getColumnLabel(last)}`;
+      const first = selectedColumns[ 0 ];
+      const last = selectedColumns[ selectedColumns.length - 1 ];
+      return `${ getColumnLabel( first ) }-${ getColumnLabel( last ) }`;
     }
-    return getColumnLabel(selectedColumns);
+    return getColumnLabel( selectedColumns );
   };
 
-  const handleSingleSelect = (index: number) => {
-    onSelect(index);
+  const handleSingleSelect = ( index: number | null ) => {
+    onSelect( index );
   };
 
-  const handleMultipleToggle = (index: number, shiftKey: boolean = false) => {
-    if (!Array.isArray(selectedColumns)) {
+  const handleMultipleToggle = ( index: number, shiftKey: boolean = false ) => {
+    if ( !Array.isArray( selectedColumns ) ) {
       lastClickedIndexRef.current = index;
-      onSelect([index]);
+      onSelect( [ index ] );
       return;
     }
 
     // Handle shift-click range selection
-    if (shiftKey && lastClickedIndexRef.current !== null) {
-      const start = Math.min(lastClickedIndexRef.current, index);
-      const end = Math.max(lastClickedIndexRef.current, index);
+    if ( shiftKey && lastClickedIndexRef.current !== null ) {
+      const start = Math.min( lastClickedIndexRef.current, index );
+      const end = Math.max( lastClickedIndexRef.current, index );
       const rangeIndices = Array.from(
         { length: end - start + 1 },
-        (_, i) => start + i
+        ( _, i ) => start + i
       );
 
       // Merge with existing selections and remove duplicates
       const newSelection = Array.from(
-        new Set([...selectedColumns, ...rangeIndices])
+        new Set( [ ...selectedColumns, ...rangeIndices ] )
       ).sort();
 
-      onSelect(newSelection);
+      onSelect( newSelection );
       // Don't update lastClickedIndex on shift-click to allow chaining
       return;
     }
 
     // Normal toggle behavior
-    if (selectedColumns.includes(index)) {
-      onSelect(selectedColumns.filter((i) => i !== index));
+    if ( selectedColumns.includes( index ) ) {
+      onSelect( selectedColumns.filter( ( i ) => i !== index ) );
     } else {
-      onSelect([...selectedColumns, index].sort());
+      onSelect( [ ...selectedColumns, index ].sort() );
     }
 
     // Update last clicked index for future shift-clicks
     lastClickedIndexRef.current = index;
   };
 
-  const handleSelectAll = (e: React.MouseEvent) => {
+  const handleSelectAll = ( e: React.MouseEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    const allIndices = availableColumns.map((_, index) => index);
-    onSelect(allIndices);
+    const allIndices = availableColumns.map( ( _, index ) => index );
+    onSelect( allIndices );
   };
 
-  const handleClearAll = (e: React.MouseEvent) => {
+  const handleClearAll = ( e: React.MouseEvent ) => {
     e.preventDefault();
     e.stopPropagation();
-    onSelect([]);
+    onSelect( [] );
   };
 
-  const handleClear = (e: React.MouseEvent) => {
+  const handleClear = ( e: React.MouseEvent ) => {
     e.stopPropagation();
-    onSelect(mode === "single" ? null as any : []);
+    onSelect( mode === "single" ? null : [] );
   };
 
   const selectedLabel = getSelectedLabel();
-  const hasSelection = mode === "single" ? selectedColumns !== null : Array.isArray(selectedColumns) && selectedColumns.length > 0;
+  const hasSelection = mode === "single" ? selectedColumns !== null : Array.isArray( selectedColumns ) && selectedColumns.length > 0;
 
-  if (compact) {
+  if ( compact ) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
-            className={`flex h-7 min-w-14 max-w-32 items-center justify-center rounded px-2 text-sm font-semibold transition-opacity hover:opacity-80 ${colorClasses[color]}`}
-            title={hasSelection ? (mode === 'multiple' && Array.isArray(selectedColumns)
-              ? selectedColumns.map(idx => availableColumns[idx]).join(', ')
-              : availableColumns[selectedColumns as number])
-              : 'Select columns'}
+            className={ `flex h-7 min-w-14 max-w-32 items-center justify-center rounded px-2 text-sm font-semibold transition-opacity hover:opacity-80 ${ colorClasses[ color ] }` }
+            title={ hasSelection ? ( mode === 'multiple' && Array.isArray( selectedColumns )
+              ? selectedColumns.map( idx => availableColumns[ idx ] ).join( ', ' )
+              : availableColumns[ selectedColumns as number ] )
+              : 'Select columns' }
           >
-            {selectedLabel || "—"}
+            { selectedLabel || "—" }
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
-          {availableColumns.length === 0 ? (
+          { availableColumns.length === 0 ? (
             <DropdownMenuItem disabled>No columns available</DropdownMenuItem>
           ) : mode === "single" ? (
-            availableColumns.map((column, index) => (
-              <DropdownMenuItem
-                key={index}
-                onClick={() => handleSingleSelect(index)}
-                className="flex items-center justify-between gap-2"
-              >
-                <div className="flex items-center gap-2 flex-1">
-                  {selectedColumns === index && (
-                    <Check className="h-3 w-3 text-zinc-900" />
-                  )}
-                  <span>{column}</span>
-                </div>
-                <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
-              </DropdownMenuItem>
-            ))
+            <>
+              { allowClear && (
+                <>
+                  <DropdownMenuItem
+                    onClick={ () => handleSingleSelect( null ) }
+                    className="flex items-center justify-between gap-2 text-zinc-500"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      { selectedColumns === null && (
+                        <Check className="h-3 w-3 text-zinc-900" />
+                      ) }
+                      <span>None</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              ) }
+              { availableColumns.map( ( column, index ) => (
+                <DropdownMenuItem
+                  key={ index }
+                  onClick={ () => handleSingleSelect( index ) }
+                  className="flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2 flex-1">
+                    { selectedColumns === index && (
+                      <Check className="h-3 w-3 text-zinc-900" />
+                    ) }
+                    <span>{ column }</span>
+                  </div>
+                  <span className="text-xs text-zinc-500">{ getColumnLabel( index ) }</span>
+                </DropdownMenuItem>
+              ) ) }
+            </>
           ) : (
             <>
               <div className="px-2 py-1.5 flex items-center justify-between">
@@ -178,14 +199,14 @@ export function ColumnSelector({
                 </span>
                 <div className="flex gap-1">
                   <button
-                    onClick={(e) => handleSelectAll(e)}
+                    onClick={ ( e ) => handleSelectAll( e ) }
                     className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                   >
                     All
                   </button>
                   <span className="text-xs text-zinc-400">|</span>
                   <button
-                    onClick={(e) => handleClearAll(e)}
+                    onClick={ ( e ) => handleClearAll( e ) }
                     className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                   >
                     None
@@ -193,24 +214,24 @@ export function ColumnSelector({
                 </div>
               </div>
               <DropdownMenuSeparator />
-              {availableColumns.map((column, index) => (
+              { availableColumns.map( ( column, index ) => (
                 <DropdownMenuCheckboxItem
-                  key={index}
-                  checked={Array.isArray(selectedColumns) && selectedColumns.includes(index)}
-                  onCheckedChange={() => {}}
-                  onClick={(e) => {
+                  key={ index }
+                  checked={ Array.isArray( selectedColumns ) && selectedColumns.includes( index ) }
+                  onCheckedChange={ () => { } }
+                  onClick={ ( e ) => {
                     e.preventDefault();
-                    handleMultipleToggle(index, e.shiftKey);
-                  }}
-                  onSelect={(e) => e.preventDefault()}
+                    handleMultipleToggle( index, e.shiftKey );
+                  } }
+                  onSelect={ ( e ) => e.preventDefault() }
                   className="flex items-center justify-between cursor-pointer"
                 >
-                  <span>{column}</span>
-                  <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
+                  <span>{ column }</span>
+                  <span className="text-xs text-zinc-500">{ getColumnLabel( index ) }</span>
                 </DropdownMenuCheckboxItem>
-              ))}
+              ) ) }
             </>
-          )}
+          ) }
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -225,44 +246,44 @@ export function ColumnSelector({
             className="flex-1 justify-between text-xs h-7"
             size="sm"
           >
-            {hasSelection ? (
+            { hasSelection ? (
               <span className="text-zinc-900">
-                {mode === "multiple" && Array.isArray(selectedColumns)
-                  ? `${selectedColumns.length} column${selectedColumns.length > 1 ? "s" : ""} selected`
-                  : availableColumns[selectedColumns as number] || placeholder}
+                { mode === "multiple" && Array.isArray( selectedColumns )
+                  ? `${ selectedColumns.length } column${ selectedColumns.length > 1 ? "s" : "" } selected`
+                  : availableColumns[ selectedColumns as number ] || placeholder }
               </span>
             ) : (
-              <span className="text-zinc-500">{placeholder}</span>
-            )}
-            {hasSelection ? (
+              <span className="text-zinc-500">{ placeholder }</span>
+            ) }
+            { hasSelection ? (
               <X
                 className="h-3 w-3 text-zinc-500 hover:text-zinc-700"
-                onClick={handleClear}
+                onClick={ handleClear }
               />
             ) : (
               <ChevronDown className="h-3 w-3 text-zinc-500" />
-            )}
+            ) }
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          {availableColumns.length === 0 ? (
+          { availableColumns.length === 0 ? (
             <DropdownMenuItem disabled>No columns available</DropdownMenuItem>
           ) : mode === "single" ? (
-            availableColumns.map((column, index) => (
+            availableColumns.map( ( column, index ) => (
               <DropdownMenuItem
-                key={index}
-                onClick={() => handleSingleSelect(index)}
+                key={ index }
+                onClick={ () => handleSingleSelect( index ) }
                 className="flex items-center justify-between gap-2"
               >
                 <div className="flex items-center gap-2 flex-1">
-                  {selectedColumns === index && (
+                  { selectedColumns === index && (
                     <Check className="h-3 w-3 text-zinc-900" />
-                  )}
-                  <span>{column}</span>
+                  ) }
+                  <span>{ column }</span>
                 </div>
-                <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
+                <span className="text-xs text-zinc-500">{ getColumnLabel( index ) }</span>
               </DropdownMenuItem>
-            ))
+            ) )
           ) : (
             <>
               <div className="px-2 py-1.5 flex items-center justify-between">
@@ -271,14 +292,14 @@ export function ColumnSelector({
                 </span>
                 <div className="flex gap-1">
                   <button
-                    onClick={(e) => handleSelectAll(e)}
+                    onClick={ ( e ) => handleSelectAll( e ) }
                     className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                   >
                     All
                   </button>
                   <span className="text-xs text-zinc-400">|</span>
                   <button
-                    onClick={(e) => handleClearAll(e)}
+                    onClick={ ( e ) => handleClearAll( e ) }
                     className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
                   >
                     None
@@ -286,31 +307,31 @@ export function ColumnSelector({
                 </div>
               </div>
               <DropdownMenuSeparator />
-              {availableColumns.map((column, index) => (
+              { availableColumns.map( ( column, index ) => (
                 <DropdownMenuCheckboxItem
-                  key={index}
-                  checked={Array.isArray(selectedColumns) && selectedColumns.includes(index)}
-                  onCheckedChange={() => {}}
-                  onClick={(e) => {
+                  key={ index }
+                  checked={ Array.isArray( selectedColumns ) && selectedColumns.includes( index ) }
+                  onCheckedChange={ () => { } }
+                  onClick={ ( e ) => {
                     e.preventDefault();
-                    handleMultipleToggle(index, e.shiftKey);
-                  }}
-                  onSelect={(e) => e.preventDefault()}
+                    handleMultipleToggle( index, e.shiftKey );
+                  } }
+                  onSelect={ ( e ) => e.preventDefault() }
                   className="flex items-center justify-between cursor-pointer"
                 >
-                  <span>{column}</span>
-                  <span className="text-xs text-zinc-500">{getColumnLabel(index)}</span>
+                  <span>{ column }</span>
+                  <span className="text-xs text-zinc-500">{ getColumnLabel( index ) }</span>
                 </DropdownMenuCheckboxItem>
-              ))}
+              ) ) }
             </>
-          )}
+          ) }
         </DropdownMenuContent>
       </DropdownMenu>
 
       <div
-        className={`flex h-7 w-14 items-center justify-center rounded text-sm font-semibold ${colorClasses[color]}`}
+        className={ `flex h-7 w-14 items-center justify-center rounded text-sm font-semibold ${ colorClasses[ color ] }` }
       >
-        {selectedLabel || "—"}
+        { selectedLabel || "—" }
       </div>
     </div>
   );

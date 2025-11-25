@@ -1,0 +1,167 @@
+.storage-debug-panel-toggle-button {
+  @apply fixed bottom-4 right-4 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 z-50;
+}
+
+.storage-debug-panel-toggle-icon {
+  @apply w-5 h-5;
+}
+
+.storage-debug-panel-container {
+  @apply fixed bottom-4 right-4 z-50 w-96;
+}
+
+.storage-debug-panel-card {
+  @apply p-4 bg-white shadow-xl border border-gray-200;
+}
+
+.storage-debug-panel-header {
+  @apply flex items-center justify-between mb-4;
+}
+
+.storage-debug-panel-header-title-group {
+  @apply flex items-center gap-2;
+}
+
+.storage-debug-panel-header-icon {
+  @apply w-5 h-5 text-blue-600;
+}
+
+.storage-debug-panel-header-title {
+  @apply font-semibold text-sm;
+}
+
+.storage-debug-panel-close-button {
+  @apply text-gray-500 hover:text-gray-700;
+}
+
+.storage-debug-panel-loading-text {
+  @apply text-sm text-gray-500;
+}
+
+.storage-debug-panel-content {
+  @apply space-y-4;
+}
+
+.storage-debug-panel-section {
+  @apply space-y-2;
+}
+
+.storage-debug-panel-section-header {
+  @apply flex items-center gap-2 text-sm;
+}
+
+.storage-debug-panel-section-icon {
+  @apply w-4 h-4 text-gray-500;
+}
+
+.storage-debug-panel-section-title {
+  @apply font-medium;
+}
+
+.storage-debug-panel-info-group {
+  @apply space-y-1;
+}
+
+.storage-debug-panel-info-row {
+  @apply flex justify-between text-xs;
+}
+
+.storage-debug-panel-info-label {
+  @apply text-gray-600;
+}
+
+.storage-debug-panel-info-value {
+  @apply font-mono;
+}
+
+.storage-debug-panel-unsupported {
+  @apply flex items-center gap-2 text-xs text-amber-600;
+}
+
+.storage-debug-panel-unsupported-icon {
+  @apply w-4 h-4;
+}
+
+.storage-debug-panel-progress-bar-background {
+  @apply w-full bg-gray-200 rounded-full h-2;
+}
+
+.storage-debug-panel-progress-bar-fill {
+  @apply h-2 rounded-full transition-all;
+}
+
+.storage-debug-panel-progress-bar-fill-red {
+  @apply bg-red-600;
+}
+
+.storage-debug-panel-progress-bar-fill-yellow {
+  @apply bg-yellow-600;
+}
+
+.storage-debug-panel-progress-bar-fill-green {
+  @apply bg-green-600;
+}
+
+.storage-debug-panel-progress-text {
+  @apply text-xs text-gray-500 text-center;
+}
+
+.storage-debug-panel-persistence-status-header {
+  @apply flex items-center justify-between;
+}
+
+.storage-debug-panel-persistence-status-group {
+  @apply flex items-center gap-2;
+}
+
+.storage-debug-panel-persistence-icon-green {
+  @apply w-4 h-4 text-green-600;
+}
+
+.storage-debug-panel-persistence-icon-amber {
+  @apply w-4 h-4 text-amber-600;
+}
+
+.storage-debug-panel-persistence-text {
+  @apply text-sm font-medium;
+}
+
+.storage-debug-panel-persistence-request-button {
+  @apply text-xs h-7;
+}
+
+.storage-debug-panel-persistence-description {
+  @apply text-xs text-gray-500;
+}
+
+.storage-debug-panel-keys-header {
+  @apply text-sm font-medium;
+}
+
+.storage-debug-panel-keys-list {
+  @apply bg-gray-50 rounded p-2 max-h-32 overflow-y-auto;
+}
+
+.storage-debug-panel-key-item {
+  @apply text-xs font-mono text-gray-700 truncate;
+}
+
+.storage-debug-panel-no-keys {
+  @apply text-xs text-gray-500 italic;
+}
+
+.storage-debug-panel-actions {
+  @apply flex gap-2;
+}
+
+.storage-debug-panel-action-button {
+  @apply flex-1;
+}
+
+.storage-debug-panel-action-icon {
+  @apply w-4 h-4 mr-1;
+}
+
+.storage-debug-panel-dev-mode-text {
+  @apply text-xs text-gray-400 text-center;
+}

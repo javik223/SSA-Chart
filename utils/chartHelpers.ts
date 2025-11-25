@@ -603,12 +603,13 @@ interface BrushZoomConfig {
 }
 
 /**
- * Setup brush zoom interaction
+ * Setup brush zoom interaction (drag to select region)
  */
 export function setupBrushZoom(config: BrushZoomConfig): void {
   const brush = d3.brushX()
     .extent([[0, 0], [config.innerWidth, config.innerHeight]])
-    .filter((event) => !event.shiftKey && !event.button) // Ignore shift key (for panning) and right click
+    .filter((event) => !event.shiftKey && !event.button) // Normal drag without Shift
+    // Allow very small selections (minimum 1 pixel) to enable zooming to single points
     .on('end', (event) => {
   // Handle zoom reset on double-click (empty selection)
       if (!event.selection) {
@@ -648,14 +649,34 @@ export function setupBrushZoom(config: BrushZoomConfig): void {
         .padding(0.5);
 
       // Find the indices of the selected range
-      let startIndex = 0;
-      let endIndex = config.data.length - 1;
+      let startIndex = config.data.length - 1;
+      let endIndex = 0;
 
       allLabels.forEach((label, i) => {
-        const pos = (xScaleFull(label) || 0) + xScaleFull.bandwidth() / 2;
+        const pos = (xScaleFull(label) || 0);
         if (pos >= x0 && i < startIndex) startIndex = i;
         if (pos <= x1) endIndex = i;
       });
+
+      // Ensure we have at least one data point selected
+      if (startIndex > endIndex) {
+        // If selection is too small, find the closest point
+        const midpoint = (x0 + x1) / 2;
+        let closestIndex = 0;
+        let closestDistance = Infinity;
+
+        allLabels.forEach((label, i) => {
+          const pos = (xScaleFull(label) || 0);
+          const distance = Math.abs(pos - midpoint);
+          if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+          }
+        });
+
+        startIndex = closestIndex;
+        endIndex = closestIndex;
+      }
 
       // Calculate Y domain from the selected data range
       const selectedData = config.data.slice(startIndex, endIndex + 1);
@@ -666,7 +687,7 @@ export function setupBrushZoom(config: BrushZoomConfig): void {
         Math.max(...config.valueKeys.map((key) => Number(d[key]) || 0))
       ) || 0;
 
-      // Update zoom domain
+      // Update zoom domain - allow zooming to a single point
       config.setZoomDomain({
         x: [startIndex, endIndex],
         y: [yMinSelected, yMaxSelected],
@@ -700,27 +721,39 @@ interface PanConfig {
 }
 
 /**
- * Setup shift+drag panning interaction
+ * Setup drag panning interaction (Shift+Drag to pan)
  */
 export function setupPan(config: PanConfig): void {
+  let isDragging = false;
+  let accumulatedDx = 0;
+
   const drag = d3.drag()
-    .filter((event) => event.shiftKey) // Only activate when shift is held
+    .filter((event) => event.shiftKey && !event.button) // Only activate with Shift key held
     .on('start', function() {
+      isDragging = true;
+      accumulatedDx = 0;
       d3.select(this).style('cursor', 'grabbing');
     })
     .on('drag', (event) => {
-      if (!config.zoomDomain) return;
+      if (!isDragging) return;
 
-      const [currentStart, currentEnd] = config.zoomDomain.x;
+      // Get current domain or default to full range
+      const [currentStart, currentEnd] = config.zoomDomain?.x || [0, config.data.length - 1];
       const range = currentEnd - currentStart;
-      
-      // Calculate how many data points to shift based on pixel drag
-      // Negative dx means dragging left, which means we want to see later data (increment index)
-      // Positive dx means dragging right, which means we want to see earlier data (decrement index)
+
+      // Accumulate drag distance
+      accumulatedDx += event.dx;
+
+      // Calculate how many data points to shift based on accumulated pixel drag
+      // Use sensitivity multiplier for adjustable panning responsiveness
       const dataPointsPerPixel = range / config.innerWidth;
-      const indexDelta = Math.round(-event.dx * dataPointsPerPixel);
+      const sensitivity = 3; // Adjust this value: lower = less sensitive (easier to drag), higher = more sensitive
+      const indexDelta = Math.round(-accumulatedDx * dataPointsPerPixel * sensitivity);
 
       if (indexDelta === 0) return;
+
+      // Reset accumulated dx after applying the delta
+      accumulatedDx = 0;
 
       // Calculate new indices
       let newStart = currentStart + indexDelta;
@@ -753,36 +786,55 @@ export function setupPan(config: PanConfig): void {
         y: [yMinSelected, yMaxSelected]
       });
     })
-    .on('end', function() {
-      d3.select(this).style('cursor', 'default');
+    .on('end', function(event) {
+      isDragging = false;
+      accumulatedDx = 0;
+      // Restore cursor based on shift key state
+      if (event.sourceEvent && event.sourceEvent.shiftKey) {
+        d3.select(this).style('cursor', 'grab');
+      } else {
+        d3.select(this).style('cursor', 'crosshair');
+      }
     });
 
   // Apply drag behavior
   // We prefer attaching to the brush overlay if it exists, as it's usually on top
   let target = config.g.select<SVGRectElement>('.brush .overlay');
-  
+
   if (target.empty()) {
     // Fallback to creating our own rect if no brush
     let panRect = config.g.select<SVGRectElement>('.pan-rect');
     if (panRect.empty()) {
       panRect = config.g.append('rect')
         .attr('class', 'pan-rect')
-        .attr('fill', 'transparent')
-        .style('cursor', 'grab');
-        
-      panRect.lower(); 
+        .attr('fill', 'transparent');
+
+      panRect.lower();
       config.g.select('.grid').lower();
     }
-    
+
     panRect
       .attr('width', config.innerWidth)
-      .attr('height', config.innerHeight);
-      
+      .attr('height', config.innerHeight)
+      .style('cursor', 'grab');
+
     target = panRect;
   } else {
-    // If using brush overlay, ensure we have the cursor style
-    // But brush overrides cursor, so we might need to handle that in the drag events
-    // (which we do: .on('start', ... style('cursor', 'grabbing')))
+    // If using brush overlay, ensure cursor stays as grab for panning
+    // and handle cursor changes on shift key press/release
+    target
+      .style('cursor', 'crosshair')
+      .on('mouseenter', function() {
+        d3.select(this).style('cursor', 'crosshair');
+      })
+      .on('mousemove', function(event) {
+        // Update cursor based on shift key state
+        if (event.shiftKey) {
+          d3.select(this).style('cursor', 'grab');
+        } else {
+          d3.select(this).style('cursor', 'crosshair');
+        }
+      });
   }
 
   target.call(drag as any);

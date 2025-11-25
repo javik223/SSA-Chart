@@ -1,0 +1,147 @@
+.data-sidebar-root {
+  @apply h-full overflow-y-auto border-l bg-white p-6;
+}
+
+.data-sidebar-content-wrapper {
+  @apply space-y-4;
+}
+
+.data-sidebar-hidden-file-input {
+  @apply hidden;
+}
+
+.data-sidebar-header {
+  @apply flex justify-between;
+}
+
+.data-sidebar-header-title {
+  @apply text-lg font-semibold text-zinc-900;
+}
+
+.data-sidebar-header-controls {
+  @apply flex items-center gap-2;
+}
+
+.data-sidebar-header-status {
+  @apply text-xs text-zinc-500;
+}
+
+.data-sidebar-upload-button {
+  @apply rounded-full;
+}
+
+.data-sidebar-upload-icon {
+  @apply h-4 w-4;
+}
+
+.data-sidebar-upload-dropdown-icon {
+  @apply h-2 w-2;
+}
+
+.data-sidebar-dropdown-item {
+  @apply flex flex-col items-start gap-1 cursor-pointer;
+}
+
+.data-sidebar-dropdown-item-title {
+  @apply text-sm font-medium;
+}
+
+.data-sidebar-dropdown-item-description {
+  @apply text-slate-500 font-normal;
+}
+
+.data-sidebar-dropdown-item-danger {
+  @apply flex flex-col items-start gap-1 cursor-pointer text-red-600;
+}
+
+.data-sidebar-dropdown-item-danger-content {
+  @apply flex items-center gap-2;
+}
+
+.data-sidebar-dropdown-item-danger-icon {
+  @apply h-4 w-4;
+}
+
+.data-sidebar-select-columns-section {
+  @apply space-y-3;
+}
+
+.data-sidebar-select-columns-header {
+  @apply flex items-center justify-between border-b border-b-zinc-200 pb-3;
+}
+
+.data-sidebar-select-columns-title {
+  @apply text-[10px] font-medium uppercase text-zinc-600 tracking-wider;
+}
+
+.data-sidebar-select-columns-auto-set-button {
+  @apply h-auto p-0 text-xs;
+}
+
+.data-sidebar-field-section {
+  @apply space-y-2;
+}
+
+.data-sidebar-field-header {
+  @apply flex items-center justify-between;
+}
+
+.data-sidebar-field-label-group {
+  @apply flex items-center gap-2;
+}
+
+.data-sidebar-field-label {
+  @apply text-sm font-medium text-zinc-900;
+}
+
+.data-sidebar-field-help-button {
+  @apply rounded-full p-0.5 hover:bg-zinc-100;
+}
+
+.data-sidebar-field-help-icon {
+  @apply h-4 w-4 text-zinc-500;
+}
+
+.data-sidebar-field-required-badge {
+  @apply rounded border border-zinc-300 bg-white px-1.5 py-0 text-[10px] font-normal uppercase text-zinc-600;
+}
+
+.data-sidebar-field-description {
+  @apply text-xs text-zinc-500;
+}
+
+.data-sidebar-field-accepted-types {
+  @apply space-y-1.5;
+}
+
+.data-sidebar-field-accepted-types-title {
+  @apply text-xs text-zinc-600;
+}
+
+.data-sidebar-field-type-badges {
+  @apply flex items-center gap-1.5;
+}
+
+.data-sidebar-field-type-badge-text {
+  @apply flex h-5 items-center justify-center rounded bg-zinc-600 px-1.5 text-[10px] font-semibold text-white;
+}
+
+.data-sidebar-field-type-badge-date {
+  @apply flex h-5 w-5 items-center justify-center rounded bg-zinc-600;
+}
+
+.data-sidebar-field-type-badge-date-svg {
+  @apply h-3 w-3 text-white;
+}
+
+.data-sidebar-field-type-badge-number {
+  @apply flex h-5 items-center justify-center rounded bg-zinc-600 px-1.5 text-[10px] font-semibold text-white;
+}
+
+.data-sidebar-expanded-content {
+  @apply space-y-2 animate-in slide-in-from-top-2;
+}
+
+.data-sidebar-alert-dialog-action-danger {
+  @apply bg-red-600 hover:bg-red-700;
+}

@@ -37,6 +37,7 @@ export function DataSidebar() {
     autoSetColumns,
     replaceData,
     mergeData,
+    chartType,
   } = useChartStore();
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [ uploadMode, setUploadMode ] = useState<'replace' | 'merge'>( 'replace' );
@@ -58,23 +59,27 @@ export function DataSidebar() {
     setExpandedFields( ( prev ) => ( { ...prev, [ field ]: !prev[ field ] } ) );
   };
 
-  const handleLabelsSelect = ( index: number | number[] ) => {
+  const handleLabelsSelect = ( index: number | number[] | null ) => {
     setColumnMapping( { labels: index as number } );
   };
 
-  const handleValuesSelect = ( indices: number | number[] ) => {
-    setColumnMapping( { values: Array.isArray( indices ) ? indices : [ indices ] } );
+  const handleValuesSelect = ( indices: number | number[] | null ) => {
+    setColumnMapping( { values: Array.isArray( indices ) ? indices : [ indices as number ] } );
   };
 
-  const handleChartsGridSelect = ( index: number | number[] ) => {
+  const handleSeriesSelect = ( index: number | number[] | null ) => {
+    setColumnMapping( { series: index as number | null } );
+  };
+
+  const handleChartsGridSelect = ( index: number | number[] | null ) => {
     setColumnMapping( { chartsGrid: index as number } );
   };
 
-  const handleRowFilterSelect = ( index: number | number[] ) => {
+  const handleRowFilterSelect = ( index: number | number[] | null ) => {
     setColumnMapping( { rowFilter: index as number } );
   };
 
-  const handleCustomPopupsSelect = ( index: number | number[] ) => {
+  const handleCustomPopupsSelect = ( index: number | number[] | null ) => {
     setColumnMapping( { customPopups: index as number } );
   };
 
@@ -82,6 +87,17 @@ export function DataSidebar() {
     if ( index === null ) return '';
     return String.fromCharCode( 65 + index );
   };
+  // ...
+  <ColumnSelector
+    availableColumns={ availableColumns }
+    selectedColumns={ columnMapping.series }
+    onSelect={ handleSeriesSelect }
+    mode='single'
+    placeholder=''
+    color='orange'
+    compact
+    allowClear
+  />;
 
   const getColumnRangeLabel = ( indices: number[] ) => {
     if ( indices.length === 0 ) return '';
@@ -444,6 +460,37 @@ export function DataSidebar() {
             ) }
           </div>
         </div>
+
+        { chartType === 'multi-line' && (
+          <>
+            <Separator />
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <Label className='text-sm font-medium text-zinc-900'>
+                    Series
+                  </Label>
+                  <span className='rounded border border-zinc-300 bg-white px-1.5 py-0 text-[10px] font-normal uppercase text-zinc-600'>
+                    Optional
+                  </span>
+                </div>
+                <ColumnSelector
+                  availableColumns={ availableColumns }
+                  selectedColumns={ columnMapping.series }
+                  onSelect={ handleSeriesSelect }
+                  mode='single'
+                  placeholder=''
+                  color='orange'
+                  compact
+                  allowClear
+                />
+              </div>
+              <p className='text-xs text-zinc-500'>
+                Select a column to group data into multiple lines.
+              </p>
+            </div>
+          </>
+        ) }
 
         <Separator />
 

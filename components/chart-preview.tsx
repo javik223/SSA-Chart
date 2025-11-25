@@ -8,7 +8,7 @@ import {
 import { BasicChart } from '@/components/charts/BasicChart';
 import { GridChart } from '@/components/charts/GridChart';
 import { ChartSettings } from '@/components/chart-settings';
-import { ChartTitleSection } from '@/components/chart-title-section';
+import { ChartHeaderSection } from '@/components/chart-header-section';
 import { ChartLegend } from '@/components/chart-legend';
 import { ChartFooterSection } from '@/components/chart-footer-section';
 import { useChartStore } from '@/store/useChartStore';
@@ -171,7 +171,7 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
   const renderContent = () => {
     // Components map
     const components = {
-      header: <ChartTitleSection key="header" />,
+      header: <ChartHeaderSection key="header" />,
       controls: null, // Placeholder for controls
       legend: (
         <div key="legend" className="w-full">
@@ -241,11 +241,11 @@ export function ChartPreview( { isVisible = true }: { isVisible?: boolean; } ) {
     <div className='chart-preview-container'>
       <ResizablePanelGroup direction='horizontal' className="flex-col! md:flex-row! gap-4">
         {/* Chart Display Area */ }
-        <ResizablePanel defaultSize={ 75 } minSize={ 50 } className="basis-auto! md:basis-0! overflow-auto max-md:h-screen shrink-0">
+        <ResizablePanel defaultSize={ 75 } minSize={ 50 } className="basis-auto! md:basis-0! shrink-0 h-full overflow-auto">
           <div className='chart-preview-area'>
             <div
               data-chart-container
-              className='chart-preview-card max-h-auto! md:max-h-full h-auto! md:h-full max-md:overflow-auto'
+              className='chart-preview-card max-md:overflow-auto'
               style={ {
                 ...containerStyle,
                 width: getDeviceWidth(),

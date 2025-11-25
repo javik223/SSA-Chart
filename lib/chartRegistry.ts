@@ -9,6 +9,7 @@
 import { ChartType, ChartCategory } from '@/types/chart';
 import { YAxisConfig } from '@/types/chart-types';
 import { ComponentType } from 'react';
+import { MultiLineChart } from '@/components/charts';
 
 /**
  * Chart metadata and configuration
@@ -127,6 +128,18 @@ class ChartRegistry {
       name: 'Advanced and Composite',
       description: 'Complex and multi-dimensional visualizations',
       order: 5,
+    });
+
+    // Register MultiLineChart
+    this.register({
+      type: 'multi-line',
+      name: 'Multi-Series Line Chart',
+      category: 'line-bar-pie',
+      description: 'Line chart with multiple series and advanced hover interactions.',
+      component: MultiLineChart,
+      supportsMultipleSeries: true,
+      icon: 'Activity', // Using Lucide icon name
+      tags: ['line', 'multi-series', 'comparison', 'trend'],
     });
   }
 

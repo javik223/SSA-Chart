@@ -6,6 +6,7 @@ import { BaseChartProps, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { calculateChartLayout } from '@/utils/chartLayout';
 import { useChartStore } from '@/store/useChartStore';
 import { ChartZoomControls } from './ChartZoomControls';
+import { setupPan } from '@/utils/chartHelpers';
 
 interface BaseChartComponentProps extends BaseChartProps {
   children?: ReactNode;
@@ -90,9 +91,10 @@ export function BaseChart( {
 
     const brushGroup = d3.select( brushRef.current );
 
-    // Create brush
+    // Create brush (Ctrl+drag to select region for zoom)
     const brush = d3.brush()
       .extent( [ [ 0, 0 ], [ innerWidth, innerHeight ] ] )
+      .filter( ( event ) => ( event.ctrlKey || event.metaKey ) && !event.button ) // Only activate with Ctrl/Cmd key held
       .on( 'end', ( event ) => {
         if ( !event.selection ) return;
 
@@ -176,11 +178,25 @@ export function BaseChart( {
     // Apply brush to group
     brushGroup.call( brush as any );
 
+    // Setup pan interaction
+    if ( gRef.current && data && valueKeys && zoomDomain ) {
+      const g = d3.select( gRef.current );
+      setupPan( {
+        g: g as any,
+        innerWidth,
+        innerHeight,
+        data,
+        zoomDomain: zoomDomain as any,
+        setZoomDomain,
+        valueKeys
+      } );
+    }
+
     // Cleanup
     return () => {
       brushGroup.on( '.brush', null );
     };
-  }, [ showZoomControls, innerWidth, innerHeight, xScale, yScale, setZoomDomain ] );
+  }, [ showZoomControls, innerWidth, innerHeight, xScale, yScale, setZoomDomain, data, valueKeys, zoomDomain ] );
 
   // Render axes
   useEffect( () => {

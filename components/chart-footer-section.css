@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+.chart-footer-section {
+  @apply flex flex-col;
+  padding-top: 16px;
+}
+
+.chart-footer-source {
+  @apply text-xs text-zinc-500 mb-1;
+}
+
+.chart-footer-source-link {
+  @apply underline hover:text-zinc-700;
+}
+
+.chart-footer-notes-container {
+  @apply space-y-1;
+}
+
+.chart-footer-note {
+  @apply text-xs text-zinc-500 whitespace-pre-wrap;
+}
+
+.chart-footer-note-secondary {
+  @apply text-xs text-zinc-400 whitespace-pre-wrap;
+}
+
+.chart-footer-text-content {
+  @apply flex flex-col;
+}

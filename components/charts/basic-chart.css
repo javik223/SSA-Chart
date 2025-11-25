@@ -1,0 +1,27 @@
+.basic-chart-full-size {
+  @apply w-full h-full;
+}
+
+.basic-chart-empty-state {
+  @apply flex h-full items-center justify-center;
+}
+
+.basic-chart-empty-state-text {
+  @apply text-sm text-zinc-500;
+}
+
+.basic-chart-unregistered-chart-text {
+  @apply text-sm text-zinc-500;
+}
+
+.basic-chart-coming-soon-container {
+  @apply flex h-full items-center justify-center flex-col gap-2;
+}
+
+.basic-chart-coming-soon-title {
+  @apply text-sm font-medium text-zinc-700;
+}
+
+.basic-chart-coming-soon-text {
+  @apply text-xs text-zinc-500;
+}
