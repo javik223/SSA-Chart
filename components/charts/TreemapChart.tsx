@@ -305,8 +305,12 @@ export function TreemapChart( {
 
     // Robust key function for data join
     const key = ( d: any ) => {
+      // Use stable identifier if available to allow morphing across hierarchy levels
       if ( d.data.id ) return d.data.id;
-      // Construct path-based ID
+      if ( d.data.name && d.data.name !== 'root' ) return d.data.name;
+      if ( d.data[ labelKey ] ) return d.data[ labelKey ];
+
+      // Fallback for root or unnamed nodes
       const ancestors = d.ancestors().reverse();
       return ancestors.map( ( n: any ) => n.data.name || n.data[ labelKey ] || 'root' ).join( '.' );
     };
