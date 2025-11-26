@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface RadialBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -32,6 +34,7 @@ export function RadialBarChart( {
   labelFontWeight = 'normal',
 }: RadialBarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   useEffect( () => {
     if ( !svgRef.current || !data || data.length === 0 ) return;
@@ -102,14 +105,36 @@ export function RadialBarChart( {
         .attr( 'fill', colorScale( valueKey ) )
         .attr( 'd', arc as any )
         .style( 'opacity', 0.8 )
-        .on( 'mouseover', function () {
-          d3.select( this ).style( 'opacity', 1 );
+        .on( 'mouseenter', ( event, d: any ) => {
+          d3.select( event.currentTarget ).style( 'opacity', 1 );
+          const [ x, y ] = d3.pointer( event, svg.node() );
+
+          showTooltip(
+            <div className="flex flex-col gap-1">
+              <div className="font-semibold text-xs">{ d.label }</div>
+              <div className="flex items-center gap-2 text-xs">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={ { backgroundColor: colorScale( valueKey ) } }
+                />
+                <span className="text-muted-foreground">{ valueKey }:</span>
+                <span className="font-medium">
+                  { d.value.toLocaleString() }
+                </span>
+              </div>
+            </div>,
+            x + width / 2, // Adjust for centered coordinate system
+            y + height / 2
+          );
         } )
-        .on( 'mouseout', function () {
-          d3.select( this ).style( 'opacity', 0.8 );
+        .on( 'mousemove', ( event ) => {
+          const [ x, y ] = d3.pointer( event, svg.node() );
+          showTooltip( tooltipState.content, x + width / 2, y + height / 2 );
         } )
-        .append( 'title' )
-        .text( d => `${ d.label } - ${ valueKey }: ${ d.value.toLocaleString() }` );
+        .on( 'mouseleave', ( event ) => {
+          d3.select( event.currentTarget ).style( 'opacity', 0.8 );
+          hideTooltip();
+        } );
     } );
 
     // Add labels
@@ -137,11 +162,17 @@ export function RadialBarChart( {
         .attr( 'alignment-baseline', 'middle' );
     }
 
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight ] );
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <svg ref={ svgRef } style={ { maxWidth: '100%', maxHeight: '100%' } } />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
+      />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface RadialStackedBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -28,6 +30,7 @@ export function RadialStackedBarChart( {
   legendShow = true,
 }: RadialStackedBarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Get chart specific settings from store
   const {
@@ -44,6 +47,8 @@ export function RadialStackedBarChart( {
     legendPosition,
     legendFontSize,
     legendGap,
+    radialDomainColor,
+    radialTickColor,
   } = useChartStore( useShallow( ( state ) => ( {
     legendShow: state.legendShow,
     labelShow: state.labelShow,
@@ -58,6 +63,8 @@ export function RadialStackedBarChart( {
     legendPosition: state.legendPosition,
     legendFontSize: state.legendFontSize,
     legendGap: state.legendGap,
+    radialDomainColor: state.radialDomainColor,
+    radialTickColor: state.radialTickColor,
   } ) ) );
 
   // Use store value if available, otherwise fallback to prop (though prop is likely false from BasicChart)
@@ -130,8 +137,39 @@ export function RadialStackedBarChart( {
       .data( d => d )
       .join( 'path' )
       .attr( 'd', arc as any )
-      .append( 'title' )
-      .text( ( d: any ) => `${ d.data[ labelKey ] } - ${ d[ 1 ] - d[ 0 ] }` );
+      .on( 'mouseenter', ( event, d: any ) => {
+        d3.select( event.currentTarget ).style( 'opacity', 0.8 );
+        const [ x, y ] = d3.pointer( event, svg.node() );
+
+        // Calculate value
+        const value = d[ 1 ] - d[ 0 ];
+
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ d.data[ labelKey ] }</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={ { backgroundColor: color( d.key ) } }
+              />
+              <span className="text-muted-foreground">{ d.key }:</span>
+              <span className="font-medium">
+                { value.toLocaleString() }
+              </span>
+            </div>
+          </div>,
+          x + width / 2, // Adjust for centered coordinate system
+          y + height / 2
+        );
+      } )
+      .on( 'mousemove', ( event ) => {
+        const [ x, y ] = d3.pointer( event, svg.node() );
+        showTooltip( tooltipState.content, x + width / 2, y + height / 2 );
+      } )
+      .on( 'mouseleave', ( event ) => {
+        d3.select( event.currentTarget ).style( 'opacity', 1 );
+        hideTooltip();
+      } );
 
     // X Axis (Labels)
     if ( labelShow ) {
@@ -170,7 +208,7 @@ export function RadialStackedBarChart( {
         .join( 'g' )
         .attr( 'fill', 'none' )
         .call( ( g: any ) => g.append( 'circle' )
-          .attr( 'stroke', '#000' )
+          .attr( 'stroke', radialDomainColor )
           .attr( 'stroke-opacity', 0.2 )
           .attr( 'r', y ) )
         .call( ( g: any ) => g.append( 'text' )
@@ -180,7 +218,7 @@ export function RadialStackedBarChart( {
           .attr( 'stroke-width', 5 )
           .text( y.tickFormat( 5, 's' ) )
           .clone( true )
-          .attr( 'fill', '#000' )
+          .attr( 'fill', radialTickColor )
           .attr( 'stroke', 'none' ) ) );
 
     svg.append( 'g' )
@@ -253,12 +291,19 @@ export function RadialStackedBarChart( {
     data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette,
     showLegend, labelShow, labelFontSize, labelColor, labelFontWeight,
     radialInnerRadius, radialStartAngle, radialEndAngle, radialPadAngle, radialCornerRadius,
-    legendPosition, legendFontSize, legendGap
+    legendPosition, legendFontSize, legendGap, radialDomainColor, radialTickColor,
+    showTooltip, hideTooltip, tooltipState.content
   ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <svg ref={ svgRef } style={ { maxWidth: '100%', maxHeight: '100%' } } />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
+      />
     </div>
   );
 }

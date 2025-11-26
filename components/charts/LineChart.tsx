@@ -396,7 +396,7 @@ export function LineChart( {
 
   return (
     <BaseChart
-      data={ filteredData }
+      data={ data }
       labelKey={ labelKey }
       valueKeys={ valueKeys }
       width={ propWidth }

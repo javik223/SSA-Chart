@@ -13,6 +13,8 @@ import {
 } from '@/utils/chartHelpers';
 import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface AreaChartProps {
   data: Array<Record<string, string | number>>;
@@ -91,6 +93,10 @@ interface AreaChartContentProps {
   fillOpacity: number;
   xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
   innerHeight: number;
+  margin: { top: number; right: number; bottom: number; left: number; };
+  showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
+  hideTooltip: () => void;
+  tooltipState: any;
 }
 
 const AreaChartContent = ( {
@@ -111,7 +117,11 @@ const AreaChartContent = ( {
   pointOutlineColor,
   fillOpacity,
   xAxisScaleType,
-  innerHeight
+  innerHeight,
+  margin,
+  showTooltip,
+  hideTooltip,
+  tooltipState
 }: AreaChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -221,12 +231,47 @@ const AreaChartContent = ( {
             const i = d3.interpolate( 0, fullSize );
             return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
           } );
+
+        // Add interaction to dots
+        ( ( dots as any ).merge( dotsEnter ) )
+          .on( 'mouseenter', ( event: any, d: any ) => {
+            d3.select( event.currentTarget ).attr( 'r', pointSize * 1.5 );
+
+            const [ x, y ] = d3.pointer( event, g.node() );
+
+            showTooltip(
+              <div className="flex flex-col gap-1">
+                <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={ { backgroundColor: color } }
+                  />
+                  <span className="text-muted-foreground">{ key }:</span>
+                  <span className="font-medium">
+                    { Number( d[ key ] ).toLocaleString() }
+                  </span>
+                </div>
+              </div>,
+              x + margin.left,
+              y + margin.top
+            );
+          } )
+          .on( 'mousemove', ( event: any ) => {
+            const [ x, y ] = d3.pointer( event, g.node() );
+            showTooltip( tooltipState.content, x + margin.left, y + margin.top );
+          } )
+          .on( 'mouseleave', ( event: any ) => {
+            d3.select( event.currentTarget ).attr( 'r', pointSize );
+            hideTooltip();
+          } );
+
       } else {
         g.selectAll( `.dot-${ index }` ).remove();
       }
     } );
 
-  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, fillOpacity, xAxisScaleType, innerHeight ] );
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, fillOpacity, xAxisScaleType, innerHeight, showTooltip, hideTooltip, tooltipState.content ] );
 
   return <g ref={ gRef } className="area-chart-content" />;
 };
@@ -284,6 +329,7 @@ export function AreaChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Visual settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -393,7 +439,7 @@ export function AreaChart( {
 
   return (
     <BaseChart
-      data={ filteredData }
+      data={ data }
       labelKey={ labelKey }
       valueKeys={ valueKeys }
       width={ propWidth }
@@ -460,6 +506,16 @@ export function AreaChart( {
         fillOpacity={ effectiveFillOpacity }
         xAxisScaleType={ xAxisScaleType }
         innerHeight={ innerHeight }
+        margin={ margin.margin }
+        showTooltip={ showTooltip }
+        hideTooltip={ hideTooltip }
+        tooltipState={ tooltipState }
+      />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </BaseChart>
   );

@@ -9,6 +9,8 @@ import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
 import { calculateChartMargins } from '@/utils/chartHelpers';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface BarChartProps {
   data: Array<Record<string, string | number>>;
@@ -77,6 +79,10 @@ interface BarChartContentProps {
   colors: string[];
   colorMode: 'by-column' | 'by-row';
   innerHeight: number;
+  margin: { top: number; right: number; bottom: number; left: number; };
+  showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
+  hideTooltip: () => void;
+  tooltipState: any;
 }
 
 const BarChartContent = ( {
@@ -87,7 +93,11 @@ const BarChartContent = ( {
   yScale,
   colors,
   colorMode,
-  innerHeight
+  innerHeight,
+  margin,
+  showTooltip,
+  hideTooltip,
+  tooltipState
 }: BarChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -141,6 +151,43 @@ const BarChartContent = ( {
         .attr( 'rx', 4 ) // Rounded corners
         .attr( 'ry', 4 );
 
+      // Apply event listeners
+      rectsMerge
+        .on( 'mouseenter', ( event, key ) => {
+          d3.select( event.currentTarget as Element ).style( 'opacity', 0.8 );
+          const [ x, y ] = d3.pointer( event, g.node() );
+
+          showTooltip(
+            <div className="flex flex-col gap-1">
+              <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
+              <div className="flex items-center gap-2 text-xs">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={ {
+                    backgroundColor: colorMode === 'by-column'
+                      ? ( colors?.[ valueKeys.indexOf( String( key ) ) ] || '#8884d8' )
+                      : ( colors?.[ data.indexOf( d ) % colors.length ] || '#8884d8' )
+                  } }
+                />
+                <span className="text-muted-foreground">{ key }:</span>
+                <span className="font-medium">
+                  { Number( d[ key ] ).toLocaleString() }
+                </span>
+              </div>
+            </div>,
+            x + margin.left, // Adjust for margin
+            y + margin.top
+          );
+        } )
+        .on( 'mousemove', ( event ) => {
+          const [ x, y ] = d3.pointer( event, g.node() );
+          showTooltip( tooltipState.content, x + margin.left, y + margin.top );
+        } )
+        .on( 'mouseleave', ( event ) => {
+          d3.select( event.currentTarget as Element ).style( 'opacity', 1 );
+          hideTooltip();
+        } );
+
       // Animate bars
       rectsMerge.transition()
         .duration( 500 )
@@ -149,7 +196,7 @@ const BarChartContent = ( {
         .attr( 'height', ( key ) => innerHeight - yScale( Number( d[ key ] ) || 0 ) );
     } );
 
-  }, [ data, labelKey, valueKeys, xScale, yScale, colors, colorMode, innerHeight ] );
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, colorMode, innerHeight, showTooltip, hideTooltip, tooltipState.content ] );
 
   return <g ref={ gRef } className="bar-chart-content" />;
 };
@@ -207,6 +254,7 @@ export function BarChart( {
 
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Chart dimensions
   const margin = useMemo( () => calculateChartMargins( {
@@ -271,7 +319,7 @@ export function BarChart( {
 
   return (
     <BaseChart
-      data={ filteredData }
+      data={ data }
       labelKey={ labelKey }
       valueKeys={ valueKeys }
       width={ propWidth }
@@ -328,6 +376,16 @@ export function BarChart( {
         colors={ effectiveColors }
         colorMode={ colorMode }
         innerHeight={ innerHeight }
+        margin={ margin.margin }
+        showTooltip={ showTooltip }
+        hideTooltip={ hideTooltip }
+        tooltipState={ tooltipState }
+      />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </BaseChart>
   );

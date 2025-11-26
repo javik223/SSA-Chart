@@ -8,6 +8,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { createScale } from '@/utils/chartScales';
 import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 import {
   calculateChartMargins,
   createClipPath,
@@ -85,8 +87,8 @@ export function MultiLineChart( {
   zoomEnabled = true,
 }: MultiLineChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const tooltipRef = useRef<HTMLDivElement>( null );
   const previousZoomDomainRef = useRef<any>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Store hooks
   // Store hooks
@@ -448,16 +450,6 @@ export function MultiLineChart( {
       .style( 'opacity', 0 )
       .style( 'pointer-events', 'none' );
 
-    // Text label for the series
-    const labelText = contentGroup.append( 'text' )
-      .attr( 'font-size', 10 )
-      .attr( 'font-family', 'sans-serif' )
-      .attr( 'text-anchor', 'start' )
-      .attr( 'fill', 'black' )
-      .style( 'opacity', 0 )
-      .style( 'pointer-events', 'none' )
-      .style( 'text-shadow', '0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff' );
-
     // Hover Event Handler
     const handleHover = ( event: any ) => {
       const [ mx, my ] = d3.pointer( event );
@@ -515,20 +507,35 @@ export function MultiLineChart( {
           .attr( 'cx', px )
           .attr( 'cy', closestSeries.py );
 
-        labelText
-          .attr( 'x', px + 5 )
-          .attr( 'y', closestSeries.py - 5 )
-          .text( closestSeries.key );
+        // Show Tooltip
+        // Calculate screen coordinates relative to the container
+        // We need to account for margins
+        const tooltipX = px + chartMargin.left;
+        const tooltipY = closestSeries.py + chartMargin.top;
 
-        if ( tooltipRef.current ) {
-          tooltipRef.current.style.opacity = '0';
-        }
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={ { backgroundColor: closestSeries.color } }
+              />
+              <span className="text-muted-foreground">{ closestSeries.key }:</span>
+              <span className="font-medium">
+                { Number( closestSeries.val ).toLocaleString() }
+              </span>
+            </div>
+          </div>,
+          tooltipX,
+          tooltipY
+        );
       }
     };
 
     const handleLeave = () => {
       dot.style( 'opacity', 0 );
-      labelText.style( 'opacity', 0 );
+      hideTooltip();
       lines.forEach( l => {
         l.path
           .attr( 'stroke', l.color )
@@ -539,7 +546,6 @@ export function MultiLineChart( {
 
     const handleEnter = () => {
       dot.style( 'opacity', 1 );
-      labelText.style( 'opacity', 1 );
     };
 
     // Overlay for events (separate from brush/zoom)
@@ -584,15 +590,16 @@ export function MultiLineChart( {
       }
     }
 
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, xAxisShow, xAxisPosition, xAxisScaleType, xAxisTitle, xAxisTitleSize, xAxisTitleWeight, xAxisTitleColor, xAxisTitlePadding, xAxisLabelSize, xAxisLabelWeight, xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing, xAxisTickCount, xAxisTickSize, xAxisTickPadding, xAxisTickFormat, xAxisShowGrid, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, xAxisShowDomain, yAxis, curveType, lineWidth, lineStyle, innerWidth, innerHeight, chartMargin, xScale, yScale, zoomEnabled, zoomDomain, setZoomDomain ] );
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, xAxisShow, xAxisPosition, xAxisScaleType, xAxisTitle, xAxisTitleSize, xAxisTitleWeight, xAxisTitleColor, xAxisTitlePadding, xAxisLabelSize, xAxisLabelWeight, xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing, xAxisTickCount, xAxisTickSize, xAxisTickPadding, xAxisTickFormat, xAxisShowGrid, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, xAxisShowDomain, yAxis, curveType, lineWidth, lineStyle, innerWidth, innerHeight, chartMargin, xScale, yScale, zoomEnabled, zoomDomain, setZoomDomain, showTooltip, hideTooltip ] );
 
   return (
     <div className="relative w-full h-full">
       <svg ref={ svgRef } className="w-full h-full overflow-visible" />
-      <div
-        ref={ tooltipRef }
-        className="absolute top-0 left-0 pointer-events-none bg-white/90 dark:bg-slate-800/90 p-2 rounded shadow-lg border border-slate-200 dark:border-slate-700 transition-opacity duration-100 opacity-0 z-10"
-        style={ { marginTop: '-10px', marginLeft: '10px' } }
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
       <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data.length } />
     </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface PieChartProps {
   data: Array<Record<string, string | number>>;
@@ -70,7 +72,7 @@ export function PieChart( {
   legendPaddingLeft = 0,
 }: PieChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const tooltipRef = useRef<HTMLDivElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   useEffect( () => {
     if ( !svgRef.current || data.length === 0 ) return;
@@ -178,23 +180,31 @@ export function PieChart( {
           .attr( 'd', hoverArc as any );
 
         // Show tooltip
-        if ( tooltipRef.current ) {
-          const percentage = ( ( d.data.value / total ) * 100 ).toFixed( 1 );
-          tooltipRef.current.innerHTML = `
-            <div class="font-semibold">${ d.data.label }</div>
-            <div class="text-sm">${ d.data.value.toLocaleString() }</div>
-            <div class="text-xs text-zinc-500">${ percentage }%</div>
-          `;
-          tooltipRef.current.style.display = 'block';
-          tooltipRef.current.style.left = event.pageX + 10 + 'px';
-          tooltipRef.current.style.top = event.pageY - 10 + 'px';
-        }
+        const percentage = ( ( d.data.value / total ) * 100 ).toFixed( 1 );
+
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ d.data.label }</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={ { backgroundColor: colors[ d.index % colors.length ] } }
+              />
+              <span className="text-muted-foreground">Value:</span>
+              <span className="font-medium">
+                { d.data.value.toLocaleString() }
+              </span>
+              <span className="text-muted-foreground text-[10px]">
+                ({ percentage }%)
+              </span>
+            </div>
+          </div>,
+          event.pageX,
+          event.pageY
+        );
       } )
       .on( 'mousemove', function ( event ) {
-        if ( tooltipRef.current ) {
-          tooltipRef.current.style.left = event.pageX + 10 + 'px';
-          tooltipRef.current.style.top = event.pageY - 10 + 'px';
-        }
+        showTooltip( tooltipState.content, event.pageX, event.pageY );
       } )
       .on( 'mouseleave', function () {
         // Reset slice
@@ -204,9 +214,7 @@ export function PieChart( {
           .attr( 'd', arc as any );
 
         // Hide tooltip
-        if ( tooltipRef.current ) {
-          tooltipRef.current.style.display = 'none';
-        }
+        hideTooltip();
       } )
       // Animate entry
       .transition()
@@ -399,15 +407,16 @@ export function PieChart( {
         .style( 'fill', '#666' )
         .text( centerLabel );
     }
-  }, [ data, labelKey, valueKeys, innerRadius, padAngle, cornerRadius, startAngle, endAngle, showTotal, centerLabel, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft ] );
+  }, [ data, labelKey, valueKeys, innerRadius, padAngle, cornerRadius, startAngle, endAngle, showTotal, centerLabel, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, showTooltip, hideTooltip, tooltipState.content ] );
 
   return (
     <div className='relative w-full h-full'>
       <svg ref={ svgRef } className='w-full h-full' />
-      <div
-        ref={ tooltipRef }
-        className='absolute hidden bg-white border border-zinc-200 rounded-lg shadow-lg p-3 pointer-events-none z-10'
-        style={ { display: 'none' } }
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </div>
   );

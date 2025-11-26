@@ -6,6 +6,8 @@ import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 import { ChartComponentProps } from '@/lib/chartRegistry';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 export function TreemapChart( {
   data,
@@ -27,14 +29,7 @@ export function TreemapChart( {
 }: ChartComponentProps ) {
   const containerRef = useRef<HTMLDivElement>( null );
   const svgRef = useRef<SVGSVGElement>( null );
-  const [ tooltipData, setTooltipData ] = useState<{
-    x: number;
-    y: number;
-    label: string;
-    value: number;
-    color: string;
-    extraFields?: { key: string; value: any; }[];
-  } | null>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Store state
   // Store state
@@ -418,25 +413,46 @@ export function TreemapChart( {
           .filter( k => !excludeKeys.includes( k ) && typeof data[ k ] !== 'object' )
           .map( k => ( { key: k, value: data[ k ] } ) );
 
-        setTooltipData( {
-          x: event.pageX,
-          y: event.pageY,
-          label: String( data[ labelKey ] || data.name || data[ 0 ] || '' ),
-          value: d.value || 0,
-          color: String(
-            treemapColorMode === 'value' ? colorScale( d.value || 0 ) :
-              treemapColorMode === 'category' ? colorScale( getTopLevelParent( d ) as any ) :
-                colorScale( String( ( d.data as any )[ labelKey ] ) as any )
-          ),
-          extraFields
-        } );
+        const label = String( data[ labelKey ] || data.name || data[ 0 ] || '' );
+        const value = d.value || 0;
+        const color = String(
+          treemapColorMode === 'value' ? colorScale( d.value || 0 ) :
+            treemapColorMode === 'category' ? colorScale( getTopLevelParent( d ) as any ) :
+              colorScale( String( ( d.data as any )[ labelKey ] ) as any )
+        );
+
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ label }</div>
+            <div className="flex flex-col gap-1 text-xs">
+              { extraFields.map( ( field: any, i: number ) => (
+                <div key={ i } className="flex justify-between gap-4">
+                  <span className="text-zinc-500 capitalize">{ field.key.replace( /([A-Z])/g, ' $1' ).trim() }</span>
+                  <span className="font-medium">{ field.value }</span>
+                </div>
+              ) ) }
+              <div className="flex items-center gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800 mt-1">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={ { backgroundColor: color } }
+                />
+                <span className="text-muted-foreground">Value:</span>
+                <span className="font-medium">
+                  { value.toLocaleString() }
+                </span>
+              </div>
+            </div>
+          </div>,
+          event.pageX,
+          event.pageY
+        );
         d3.select( event.currentTarget ).attr( 'opacity', 0.9 );
       } )
       .on( 'mousemove', ( event: any ) => {
-        setTooltipData( prev => prev ? { ...prev, x: event.pageX, y: event.pageY } : null );
+        showTooltip( tooltipState.content, event.pageX, event.pageY );
       } )
       .on( 'mouseleave', ( event: any ) => {
-        setTooltipData( null );
+        hideTooltip();
         d3.select( event.currentTarget ).attr( 'opacity', 1 );
       } );
 
@@ -510,7 +526,7 @@ export function TreemapChart( {
         return node.depth === 1 ? 'uppercase' : 'none';
       } );
 
-  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor ] );
+  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor, showTooltip, hideTooltip, tooltipState.content ] );
 
   return (
     <div className='relative w-full h-full flex flex-col' ref={ containerRef }>
@@ -543,36 +559,13 @@ export function TreemapChart( {
         />
       </div>
 
-      { tooltipData && (
-        <div
-          className='fixed pointer-events-none z-50 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 text-sm overflow-hidden'
-          style={ {
-            left: tooltipData.x,
-            top: tooltipData.y,
-            transform: 'translate(-50%, -100%)',
-            marginTop: '-10px',
-            minWidth: '200px'
-          } }
-        >
-          {/* Tooltip Header */ }
-          <div className="px-3 py-2 bg-zinc-800 text-white font-semibold">
-            { tooltipData.label }
-          </div>
-
-          {/* Tooltip Body */ }
-          <div className="p-3 space-y-1">
-            { ( tooltipData as any ).extraFields?.map( ( field: any, i: number ) => (
-              <div key={ i } className="flex justify-between gap-4 text-xs">
-                <span className="text-zinc-500 dark:text-zinc-400 capitalize">{ field.key.replace( /([A-Z])/g, ' $1' ).trim() }</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">{ field.value }</span>
-              </div>
-            ) ) }
-            <div className="flex justify-between gap-4 text-xs pt-1 border-t border-zinc-100 dark:border-zinc-800 mt-1">
-              <span className="text-zinc-500 dark:text-zinc-400">Value</span>
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">{ tooltipData.value.toLocaleString() }</span>
-            </div>
-          </div>
-        </div>
+      { tooltipState.visible && (
+        <ChartTooltip
+          visible={ tooltipState.visible }
+          x={ tooltipState.x }
+          y={ tooltipState.y }
+          content={ tooltipState.content }
+        />
       ) }
     </div>
   );

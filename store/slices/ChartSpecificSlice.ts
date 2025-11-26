@@ -79,6 +79,12 @@ export interface ChartSpecificSlice {
 
   radialCornerRadius: number;
   setRadialCornerRadius: (radius: number) => void;
+
+  radialDomainColor: string;
+  setRadialDomainColor: (color: string) => void;
+
+  radialTickColor: string;
+  setRadialTickColor: (color: string) => void;
 }
 
 export const createChartSpecificSlice: StateCreator<ChartSpecificSlice, [], [], ChartSpecificSlice> = (set) => ({
@@ -160,4 +166,10 @@ export const createChartSpecificSlice: StateCreator<ChartSpecificSlice, [], [], 
 
   radialCornerRadius: 0,
   setRadialCornerRadius: (radius) => set({ radialCornerRadius: radius }),
+
+  radialDomainColor: '#e0e0e0',
+  setRadialDomainColor: (color) => set({ radialDomainColor: color }),
+
+  radialTickColor: '#808080',
+  setRadialTickColor: (color) => set({ radialTickColor: color }),
 });

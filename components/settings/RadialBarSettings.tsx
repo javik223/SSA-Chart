@@ -88,6 +88,29 @@ export function RadialBarSettings() {
           </FormCol>
         </FormRow>
       </FormSection>
+
+      <Separator />
+
+      <FormSection title='Colors'>
+        <FormRow>
+          <FormCol>
+            <FormField
+              type='color'
+              label='Domain Color'
+              value={ useChartStore( ( state ) => state.radialDomainColor ) }
+              onChange={ useChartStore( ( state ) => state.setRadialDomainColor ) }
+            />
+          </FormCol>
+          <FormCol>
+            <FormField
+              type='color'
+              label='Tick Color'
+              value={ useChartStore( ( state ) => state.radialTickColor ) }
+              onChange={ useChartStore( ( state ) => state.setRadialTickColor ) }
+            />
+          </FormCol>
+        </FormRow>
+      </FormSection>
     </div>
   );
 }

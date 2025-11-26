@@ -3,7 +3,7 @@
 import { useEffect, useRef, ReactNode } from 'react';
 import * as d3 from 'd3';
 import { BaseChartProps, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
-import { calculateChartMargins, setupPan, renderXAxis, renderYAxis, renderXGrid, renderYGrid, renderLegend } from '@/utils/chartHelpers';
+import { calculateChartMargins, setupPan, setupBrushZoom, renderXAxis, renderYAxis, renderXGrid, renderYGrid, renderLegend } from '@/utils/chartHelpers';
 import { useChartStore } from '@/store/useChartStore';
 import { ChartZoomControls } from './ChartZoomControls';
 
@@ -102,102 +102,25 @@ export function BaseChart( {
 
   // Set up D3 brush for zoom
   useEffect( () => {
-    if ( !brushRef.current || !showZoomControls || !xScale || !yScale ) return;
+    if ( !gRef.current || !showZoomControls || !xScale || !yScale || !data || !labelKey ) return;
 
-    const brushGroup = d3.select( brushRef.current );
+    const g = d3.select( gRef.current );
 
-    // Create brush (Ctrl+drag to select region for zoom)
-    const brush = d3.brush()
-      .extent( [ [ 0, 0 ], [ innerWidth, innerHeight ] ] )
-      .filter( ( event ) => ( event.ctrlKey || event.metaKey ) && !event.button ) // Only activate with Ctrl/Cmd key held
-      .on( 'end', ( event ) => {
-        if ( !event.selection ) return;
+    // Setup Brush Zoom
+    setupBrushZoom( {
+      g,
+      innerWidth,
+      innerHeight,
+      data,
+      labelKey,
+      valueKeys,
+      setZoomDomain
+    } );
 
-        const [ [ x0, y0 ], [ x1, y1 ] ] = event.selection;
-
-        // Helper to invert X scale safely
-        let xMin: number, xMax: number;
-
-        if ( typeof xScale.invert === 'function' ) {
-          // Linear or Time scale
-          const d0 = xScale.invert( x0 );
-          const d1 = xScale.invert( x1 );
-
-          // Convert Dates to timestamps if needed
-          const v0 = d0 instanceof Date ? d0.getTime() : Number( d0 );
-          const v1 = d1 instanceof Date ? d1.getTime() : Number( d1 );
-
-          xMin = Math.min( v0, v1 );
-          xMax = Math.max( v0, v1 );
-        } else {
-          // Point/Band scale (no invert) - map range back to domain index/value
-          // For simplicity, if we can't invert, we might skip X zoom or implement approximate inversion
-          // Here we'll try to find domain values within the range
-          // This is complex for point scales without a quantize scale.
-          // For now, let's just not zoom X if it's a point scale to avoid crashes
-          // or fallback to full domain.
-          // Actually, let's try to support it by finding the domain indices.
-
-          // If we can't invert, we just don't update X zoom
-          xMin = 0;
-          xMax = 0; // Signals no zoom on X or invalid
-        }
-
-        // Helper to invert Y scale (usually linear)
-        let yMin: number, yMax: number;
-        if ( typeof yScale.invert === 'function' ) {
-          const d0 = yScale.invert( y1 ); // y1 is lower pixel (higher value) usually? Wait, SVG coords: y=0 is top.
-          const d1 = yScale.invert( y0 );
-          // d3 y scale usually maps domain [min, max] to range [height, 0]
-          // so y0 (top) -> max value, y1 (bottom) -> min value
-
-          yMin = Math.min( Number( d0 ), Number( d1 ) );
-          yMax = Math.max( Number( d0 ), Number( d1 ) );
-        } else {
-          yMin = 0;
-          yMax = 0;
-        }
-
-        // Only update if we have valid ranges
-        // For X, if we couldn't invert (Point scale), we might want to preserve existing zoom or just not zoom X.
-        // But the store expects a full object.
-        // Let's only update if we have valid numbers.
-
-        const newZoomDomain: any = {};
-
-        if ( typeof xScale.invert === 'function' ) {
-          newZoomDomain.x = [ xMin, xMax ];
-        } else {
-          // If we can't zoom X, keep it null (full) or existing?
-          // For now, null.
-          newZoomDomain.x = null;
-        }
-
-        if ( typeof yScale.invert === 'function' ) {
-          newZoomDomain.y = [ yMin, yMax ];
-        } else {
-          newZoomDomain.y = null;
-        }
-
-        if ( newZoomDomain.x || newZoomDomain.y ) {
-          setZoomDomain( {
-            x: newZoomDomain.x,
-            y: newZoomDomain.y
-          } );
-        }
-
-        // Clear brush selection
-        brushGroup.call( brush.move as any, null );
-      } );
-
-    // Apply brush to group
-    brushGroup.call( brush as any );
-
-    // Setup pan interaction
-    if ( gRef.current && data && valueKeys && zoomDomain ) {
-      const g = d3.select( gRef.current );
+    // Setup Pan
+    if ( zoomDomain ) {
       setupPan( {
-        g: g as any,
+        g,
         innerWidth,
         innerHeight,
         data,
@@ -207,11 +130,10 @@ export function BaseChart( {
       } );
     }
 
-    // Cleanup
-    return () => {
-      brushGroup.on( '.brush', null );
-    };
-  }, [ showZoomControls, innerWidth, innerHeight, xScale, yScale, setZoomDomain, data, valueKeys, zoomDomain ] );
+    // Cleanup not strictly necessary as D3 handles event replacement, 
+    // but good practice if we were adding global listeners.
+    // The utilities attach listeners to elements that are re-created or selected.
+  }, [ showZoomControls, innerWidth, innerHeight, xScale, yScale, setZoomDomain, data, labelKey, valueKeys, zoomDomain ] );
 
   // Render axes
   useEffect( () => {
