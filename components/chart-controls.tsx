@@ -25,6 +25,11 @@ export function ChartControls() {
   const treemapTileMethod = useChartStore( ( state ) => state.treemapTileMethod );
   const setTreemapTileMethod = useChartStore( ( state ) => state.setTreemapTileMethod );
 
+  const treemapCategoryLevel = useChartStore( ( state ) => state.treemapCategoryLevel );
+  const setTreemapCategoryLevel = useChartStore( ( state ) => state.setTreemapCategoryLevel );
+
+  const data = useChartStore( ( state ) => state.data );
+
   if ( !showOnChartControls ) return null;
 
   // Only show controls relevant to the current chart type
@@ -82,6 +87,62 @@ export function ChartControls() {
             </SelectContent>
           </Select>
         </div>
+
+        {/* Level Selection Control */ }
+        { ( () => {
+          // Calculate available levels based on data
+          if ( !data || data.length === 0 ) return null;
+
+          // Check for path key (path or id)
+          const pathKey = Object.keys( data[ 0 ] ).find( k => k.toLowerCase() === 'path' || k.toLowerCase() === 'id' );
+
+          // Check for category keys
+          const columnMapping = useChartStore.getState().columnMapping;
+          const availableColumns = useChartStore.getState().availableColumns;
+          const categoryKeys = ( columnMapping.categories || [] ).map( i => availableColumns[ i ] ).filter( Boolean );
+
+          let maxLevel = 0;
+          let isPathBased = false;
+
+          if ( pathKey ) {
+            isPathBased = true;
+            // Calculate max depth from path data
+            const firstPath = String( ( data[ 0 ] as any )[ pathKey ] || '' );
+            const separator = firstPath.includes( '/' ) ? '/' : '.';
+            // Scan a few rows to find max depth
+            data.slice( 0, 10 ).forEach( ( d: any ) => {
+              const parts = String( d[ pathKey ] ).split( separator );
+              maxLevel = Math.max( maxLevel, parts.length - 1 );
+            } );
+          } else if ( categoryKeys.length > 0 ) {
+            // Use category keys count
+            maxLevel = categoryKeys.length;
+          }
+
+          if ( maxLevel <= 0 ) return null;
+
+          return (
+            <div className="flex items-center gap-2">
+              <Label className="text-xs font-medium whitespace-nowrap">Group Level:</Label>
+              <Select
+                value={ String( treemapCategoryLevel ) }
+                onValueChange={ ( val ) => setTreemapCategoryLevel( Number( val ) ) }
+              >
+                <SelectTrigger className="h-7 text-xs w-[100px]">
+                  <SelectValue placeholder="Select level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="-1">All</SelectItem>
+                  { Array.from( { length: maxLevel }, ( _, i ) => (
+                    <SelectItem key={ i } value={ String( i ) }>
+                      { isPathBased ? `Level ${ i }` : ( categoryKeys[ i ] || `Level ${ i }` ) }
+                    </SelectItem>
+                  ) ) }
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        } )() }
       </div>
     );
   }

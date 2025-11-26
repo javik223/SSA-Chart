@@ -39,6 +39,7 @@ export function TreemapChart( {
   const treemapTileMethod = useChartStore( ( state ) => state.treemapTileMethod );
   const treemapPadding = useChartStore( ( state ) => state.treemapPadding );
   const treemapColorMode = useChartStore( ( state ) => state.treemapColorMode );
+  const treemapCategoryLevel = useChartStore( ( state ) => state.treemapCategoryLevel );
   const theme = useChartStore( ( state ) => state.theme );
 
   // Dimensions
@@ -55,8 +56,8 @@ export function TreemapChart( {
     // Check if we have explicit parentId structure
     const hasParentId = 'parentId' in data[ 0 ] && 'id' in data[ 0 ];
 
-    // Check for 'path' or 'PATH' column
-    const pathKey = Object.keys( data[ 0 ] ).find( k => k.toLowerCase() === 'path' );
+    // Check for 'path' or 'id' column
+    const pathKey = Object.keys( data[ 0 ] ).find( k => k.toLowerCase() === 'path' || k.toLowerCase() === 'id' );
 
     // Check for category column (from settings)
     const hasCategories = categoryKeys && categoryKeys.length > 0;
@@ -68,8 +69,13 @@ export function TreemapChart( {
 
     if ( hasCategories ) {
       // Use category columns for grouping
+      // Filter keys based on selected level
+      // Treat -1 (All) as 0
+      const effectiveLevel = Math.max( 0, treemapCategoryLevel );
+      const activeCategoryKeys = categoryKeys.slice( effectiveLevel );
+
       // d3.group can take multiple keys for nested grouping
-      const grouped = d3.group( data, ...categoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
+      const grouped = d3.group( data, ...activeCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
 
       // Helper to convert Map to hierarchy object
       const mapToNode = ( name: string, value: any ): any => {
@@ -116,8 +122,13 @@ export function TreemapChart( {
 
         const syntheticCategoryKeys = Array.from( { length: maxDepth }, ( _, i ) => `__level_${ i }` );
 
+        // Filter keys based on selected level
+        // If level is 1, we want to start grouping from Level 1
+        const effectiveLevel = Math.max( 0, treemapCategoryLevel );
+        const activeCategoryKeys = syntheticCategoryKeys.slice( effectiveLevel );
+
         // 3. Use d3.group with the synthetic keys
-        const grouped = d3.group( transformedData, ...syntheticCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
+        const grouped = d3.group( transformedData, ...activeCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
 
         // 4. Convert Map to hierarchy object (reusing the helper)
         // Note: We need to define mapToNode here or move it out if it's not accessible
@@ -131,7 +142,8 @@ export function TreemapChart( {
         const rootData = { name: 'root', children: Array.from( grouped, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
 
         // Optimization: If root has only one child (e.g. 'flare'), make that the root
-        if ( rootData.children.length === 1 ) {
+        // Only apply this optimization if we haven't manually selected a level > 0
+        if ( rootData.children.length === 1 && effectiveLevel === 0 ) {
           hierarchy = d3.hierarchy( rootData.children[ 0 ] );
         } else {
           hierarchy = d3.hierarchy( rootData );
@@ -175,7 +187,7 @@ export function TreemapChart( {
       .sort( ( a, b ) => ( b.value || 0 ) - ( a.value || 0 ) );
 
     return hierarchy;
-  }, [ data, valueKeys, categoryKeys ] );
+  }, [ data, valueKeys, categoryKeys, treemapCategoryLevel ] );
 
   // Layout
   const treemapRoot = useMemo( () => {
@@ -281,27 +293,62 @@ export function TreemapChart( {
   useEffect( () => {
     if ( !svgRef.current || !treemapRoot ) return;
 
-    const svg = d3.select( svgRef.current );
-    svg.selectAll( '*' ).remove();
+    const svg = d3.select( containerRef.current ).select( 'svg' );
 
-    const g = svg.append( 'g' )
-      .attr( 'transform', `translate(${ margin.left },${ margin.top })` );
+    // Ensure we have the main group
+    const g = svg.select( 'g' ).empty()
+      ? svg.append( 'g' ).attr( 'transform', `translate(${ margin.left },${ margin.top })` )
+      : svg.select( 'g' );
 
-    // Select nodes based on mode
     // Render all descendants to show hierarchy nesting
-    // Filter out root if we don't want to draw the main container
     const nodes = treemapRoot.descendants();
 
-    const cell = g.selectAll( 'g' )
-      .data( nodes )
-      .join( 'g' )
-      .attr( 'transform', d => `translate(${ d.x0 },${ d.y0 })` );
+    // Robust key function for data join
+    const key = ( d: any ) => {
+      if ( d.data.id ) return d.data.id;
+      // Construct path-based ID
+      const ancestors = d.ancestors().reverse();
+      return ancestors.map( ( n: any ) => n.data.name || n.data[ labelKey ] || 'root' ).join( '.' );
+    };
 
-    // Rects
-    cell.append( 'rect' )
-      .attr( 'id', ( d, i ) => `rect-${ i }` )
-      .attr( 'width', d => Math.max( 0, d.x1 - d.x0 ) )
-      .attr( 'height', d => Math.max( 0, d.y1 - d.y0 ) )
+    const t = svg.transition().duration( 750 ) as any;
+
+    const cell = g.selectAll( 'g.node' )
+      .data( nodes, key as any )
+      .join(
+        ( enter: any ) => {
+          const enterG = enter.append( 'g' )
+            .attr( 'class', 'node' )
+            .attr( 'transform', ( d: any ) => `translate(${ d.x0 },${ d.y0 })` )
+            .attr( 'opacity', 0 );
+
+          enterG.append( 'rect' )
+            .attr( 'id', ( d: any, i: number ) => `rect-${ i }` )
+            .attr( 'width', ( d: any ) => Math.max( 0, d.x1 - d.x0 ) )
+            .attr( 'height', ( d: any ) => Math.max( 0, d.y1 - d.y0 ) );
+
+          enterG.append( 'clipPath' )
+            .attr( 'id', ( d: any, i: number ) => `clip-${ i }` )
+            .append( 'rect' )
+            .attr( 'width', ( d: any ) => Math.max( 0, d.x1 - d.x0 ) )
+            .attr( 'height', ( d: any ) => Math.max( 0, d.y1 - d.y0 ) );
+
+          enterG.append( 'text' )
+            .attr( 'clip-path', ( d: any, i: number ) => `url(#clip-${ i })` );
+
+          return enterG.call( ( enter: any ) => enter.transition( t ).attr( 'opacity', 1 ) );
+        },
+        ( update: any ) => update.call( ( update: any ) => update.transition( t )
+          .attr( 'transform', ( d: any ) => `translate(${ d.x0 },${ d.y0 })` )
+          .attr( 'opacity', 1 ) ),
+        ( exit: any ) => exit.call( ( exit: any ) => exit.transition( t ).attr( 'opacity', 0 ).remove() )
+      );
+
+    // Update Rects (for both enter and update selections)
+    cell.select( 'rect' )
+      .transition( t )
+      .attr( 'width', ( d: any ) => Math.max( 0, d.x1 - d.x0 ) )
+      .attr( 'height', ( d: any ) => Math.max( 0, d.y1 - d.y0 ) )
       .attr( 'fill', ( d: any ) => {
         if ( treemapColorMode === 'category' ) {
           // Both groups and leaves get the category color
@@ -340,7 +387,12 @@ export function TreemapChart( {
       } )
       .attr( 'fill-opacity', 1 )
       .attr( 'stroke', treemapStrokeColor || '#ffffff' )
-      .attr( 'stroke-width', treemapStrokeWidth ?? 1 )
+      .attr( 'stroke-width', treemapStrokeWidth ?? 1 );
+
+    // Re-attach events (since they might be lost on enter/update if not careful, but usually fine on 'cell')
+    // Actually, we should attach events to the enter selection or merge.
+    // Since 'cell' is the merged selection, we can attach here.
+    cell.select( 'rect' )
       .on( 'mouseover', ( event, d: any ) => {
         // Don't show tooltip for group headers
         if ( d.children ) return;
@@ -374,15 +426,14 @@ export function TreemapChart( {
         d3.select( event.currentTarget ).attr( 'opacity', 1 );
       } );
 
-    // Labels
-    cell.append( 'clipPath' )
-      .attr( 'id', ( d, i ) => `clip-${ i }` )
-      .append( 'rect' )
-      .attr( 'width', d => Math.max( 0, d.x1 - d.x0 ) )
-      .attr( 'height', d => Math.max( 0, d.y1 - d.y0 ) );
+    // Update Clip Rects
+    cell.select( 'clipPath' ).select( 'rect' )
+      .transition( t )
+      .attr( 'width', ( d: any ) => Math.max( 0, d.x1 - d.x0 ) )
+      .attr( 'height', ( d: any ) => Math.max( 0, d.y1 - d.y0 ) );
 
-    cell.append( 'text' )
-      .attr( 'clip-path', ( d, i ) => `url(#clip-${ i })` )
+    // Update Text
+    cell.select( 'text' )
       .selectAll( 'tspan' )
       .data( ( d: any ) => {
         // For group nodes (depth 1), show the group label
@@ -391,15 +442,12 @@ export function TreemapChart( {
           const label = id.split( /[\/.]/ ).pop() || id;
           return [ label ];
         }
-        // For leaves, show leaf name
-        if ( !d.children ) {
+        // For leaf nodes, show label if space permits
+        if ( !d.children && ( d.x1 - d.x0 ) > 30 && ( d.y1 - d.y0 ) > 15 ) {
           const fullLabel = String( ( d.data as any )[ labelKey ] || ( d.data as any ).name || d.data[ 0 ] || '' );
           const separator = fullLabel.includes( '/' ) ? '/' : '.';
           const leafName = fullLabel.split( separator ).pop() || fullLabel;
-          // Only show label if box is big enough
-          if ( ( d.x1 - d.x0 ) > 30 && ( d.y1 - d.y0 ) > 20 ) {
-            return leafName.split( /(?=[A-Z][^A-Z])/g ).concat( d3.format( "," )( d.value || 0 ) );
-          }
+          return leafName.split( /(?=[A-Z][a-z])/g ).concat( d3.format( "," )( d.value || 0 ) );
         }
         return [];
       } )

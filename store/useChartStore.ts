@@ -804,25 +804,28 @@ interface ChartStore {
 
   // Treemap settings
   treemapTileMethod: 'binary' | 'squarify' | 'resquarify' | 'slice' | 'dice' | 'slice-dice';
-  setTreemapTileMethod: (method: 'binary' | 'squarify' | 'resquarify' | 'slice' | 'dice' | 'slice-dice') => void;
+  setTreemapTileMethod: ( method: 'binary' | 'squarify' | 'resquarify' | 'slice' | 'dice' | 'slice-dice' ) => void;
 
   treemapPadding: number;
-  setTreemapPadding: (padding: number) => void;
+  setTreemapPadding: ( padding: number ) => void;
 
-  treemapColorMode: 'depth' | 'value' | 'category' | 'root';
-  setTreemapColorMode: (mode: 'depth' | 'value' | 'category' | 'root') => void;
+  treemapColorMode: 'depth' | 'value' | 'category';
+  setTreemapColorMode: ( mode: 'depth' | 'value' | 'category' ) => void;
+
+  treemapCategoryLevel: number;
+  setTreemapCategoryLevel: ( level: number ) => void;
 
   treemapGradientSteepness: number;
-  setTreemapGradientSteepness: (steepness: number) => void;
+  setTreemapGradientSteepness: ( steepness: number ) => void;
 
   treemapCategoryLabelColor: string;
-  setTreemapCategoryLabelColor: (color: string) => void;
+  setTreemapCategoryLabelColor: ( color: string ) => void;
 
   treemapStrokeWidth: number;
-  setTreemapStrokeWidth: (width: number) => void;
+  setTreemapStrokeWidth: ( width: number ) => void;
 
   treemapStrokeColor: string;
-  setTreemapStrokeColor: (color: string) => void;
+  setTreemapStrokeColor: ( color: string ) => void;
   
   yAxisGridExtend: boolean;
   setYAxisGridExtend: (extend: boolean) => void;
@@ -1843,17 +1846,20 @@ export const useChartStore = create<ChartStore>()(
       treemapTileMethod: 'squarify',
       setTreemapTileMethod: (method) => set({ treemapTileMethod: method }),
 
-      treemapPadding: 1,
-      setTreemapPadding: (padding) => set({ treemapPadding: padding }),
+      treemapPadding: 0,
+      setTreemapPadding: ( padding: number ) => set( { treemapPadding: padding } ),
 
-      treemapColorMode: 'depth',
-      setTreemapColorMode: (mode) => set({ treemapColorMode: mode }),
+      treemapColorMode: 'category',
+      setTreemapColorMode: ( mode: 'depth' | 'value' | 'category' ) => set( { treemapColorMode: mode } ),
+
+      treemapCategoryLevel: 0,
+      setTreemapCategoryLevel: ( level: number ) => set( { treemapCategoryLevel: level } ),
 
       treemapGradientSteepness: 0.3,
-      setTreemapGradientSteepness: (steepness) => set({ treemapGradientSteepness: steepness }),
+      setTreemapGradientSteepness: ( steepness: number ) => set( { treemapGradientSteepness: steepness } ),
 
       treemapCategoryLabelColor: '#ffffff',
-      setTreemapCategoryLabelColor: (color) => set({ treemapCategoryLabelColor: color }),
+      setTreemapCategoryLabelColor: ( color: string ) => set( { treemapCategoryLabelColor: color } ),
 
       treemapStrokeWidth: 1,
       setTreemapStrokeWidth: (width) => set({ treemapStrokeWidth: width }),
