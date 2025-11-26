@@ -20,8 +20,8 @@ interface DonutChartProps {
   legendPaddingRight?: number;
   legendPaddingBottom?: number;
   legendPaddingLeft?: number;
-  onSliceClick?: (index: number, label: string, value: number) => void;
-  onSliceHover?: (index: number | null, label: string | null, value: number | null) => void;
+  onSliceClick?: ( index: number, label: string, value: number ) => void;
+  onSliceHover?: ( index: number | null, label: string | null, value: number | null ) => void;
   forceRenderer?: 'svg' | 'canvas';
 }
 
@@ -31,6 +31,27 @@ interface DonutChartProps {
  * This is a convenience wrapper around PieChart with a preset innerRadius of 0.6.
  * The center displays the total value.
  */
-export function DonutChart(props: DonutChartProps) {
-  return <PieChart {...props} innerRadius={0.6} />;
+import { useChartStore } from '@/store/useChartStore';
+
+export function DonutChart( props: DonutChartProps ) {
+  const donutInnerRadius = useChartStore( ( state ) => state.donutInnerRadius );
+  const donutPadAngle = useChartStore( ( state ) => state.donutPadAngle );
+  const donutCornerRadius = useChartStore( ( state ) => state.donutCornerRadius );
+  const donutStartAngle = useChartStore( ( state ) => state.donutStartAngle );
+  const donutEndAngle = useChartStore( ( state ) => state.donutEndAngle );
+  const donutShowTotal = useChartStore( ( state ) => state.donutShowTotal );
+  const donutCenterLabel = useChartStore( ( state ) => state.donutCenterLabel );
+
+  return (
+    <PieChart
+      { ...props }
+      innerRadius={ donutInnerRadius }
+      padAngle={ donutPadAngle }
+      cornerRadius={ donutCornerRadius }
+      startAngle={ donutStartAngle }
+      endAngle={ donutEndAngle }
+      showTotal={ donutShowTotal }
+      centerLabel={ donutCenterLabel }
+    />
+  );
 }

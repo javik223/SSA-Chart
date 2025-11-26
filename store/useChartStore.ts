@@ -946,6 +946,28 @@ interface ChartStore {
   divergingBarNegativeColor: string;
   setDivergingBarNegativeColor: (color: string) => void;
 
+  // Donut Chart specific settings
+  donutInnerRadius: number;
+  setDonutInnerRadius: (radius: number) => void;
+
+  donutPadAngle: number;
+  setDonutPadAngle: (angle: number) => void;
+
+  donutCornerRadius: number;
+  setDonutCornerRadius: (radius: number) => void;
+
+  donutStartAngle: number;
+  setDonutStartAngle: (angle: number) => void;
+
+  donutEndAngle: number;
+  setDonutEndAngle: (angle: number) => void;
+
+  donutShowTotal: boolean;
+  setDonutShowTotal: (show: boolean) => void;
+
+  donutCenterLabel: string;
+  setDonutCenterLabel: (label: string) => void;
+
   // UI state
   isDataPanelOpen: boolean;
   toggleDataPanel: () => void;
@@ -2037,8 +2059,30 @@ export const useChartStore = create<ChartStore>()(
       divergingBarPositiveColor: '#3b82f6',
       setDivergingBarPositiveColor: (color) => set({ divergingBarPositiveColor: color }),
 
-      divergingBarNegativeColor: '#dc2626',
+      divergingBarNegativeColor: '#ef4444', // red-500
       setDivergingBarNegativeColor: (color) => set({ divergingBarNegativeColor: color }),
+
+      // Donut Chart settings
+      donutInnerRadius: 0.6,
+      setDonutInnerRadius: (radius) => set({ donutInnerRadius: radius }),
+
+      donutPadAngle: 0,
+      setDonutPadAngle: (angle) => set({ donutPadAngle: angle }),
+
+      donutCornerRadius: 0,
+      setDonutCornerRadius: (radius) => set({ donutCornerRadius: radius }),
+
+      donutStartAngle: 0,
+      setDonutStartAngle: (angle) => set({ donutStartAngle: angle }),
+
+      donutEndAngle: 360,
+      setDonutEndAngle: (angle) => set({ donutEndAngle: angle }),
+
+      donutShowTotal: true,
+      setDonutShowTotal: (show) => set({ donutShowTotal: show }),
+
+      donutCenterLabel: 'Total',
+      setDonutCenterLabel: (label) => set({ donutCenterLabel: label }),
 
       // Initial UI state
       isDataPanelOpen: true,

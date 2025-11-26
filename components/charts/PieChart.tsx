@@ -8,6 +8,12 @@ interface PieChartProps {
   labelKey: string;
   valueKeys: string[];
   innerRadius?: number; // For donut charts, set this to > 0
+  padAngle?: number;
+  cornerRadius?: number;
+  startAngle?: number;
+  endAngle?: number;
+  showTotal?: boolean;
+  centerLabel?: string;
   width?: number;
   height?: number;
   colors?: string[];
@@ -42,6 +48,12 @@ export function PieChart( {
   labelKey,
   valueKeys,
   innerRadius = 0,
+  padAngle = 0,
+  cornerRadius = 0,
+  startAngle = 0,
+  endAngle = 360,
+  showTotal = true,
+  centerLabel = 'Total',
   width: propWidth = 800,
   height: propHeight = 600,
   colors = DEFAULT_COLORS,
@@ -115,23 +127,32 @@ export function PieChart( {
     // Calculate total for percentages
     const total = d3.sum( pieData, ( d ) => d.value );
 
+    // Convert angles from degrees to radians
+    const startAngleRad = ( startAngle * Math.PI ) / 180;
+    const endAngleRad = ( endAngle * Math.PI ) / 180;
+
     // Create pie generator
     const pie = d3
       .pie<{ label: string; value: number; }>()
       .value( ( d ) => d.value )
-      .sort( null );
+      .sort( null )
+      .startAngle( startAngleRad )
+      .endAngle( endAngleRad )
+      .padAngle( padAngle );
 
     // Create arc generator
     const arc = d3
       .arc<d3.PieArcDatum<{ label: string; value: number; }>>()
       .innerRadius( actualInnerRadius )
-      .outerRadius( outerRadius );
+      .outerRadius( outerRadius )
+      .cornerRadius( cornerRadius );
 
     // Create hover arc (slightly larger)
     const hoverArc = d3
       .arc<d3.PieArcDatum<{ label: string; value: number; }>>()
       .innerRadius( actualInnerRadius )
-      .outerRadius( outerRadius + 10 );
+      .outerRadius( outerRadius + 10 )
+      .cornerRadius( cornerRadius );
 
     // Create arcs
     const arcs = g
@@ -191,7 +212,7 @@ export function PieChart( {
       .transition()
       .duration( 800 )
       .attrTween( 'd', function ( d ) {
-        const interpolate = d3.interpolate( { startAngle: 0, endAngle: 0 }, d );
+        const interpolate = d3.interpolate( { startAngle: startAngleRad, endAngle: startAngleRad }, d );
         return function ( t ) {
           return arc( interpolate( t ) ) || '';
         };
@@ -358,7 +379,7 @@ export function PieChart( {
     }
 
     // Center text for donut charts
-    if ( actualInnerRadius > 0 ) {
+    if ( actualInnerRadius > 0 && showTotal ) {
       const centerGroup = g.append( 'g' ).attr( 'class', 'center-text' );
 
       centerGroup
@@ -376,9 +397,9 @@ export function PieChart( {
         .attr( 'dy', '1.2em' )
         .style( 'font-size', '14px' )
         .style( 'fill', '#666' )
-        .text( 'Total' );
+        .text( centerLabel );
     }
-  }, [ data, labelKey, valueKeys, innerRadius, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft ] );
+  }, [ data, labelKey, valueKeys, innerRadius, padAngle, cornerRadius, startAngle, endAngle, showTotal, centerLabel, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft ] );
 
   return (
     <div className='relative w-full h-full'>

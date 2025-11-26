@@ -7,33 +7,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ButtonGroup } from '@/components/ui/button-group';
 import {
-  RefreshCw,
   Search,
   HelpCircle,
   X,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { useChartStore } from '@/store/useChartStore';
-import { getChartsByCategory } from '@/lib/chartRegistry';
-import { getStatusLabel } from '@/lib/chartRegistrations';
 import { HeaderSettingsSection } from '@/components/HeaderSettingsSection';
 import { FooterSettingsSection } from '@/components/FooterSettingsSection';
 import { LayoutSettings } from '@/components/settings/LayoutSettings';
@@ -44,247 +25,114 @@ import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
 import { DivergingBarSettings } from '@/components/settings/DivergingBarSettings';
 import { TreemapSettings } from '@/components/settings/TreemapSettings';
+import { DonutSettings } from '@/components/settings/DonutSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
-import { FormField } from '@/components/ui/form-field';
-import { FormSection } from '@/components/ui/form-section';
-import { FormGrid } from '@/components/ui/form-grid';
-import { FormRow } from '@/components/ui/form-row';
-import { FormCol } from '@/components/ui/form-col';
 import { PreviewSettings } from '@/components/settings/PreviewSettings';
+import { ThemeSettings } from '@/components/settings/ThemeSettings';
+import { ChartTypeSettings } from '@/components/settings/ChartTypeSettings';
+import { ZoomSettings } from '@/components/settings/ZoomSettings';
+import { AnimationSettings } from '@/components/settings/AnimationSettings';
+import { PlotBackgroundSettings } from '@/components/settings/PlotBackgroundSettings';
+import { NumberFormattingSettings } from '@/components/settings/NumberFormattingSettings';
+import { AnnotationsSettings } from '@/components/settings/AnnotationsSettings';
+import { PopupsSettings } from '@/components/settings/PopupsSettings';
+import { ControlsSettings } from '@/components/settings/ControlsSettings';
+import {
+  PANEL_CONFIGS,
+  UNIVERSAL_PANELS,
+  CHART_SPECIFIC_PANELS,
+  EXCLUDED_PANELS,
+  PanelId,
+} from '@/lib/chartSettingsConfig';
+
+const PANEL_COMPONENTS: Record<PanelId, React.ComponentType> = {
+  preview: PreviewSettings,
+  theme: ThemeSettings,
+  chartType: ChartTypeSettings,
+  controls: ControlsSettings,
+  colors: ColorsSection,
+  lines: LinesSettings,
+  labels: LabelsSettings,
+  divergingBar: DivergingBarSettings,
+  donut: DonutSettings,
+  treemap: TreemapSettings,
+  xAxis: XAxisSettings,
+  yAxis: YAxisSettings,
+  background: PlotBackgroundSettings,
+  formatting: NumberFormattingSettings,
+  legend: LegendSettings,
+  popups: PopupsSettings,
+  annotations: AnnotationsSettings,
+  animations: AnimationSettings,
+  zoom: ZoomSettings,
+  layout: LayoutSettings,
+  header: HeaderSettingsSection,
+  footer: FooterSettingsSection,
+};
 
 export function ChartSettings() {
-  const {
-    chartType,
-    setChartType,
-    theme,
-    setTheme,
-    gridMode,
-    setGridMode,
-    gridSplitBy,
-    setGridSplitBy,
-    gridColumns,
-    setGridColumns,
-    gridColumnsMobile,
-    setGridColumnsMobile,
-    gridAspectRatio,
-    setGridAspectRatio,
-    showZoomControls,
-    setShowZoomControls,
-    resetZoom,
-    heightMode,
-    setHeightMode,
-    aggregationMode,
-    setAggregationMode,
-    legendShow,
-    setLegendShow,
-    legendPosition,
-    setLegendPosition,
-    legendAlignment,
-    setLegendAlignment,
-    legendFontSize,
-    setLegendFontSize,
-    legendShowValues,
-    setLegendShowValues,
-    legendGap,
-    setLegendGap,
-    legendPaddingTop,
-    setLegendPaddingTop,
-    legendPaddingRight,
-    setLegendPaddingRight,
-    legendPaddingBottom,
-    setLegendPaddingBottom,
-    legendPaddingLeft,
-    setLegendPaddingLeft,
-  } = useChartStore();
-
+  const chartType = useChartStore( ( state ) => state.chartType );
   const [ searchQuery, setSearchQuery ] = useState( '' );
   const [ openSections, setOpenSections ] = useState<string[]>( [] );
 
-  // Group chart options for FormField select
-  const chartTypeOptions = getChartsByCategory().map( ( { category, charts } ) => ( {
-    label: category.name,
-    options: charts.map( ( chart ) => {
-      const statusLabel = getStatusLabel( chart.status );
-      return {
-        value: chart.type,
-        label: (
-          <span className='settings-header'>
-            { chart.name }
-            { statusLabel && (
-              <span className='status-badge'>
-                { statusLabel }
-              </span>
-            ) }
-          </span>
-        ),
-        disabled: chart.status === 'coming-soon',
-      };
-    } ),
-  } ) );
-
-  // Define all accordion sections with searchable content
-  const allAccordionSections = [
-    {
-      value: 'preview',
-      title: 'Preview',
-      description: 'Configure preview size, colorblind modes, and theme',
-      keywords: [
-        'preview',
-        'size',
-        'colorblind',
-        'dark mode',
-        'dimensions',
-        'accessibility',
-      ],
-    },
-    {
-      value: 'theme',
-      title: 'Theme',
-      description: 'Choose a visual theme for your chart',
-      keywords: [ 'theme', 'visual', 'style', 'appearance', 'light', 'dark' ],
-    },
-    {
-      value: 'chart-type',
-      title: 'Chart type',
-      description: 'Select the type of chart to display',
-      keywords: [ 'chart', 'type', 'visualization', 'graph', 'display' ],
-    },
-    {
-      value: 'controls',
-      title: 'Controls & filters',
-      description: 'Configure interactive controls and data filters',
-      keywords: [ 'controls', 'filters', 'interactive', 'data' ],
-    },
-    {
-      value: 'colors',
-      title: 'Colors',
-      description: 'Customize chart color schemes',
-      keywords: [ 'colors', 'color', 'schemes', 'palette', 'theme' ],
-    },
-    {
-      value: 'lines',
-      title: 'Lines, dots and areas',
-      description: 'Configure line styles, markers, and fill areas',
-      keywords: [ 'lines', 'dots', 'areas', 'markers', 'style', 'stroke' ],
-    },
-    {
-      value: 'labels',
-      title: 'Labels',
-      description: 'Customize data point labels',
-      keywords: [ 'labels', 'text', 'annotations', 'data points' ],
-    },
-    {
-      value: 'diverging-bar',
-      title: 'Diverging Bar Options',
-      description: 'Configure diverging bar chart specific settings',
-      keywords: [ 'diverging', 'bar', 'sort', 'gradient', 'colors', 'labels' ],
-    },
-    {
-      value: 'treemap',
-      title: 'Treemap Options',
-      description: 'Configure treemap tiling and layout',
-      keywords: [ 'treemap', 'tile', 'squarify', 'hierarchy', 'padding' ],
-    },
-    {
-      value: 'x-axis',
-      title: 'X axis',
-      description: 'Configure horizontal axis settings',
-      keywords: [ 'x axis', 'horizontal', 'axis', 'bottom', 'categories' ],
-    },
-    {
-      value: 'y-axis',
-      title: 'Y axis',
-      description: 'Configure vertical axis settings',
-      keywords: [ 'y axis', 'vertical', 'axis', 'left', 'right', 'values' ],
-    },
-    {
-      value: 'background',
-      title: 'Plot background',
-      description: 'Set background colors and styling',
-      keywords: [ 'background', 'plot', 'canvas', 'color' ],
-    },
-    {
-      value: 'formatting',
-      title: 'Number formatting',
-      description: 'Format numbers, currency, and percentages',
-      keywords: [
-        'number',
-        'formatting',
-        'format',
-        'currency',
-        'percentage',
-        'decimal',
-      ],
-    },
-    {
-      value: 'legend',
-      title: 'Legend',
-      description: 'Configure legend position and appearance',
-      keywords: [ 'legend', 'key', 'series', 'position' ],
-    },
-    {
-      value: 'popups',
-      title: 'Popups & panels',
-      description: 'Customize tooltips and information panels',
-      keywords: [ 'popups', 'panels', 'tooltips', 'hover', 'information' ],
-    },
-    {
-      value: 'annotations',
-      title: 'Annotations',
-      description: 'Add text and shapes to highlight data',
-      keywords: [ 'annotations', 'text', 'shapes', 'highlight', 'notes' ],
-    },
-    {
-      value: 'animations',
-      title: 'Animations',
-      description: 'Configure chart animation effects',
-      keywords: [ 'animations', 'effects', 'transitions', 'motion' ],
-    },
-    {
-      value: 'zoom',
-      title: 'Zoom',
-      description: 'Enable interactive zoom functionality',
-      keywords: [ 'zoom', 'interactive', 'brush', 'selection', 'pan' ],
-    },
-    {
-      value: 'layout',
-      title: 'Layout',
-      description: 'Adjust chart layout and spacing',
-      keywords: [ 'layout', 'spacing', 'margins', 'padding' ],
-    },
-    {
-      value: 'header',
-      title: 'Header',
-      description: 'Customize chart title and subtitle',
-      keywords: [ 'header', 'title', 'subtitle', 'heading' ],
-    },
-    {
-      value: 'footer',
-      title: 'Footer',
-      description: 'Customize chart footer text',
-      keywords: [ 'footer', 'source', 'credits', 'notes' ],
-    },
+  // Determine available panels
+  let availablePanels = [
+    ...UNIVERSAL_PANELS,
+    ...( CHART_SPECIFIC_PANELS[ chartType ] || [] ),
   ];
 
-  const accordionSections = allAccordionSections.filter( section =>
-    ( section.value !== 'diverging-bar' || chartType === 'diverging-bar' ) &&
-    ( section.value !== 'treemap' || chartType === 'treemap' )
-  );
+  // Filter out excluded panels
+  if ( EXCLUDED_PANELS[ chartType ] ) {
+    availablePanels = availablePanels.filter( ( id ) => !EXCLUDED_PANELS[ chartType ].includes( id ) );
+  }
+
+  // Filter and sort panels based on configuration order (if needed, or just use availablePanels order)
+  // Here we might want to enforce a specific order. For now, let's use the order in UNIVERSAL_PANELS + specific ones appended.
+  // A better approach might be to have a MASTER_ORDER list and filter it.
+
+  // Let's define a master order to ensure consistency
+  const MASTER_ORDER: PanelId[] = [
+    'preview',
+    'theme',
+    'chartType',
+    'controls',
+    'colors',
+    'lines',
+    'divergingBar',
+    'donut',
+    'treemap',
+    'xAxis',
+    'yAxis',
+    'labels',
+    'background',
+    'formatting',
+    'legend',
+    'popups',
+    'annotations',
+    'animations',
+    'zoom',
+    'layout',
+    'header',
+    'footer',
+  ];
+
+  const activePanels = MASTER_ORDER.filter( ( id ) => availablePanels.includes( id ) );
 
   // Check if a section matches the search query
-  const doesSectionMatch = ( section: ( typeof allAccordionSections )[ 0 ] ) => {
+  const doesSectionMatch = ( id: PanelId ) => {
     if ( !searchQuery.trim() ) return true;
     const query = searchQuery.toLowerCase();
+    const config = PANEL_CONFIGS[ id ];
     return (
-      section.title.toLowerCase().includes( query ) ||
-      section.description.toLowerCase().includes( query ) ||
-      section.keywords.some( ( keyword ) => keyword.includes( query ) )
+      config.title.toLowerCase().includes( query ) ||
+      config.description.toLowerCase().includes( query ) ||
+      config.keywords.some( ( keyword ) => keyword.includes( query ) )
     );
   };
 
   // Get matching section values for auto-expand
   const matchingSections = searchQuery.trim()
-    ? accordionSections.filter( doesSectionMatch ).map( ( section ) => section.value )
+    ? activePanels.filter( doesSectionMatch )
     : [];
 
   // Use matching sections when searching, otherwise use user-controlled state
@@ -310,200 +158,24 @@ export function ChartSettings() {
             value={ activeValue }
             onValueChange={ setOpenSections }
           >
-            { accordionSections.map( ( section ) => {
-              const isMatch = doesSectionMatch( section );
+            { activePanels.map( ( id ) => {
+              const config = PANEL_CONFIGS[ id ];
+              const Component = PANEL_COMPONENTS[ id ];
+              const isMatch = doesSectionMatch( id );
+
+              if ( !isMatch && searchQuery.trim() ) return null;
+
               return (
                 <AccordionItem
-                  key={ section.value }
-                  value={ section.value }
-                  className={ !isMatch ? 'opacity-30 blur-[0.5px]' : '' }
+                  key={ id }
+                  value={ id }
+                  className={ !isMatch && searchQuery.trim() ? 'hidden' : '' }
                 >
                   <AccordionTrigger className='text-sm py-3 px-4 hover:no-underline'>
-                    { section.title }
+                    { config.title }
                   </AccordionTrigger>
                   <AccordionContent className='px-4'>
-                    { section.value === 'header' ? (
-                      <HeaderSettingsSection />
-                    ) : section.value === 'footer' ? (
-                      <FooterSettingsSection />
-                    ) : section.value === 'layout' ? (
-                      <LayoutSettings />
-                    ) : section.value === 'colors' ? (
-                      <ColorsSection />
-                    ) : section.value === 'x-axis' ? (
-                      <XAxisSettings />
-                    ) : section.value === 'y-axis' ? (
-                      <YAxisSettings />
-                    ) : section.value === 'lines' ? (
-                      <LinesSettings />
-                    ) : section.value === 'labels' ? (
-                      <LabelsSettings />
-                    ) : section.value === 'diverging-bar' ? (
-                      <DivergingBarSettings />
-                    ) : section.value === 'treemap' ? (
-                      <TreemapSettings />
-                    ) : section.value === 'theme' ? (
-                      <div className='settings-container'>
-                        <FormSection title='Theme' helpIcon>
-                          <FormRow gap='sm'>
-                            <FormCol span='auto'>
-                              <FormField
-                                type='select'
-                                value={ theme }
-                                onChange={ setTheme }
-                                options={ [
-                                  { value: 'none', label: 'No theme' },
-                                  { value: 'light', label: 'Light' },
-                                  { value: 'dark', label: 'Dark' },
-                                ] }
-                              />
-                            </FormCol>
-                            <FormCol span={ 1 }>
-                              <Button variant='outline' size='sm' className='h-8 w-8 p-0'>
-                                <RefreshCw className='icon-xs' />
-                              </Button>
-                            </FormCol>
-                          </FormRow>
-                        </FormSection>
-                      </div>
-                    ) : section.value === 'zoom' ? (
-                      <FormSection>
-                        <FormField
-                          type='switch'
-                          label='Show zoom controls'
-                          checked={ showZoomControls }
-                          onChange={ setShowZoomControls }
-                        />
-                        <p className='text-xs text-zinc-500 mt-1'>Display zoom buttons on the chart</p>
-
-                        { showZoomControls && (
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={ resetZoom }
-                            className='w-full mt-2'
-                          >
-                            <RefreshCw className='icon-sm mr-2' />
-                            Reset Zoom
-                          </Button>
-                        ) }
-                      </FormSection>
-                    ) : section.value === 'chart-type' ? (
-                      <div className='settings-container'>
-                        <FormSection>
-                          <FormField
-                            type='select'
-                            value={ chartType }
-                            onChange={ setChartType }
-                            options={ chartTypeOptions }
-                          />
-
-                          <FormField
-                            type='button-group'
-                            label='Grid mode'
-                            value={ gridMode }
-                            onChange={ setGridMode }
-                            options={ [
-                              { value: 'single', label: 'Single chart' },
-                              { value: 'grid', label: 'Grid of charts' },
-                            ] }
-                          />
-
-                          { gridMode === 'grid' && (
-                            <FormRow>
-                              <FormCol>
-                                <FormField
-                                  type='button-group'
-                                  label='Split by'
-                                  value={ gridSplitBy }
-                                  onChange={ setGridSplitBy }
-                                  options={ [
-                                    { value: 'label', label: 'By Label' },
-                                    { value: 'value', label: 'By Value' },
-                                  ] }
-                                />
-                              </FormCol>
-                              <FormCol>
-                                <FormField
-                                  type='select'
-                                  label='Aspect ratio'
-                                  value={ gridAspectRatio }
-                                  onChange={ setGridAspectRatio }
-                                  options={ [
-                                    { value: '16/9', label: '16:9 (Widescreen)' },
-                                    { value: '4/3', label: '4:3 (Standard)' },
-                                    { value: '1/1', label: '1:1 (Square)' },
-                                    { value: '21/9', label: '21:9 (Ultrawide)' },
-                                    { value: '3/2', label: '3:2 (Classic)' },
-                                    { value: '2/1', label: '2:1 (Panoramic)' },
-                                  ] }
-                                />
-                              </FormCol>
-                            </FormRow>
-                          ) }
-
-                          { gridMode === 'grid' && (
-                            <FormRow>
-                              <FormCol>
-                                <FormField
-                                  type='number'
-                                  label='Grid columns'
-                                  value={ gridColumns }
-                                  onChange={ ( value ) => setGridColumns( Number( value ) ) }
-                                  min={ 1 }
-                                  max={ 6 }
-                                />
-                              </FormCol>
-                              <FormCol>
-                                <FormField
-                                  type='number'
-                                  label='Grid columns (Mobile)'
-                                  value={ gridColumnsMobile }
-                                  onChange={ ( value ) => setGridColumnsMobile( Number( value ) ) }
-                                  min={ 1 }
-                                  max={ 6 }
-                                />
-                              </FormCol>
-                            </FormRow>
-                          ) }
-
-                          <FormField
-                            type='button-group'
-                            label='Height mode'
-                            value={ heightMode }
-                            onChange={ setHeightMode }
-                            options={ [
-                              { value: 'auto', label: 'Auto' },
-                              { value: 'standard', label: 'Standard' },
-                              { value: 'aspect', label: 'Aspect ratio' },
-                            ] }
-                          />
-
-                          <FormField
-                            type='button-group'
-                            label='Aggregation mode'
-                            value={ aggregationMode }
-                            onChange={ setAggregationMode }
-                            options={ [
-                              { value: 'none', label: 'None' },
-                              { value: 'sum', label: 'Sum' },
-                              { value: 'average', label: 'Average' },
-                              { value: 'count', label: 'Count' },
-                            ] }
-                          />
-                        </FormSection>
-                      </div>
-                    ) : section.value === 'preview' ? (
-                      <div className='settings-container'>
-                        <PreviewSettings />
-                      </div>
-                    ) : section.value === 'legend' ? (
-                      <LegendSettings />
-                    ) : (
-                      <div className='text-xs text-zinc-500 py-2'>
-                        { section.description }
-                      </div>
-                    ) }
+                    <Component />
                   </AccordionContent>
                 </AccordionItem>
               );
