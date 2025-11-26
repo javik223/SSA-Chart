@@ -80,6 +80,7 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const yAxisLabelColor = useChartStore( ( state ) => state.yAxisLabelColor );
   const yAxisLabelPadding = useChartStore( ( state ) => state.yAxisLabelPadding );
   const yAxisLabelAngle = useChartStore( ( state ) => state.yAxisLabelAngle );
+  const yAxisLabelRotation = useChartStore( ( state ) => state.yAxisLabelRotation );
   const yAxisLabelWeight = useChartStore( ( state ) => state.yAxisLabelWeight );
   const yAxisLabelMaxLines = useChartStore( ( state ) => state.yAxisLabelMaxLines );
   const yAxisLabelLineHeight = useChartStore( ( state ) => state.yAxisLabelLineHeight );
@@ -93,6 +94,8 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
   const yAxisGridDash = useChartStore( ( state ) => state.yAxisGridDash );
   const yAxisGridSpace = useChartStore( ( state ) => state.yAxisGridSpace );
   const yAxisGridExtend = useChartStore( ( state ) => state.yAxisGridExtend );
+  const yAxisGridOpacity = useChartStore( ( state ) => state.yAxisGridOpacity );
+  const yAxisGridDashArray = useChartStore( ( state ) => state.yAxisGridDashArray );
   const yAxisLineColor = useChartStore( ( state ) => state.yAxisLineColor );
   const yAxisLineWidth = useChartStore( ( state ) => state.yAxisLineWidth );
   const yAxisTickLength = useChartStore( ( state ) => state.yAxisTickLength );
@@ -264,6 +267,7 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
     labelColor: yAxisLabelColor,
     labelPadding: yAxisLabelPadding,
     labelAngle: yAxisLabelAngle,
+    labelRotation: yAxisLabelRotation,
     labelWeight: yAxisLabelWeight,
     labelMaxLines: yAxisLabelMaxLines,
     labelLineHeight: yAxisLabelLineHeight,
@@ -287,6 +291,8 @@ export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
     gridDash: yAxisGridDash,
     gridSpace: yAxisGridSpace,
     gridExtend: yAxisGridExtend,
+    gridOpacity: yAxisGridOpacity,
+    gridDashArray: yAxisGridDashArray,
     lineColor: yAxisLineColor,
     lineWidth: yAxisLineWidth,
     edgePadding: yAxisEdgePadding,

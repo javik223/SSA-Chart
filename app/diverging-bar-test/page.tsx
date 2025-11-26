@@ -1,11 +1,12 @@
 'use client';
 
 import { DivergingBarChart } from '@/components/charts';
+import { DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useState } from 'react';
 
 export default function DivergingBarTestPage() {
   // US State population data: 2010 to 2019 change
-  const [data] = useState([
+  const [ data ] = useState( [
     { state: 'California', '2010': 37254523, '2019': 39512223, change: 2257700 },
     { state: 'Texas', '2010': 25145561, '2019': 28995881, change: 3850320 },
     { state: 'Florida', '2010': 18801310, '2019': 21477737, change: 2676427 },
@@ -58,12 +59,12 @@ export default function DivergingBarTestPage() {
     { state: 'District of Columbia', '2010': 601723, '2019': 705749, change: 104026 },
     { state: 'Vermont', '2010': 625741, '2019': 623989, change: -1752 },
     { state: 'Wyoming', '2010': 563626, '2019': 578759, change: 15133 },
-  ]);
+  ] );
 
-  const [sortBy, setSortBy] = useState<'none' | 'value' | 'ascending' | 'descending'>('ascending');
-  const [showLabels, setShowLabels] = useState(true);
-  const [useGradientColors, setUseGradientColors] = useState(true);
-  const [labelPosition, setLabelPosition] = useState<'inside' | 'outside'>('outside');
+  const [ sortBy, setSortBy ] = useState<'none' | 'value' | 'ascending' | 'descending'>( 'ascending' );
+  const [ showLabels, setShowLabels ] = useState( true );
+  const [ useGradientColors, setUseGradientColors ] = useState( true );
+  const [ labelPosition, setLabelPosition ] = useState<'inside' | 'outside'>( 'outside' );
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -80,8 +81,8 @@ export default function DivergingBarTestPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                value={ sortBy }
+                onChange={ ( e ) => setSortBy( e.target.value as any ) }
                 className="px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="none">None (Original Order)</option>
@@ -96,8 +97,8 @@ export default function DivergingBarTestPage() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={showLabels}
-                  onChange={(e) => setShowLabels(e.target.checked)}
+                  checked={ showLabels }
+                  onChange={ ( e ) => setShowLabels( e.target.checked ) }
                   className="mr-2"
                 />
                 <span className="text-sm">Show value labels</span>
@@ -105,8 +106,8 @@ export default function DivergingBarTestPage() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
-                  checked={useGradientColors}
-                  onChange={(e) => setUseGradientColors(e.target.checked)}
+                  checked={ useGradientColors }
+                  onChange={ ( e ) => setUseGradientColors( e.target.checked ) }
                   className="mr-2"
                 />
                 <span className="text-sm">Use gradient colors</span>
@@ -116,8 +117,8 @@ export default function DivergingBarTestPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Label Position</label>
               <select
-                value={labelPosition}
-                onChange={(e) => setLabelPosition(e.target.value as any)}
+                value={ labelPosition }
+                onChange={ ( e ) => setLabelPosition( e.target.value as any ) }
                 className="px-3 py-2 border border-gray-300 rounded-md"
               >
                 <option value="inside">Inside bars</option>
@@ -129,20 +130,21 @@ export default function DivergingBarTestPage() {
 
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Population Change by State (2010-2019)</h2>
-          <div className="w-full" style={{ height: '1600px' }}>
+          <div className="w-full" style={ { height: '1600px' } }>
             <DivergingBarChart
-              data={data}
+              data={ data }
               labelKey="state"
-              valueKeys={['change']}
-              width={1200}
-              height={1600}
-              xAxisShow={true}
+              valueKeys={ [ 'change' ] }
+              width={ 1200 }
+              height={ 1600 }
+              xAxisShow={ true }
               xAxisTitle="Population Change"
               xAxisPosition="top"
-              xAxisShowGrid={true}
+              xAxisShowGrid={ true }
               xAxisGridColor="#e5e7eb"
-              xAxisGridOpacity={0.3}
-              yAxis={{
+              xAxisGridOpacity={ 0.3 }
+              yAxis={ {
+                ...DEFAULT_Y_AXIS_CONFIG,
                 show: true,
                 position: 'right',
                 scaleType: 'linear',
@@ -179,14 +181,14 @@ export default function DivergingBarTestPage() {
                 titleArrow: false,
                 domainColor: '#000000',
                 edgePadding: 0,
-              }}
-              showLabels={showLabels}
-              sortBy={sortBy}
-              useGradientColors={useGradientColors}
-              labelPosition={labelPosition}
+              } }
+              showLabels={ showLabels }
+              sortBy={ sortBy }
+              useGradientColors={ useGradientColors }
+              labelPosition={ labelPosition }
               positiveColor="#3b82f6"
               negativeColor="#dc2626"
-              legendShow={false}
+              legendShow={ false }
             />
           </div>
         </div>

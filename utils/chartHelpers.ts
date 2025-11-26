@@ -329,7 +329,7 @@ interface YAxisRenderConfig {
  */
 export function renderYAxis(
   g: d3.Selection<SVGGElement, unknown, null, undefined>,
-  config: RenderYAxisConfig
+  config: YAxisRenderConfig
 ): void {
   const yAxis = config.yAxis;
   if (!yAxis.show || yAxis.position === 'hidden') return;

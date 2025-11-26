@@ -84,6 +84,7 @@ export interface YAxisConfig {
   labelColor: string;
   labelPadding: number;
   labelAngle: number;
+  labelRotation: number;
   labelMaxLines: number;
   labelLineHeight: number;
   labelSpacing: number;
@@ -106,6 +107,8 @@ export interface YAxisConfig {
   gridColor: string;
   gridStyle: 'solid' | 'dashed' | 'dotted';
   gridWidth: number;
+  gridOpacity: number;
+  gridDashArray: string;
   gridDash: number;
   gridSpace: number;
   gridExtend: boolean;
@@ -141,6 +144,7 @@ export const DEFAULT_Y_AXIS_CONFIG: YAxisConfig = {
   labelColor: '#666666',
   labelPadding: 8,
   labelAngle: 0,
+  labelRotation: 0,
   labelMaxLines: 1,
   labelLineHeight: 1.2,
   labelSpacing: 4,
@@ -159,6 +163,8 @@ export const DEFAULT_Y_AXIS_CONFIG: YAxisConfig = {
   gridColor: '#e5e7eb',
   gridStyle: 'solid',
   gridWidth: 1,
+  gridOpacity: 0.5,
+  gridDashArray: '0',
   gridDash: 0,
   gridSpace: 0,
   gridExtend: false,

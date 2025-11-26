@@ -42,6 +42,8 @@ export interface XAxisProps {
   xAxisTitleColor?: string;
   xAxisTitleSize?: number;
   xAxisTitlePadding?: number;
+  xAxisTitleAlignment?: 'start' | 'center' | 'end';
+  xAxisTitleArrow?: boolean;
   xAxisTickPosition?: 'outside' | 'inside' | 'cross';
   xAxisLabelWeight?: 'bold' | 'regular';
   xAxisLabelColor?: string;

@@ -106,6 +106,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const yAxisLabelMaxLines = useChartStore( ( state ) => state.yAxisLabelMaxLines );
   const yAxisLabelLineHeight = useChartStore( ( state ) => state.yAxisLabelLineHeight );
   const yAxisLabelSpacing = useChartStore( ( state ) => state.yAxisLabelSpacing );
+  const yAxisLabelRotation = useChartStore( ( state ) => state.yAxisLabelRotation );
 
   // Y Axis Tick Display
   const yAxisTickMode = useChartStore( ( state ) => state.yAxisTickMode );
@@ -119,6 +120,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const yAxisGridDash = useChartStore( ( state ) => state.yAxisGridDash );
   const yAxisGridSpace = useChartStore( ( state ) => state.yAxisGridSpace );
   const yAxisGridExtend = useChartStore( ( state ) => state.yAxisGridExtend );
+  const yAxisGridOpacity = useChartStore( ( state ) => state.yAxisGridOpacity );
+  const yAxisGridDashArray = useChartStore( ( state ) => state.yAxisGridDashArray );
 
   // Y Axis Line & Tick Marks
   const yAxisLineColor = useChartStore( ( state ) => state.yAxisLineColor );
@@ -456,6 +459,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
       labelMaxLines: yAxisLabelMaxLines,
       labelLineHeight: yAxisLabelLineHeight,
       labelSpacing: yAxisLabelSpacing,
+      labelRotation: yAxisLabelRotation,
       tickMode: yAxisTickMode,
       tickNumber: yAxisTickNumber,
       oneTickLabelPerLine: yAxisOneTickLabelPerLine,
@@ -474,6 +478,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
       gridDash: yAxisGridDash,
       gridSpace: yAxisGridSpace,
       gridExtend: yAxisGridExtend,
+      gridOpacity: yAxisGridOpacity,
+      gridDashArray: yAxisGridDashArray,
       lineColor: yAxisLineColor,
       lineWidth: yAxisLineWidth,
       edgePadding: yAxisEdgePadding,

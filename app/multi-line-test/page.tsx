@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { MultiLineChart } from '@/components/charts/MultiLineChart';
+import { DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import Papa from 'papaparse';
 
 export default function MultiLineTestPage() {
@@ -74,6 +75,7 @@ export default function MultiLineTestPage() {
           xAxisTickFormat="%Y"
           legendShow={ false } // Hide legend as requested by visual style (too many series)
           yAxis={ {
+            ...DEFAULT_Y_AXIS_CONFIG,
             ...{
               show: true,
               position: 'left',

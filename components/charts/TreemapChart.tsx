@@ -270,9 +270,9 @@ export function TreemapChart( {
     ( root.children || [] ).forEach( ( group: any ) => {
       const groupId = ( group.data as any ).id || ( group.data as any ).name || String( ( group.data as any )[ labelKey ] );
       const leaves = group.leaves();
-      const values = leaves.map( ( d: any ) => d.value || 0 );
-      const min = d3.min( values ) || 0;
-      const max = d3.max( values ) || 0;
+      const values = leaves.map( ( d: any ) => Number( d.value ) || 0 );
+      const min = Number( d3.min( values ) ) || 0;
+      const max = Number( d3.max( values ) ) || 0;
       extents.set( groupId, [ min, max ] );
     } );
 
@@ -317,7 +317,7 @@ export function TreemapChart( {
 
     const t = svg.transition().duration( 750 ) as any;
 
-    const cell = g.selectAll( 'g.node' )
+    const cell = ( g as any ).selectAll( 'g.node' )
       .data( nodes, key as any )
       .join(
         ( enter: any ) => {
@@ -397,7 +397,7 @@ export function TreemapChart( {
     // Actually, we should attach events to the enter selection or merge.
     // Since 'cell' is the merged selection, we can attach here.
     cell.select( 'rect' )
-      .on( 'mouseover', ( event, d: any ) => {
+      .on( 'mouseover', ( event: any, d: any ) => {
         // Don't show tooltip for group headers
         if ( d.children ) return;
 
@@ -422,10 +422,10 @@ export function TreemapChart( {
         } );
         d3.select( event.currentTarget ).attr( 'opacity', 0.9 );
       } )
-      .on( 'mousemove', ( event ) => {
+      .on( 'mousemove', ( event: any ) => {
         setTooltipData( prev => prev ? { ...prev, x: event.pageX, y: event.pageY } : null );
       } )
-      .on( 'mouseleave', ( event ) => {
+      .on( 'mouseleave', ( event: any ) => {
         setTooltipData( null );
         d3.select( event.currentTarget ).attr( 'opacity', 1 );
       } );
@@ -457,7 +457,7 @@ export function TreemapChart( {
       } )
       .join( 'tspan' )
       .attr( 'x', labelPadding || 4 )
-      .attr( 'y', function ( d, i ) {
+      .attr( 'y', function ( this: SVGElement, d: any, i: number ) {
         const parent = this.parentNode as Element;
         const node = ( parent as any ).__data__;
         const baseSize = labelFontSize || 10;
@@ -465,8 +465,8 @@ export function TreemapChart( {
         const lineHeight = fontSize * 1.2;
         return lineHeight + i * lineHeight;
       } )
-      .text( d => String( d ) )
-      .attr( 'fill', function ( d: any ) {
+      .text( ( d: any ) => String( d ) )
+      .attr( 'fill', function ( this: SVGElement, d: any ) {
         const parent = this.parentNode as Element;
         const node = ( parent as any ).__data__;
 
@@ -480,21 +480,21 @@ export function TreemapChart( {
         if ( treemapColorMode === 'category' ) return '#fff';
         return '#333';
       } )
-      .attr( 'font-size', function ( d: any ) {
+      .attr( 'font-size', function ( this: SVGElement, d: any ) {
         const parent = this.parentNode as Element;
         const node = ( parent as any ).__data__;
         const baseSize = labelFontSize || 10;
         if ( node.depth === 1 ) return `${ baseSize * 1.3 }px`;
         return `${ baseSize }px`;
       } )
-      .attr( 'font-weight', function ( d: any, i, nodes ) {
+      .attr( 'font-weight', function ( this: SVGElement, d: any, i: number, nodes: any ) {
         const parent = this.parentNode as Element;
         const node = ( parent as any ).__data__;
         if ( node.depth === 1 ) return '600'; // Medium bold for headers
         if ( labelFontWeight ) return labelFontWeight;
         return i === nodes.length - 1 ? 'bold' : 'normal';
       } )
-      .attr( 'text-transform', function ( d: any ) {
+      .attr( 'text-transform', function ( this: SVGElement, d: any ) {
         const parent = this.parentNode as Element;
         const node = ( parent as any ).__data__;
         return node.depth === 1 ? 'uppercase' : 'none';
