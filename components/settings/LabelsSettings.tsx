@@ -19,6 +19,9 @@ export function LabelsSettings() {
   const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
   const setLabelFontWeight = useChartStore( ( state ) => state.setLabelFontWeight );
 
+  const labelPadding = useChartStore( ( state ) => state.labelPadding );
+  const setLabelPadding = useChartStore( ( state ) => state.setLabelPadding );
+
   return (
     <div className='settings-container'>
       {/* Show/Hide Labels */ }
@@ -70,6 +73,15 @@ export function LabelsSettings() {
             { value: '800', label: '800 (Extra Bold)' },
             { value: '900', label: '900 (Black)' },
           ] }
+        />
+
+        <FormField
+          type='number'
+          label='Padding (px)'
+          value={ labelPadding }
+          onChange={ ( v ) => setLabelPadding( v ?? 4 ) }
+          min={ 0 }
+          max={ 20 }
         />
       </FormSection>
     </div>

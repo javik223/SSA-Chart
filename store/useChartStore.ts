@@ -52,6 +52,7 @@ export interface ColumnMapping {
   chartsGrid: number | null;
   rowFilter: number | null;
   customPopups: number | null;
+  categories: number[] | null;
 }
 
 interface ChartStore {
@@ -800,6 +801,28 @@ interface ChartStore {
   
   yAxisGridSpace: number;
   setYAxisGridSpace: (space: number) => void;
+
+  // Treemap settings
+  treemapTileMethod: 'binary' | 'squarify' | 'resquarify' | 'slice' | 'dice' | 'slice-dice';
+  setTreemapTileMethod: (method: 'binary' | 'squarify' | 'resquarify' | 'slice' | 'dice' | 'slice-dice') => void;
+
+  treemapPadding: number;
+  setTreemapPadding: (padding: number) => void;
+
+  treemapColorMode: 'depth' | 'value' | 'category' | 'root';
+  setTreemapColorMode: (mode: 'depth' | 'value' | 'category' | 'root') => void;
+
+  treemapGradientSteepness: number;
+  setTreemapGradientSteepness: (steepness: number) => void;
+
+  treemapCategoryLabelColor: string;
+  setTreemapCategoryLabelColor: (color: string) => void;
+
+  treemapStrokeWidth: number;
+  setTreemapStrokeWidth: (width: number) => void;
+
+  treemapStrokeColor: string;
+  setTreemapStrokeColor: (color: string) => void;
   
   yAxisGridExtend: boolean;
   setYAxisGridExtend: (extend: boolean) => void;
@@ -901,6 +924,9 @@ interface ChartStore {
   labelFontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
   setLabelFontWeight: (weight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900') => void;
 
+  labelPadding: number;
+  setLabelPadding: (padding: number) => void;
+
   // Diverging Bar Chart specific settings
   divergingBarSortBy: 'none' | 'value' | 'ascending' | 'descending';
   setDivergingBarSortBy: (sortBy: 'none' | 'value' | 'ascending' | 'descending') => void;
@@ -988,6 +1014,7 @@ export const useChartStore = create<ChartStore>()(
               chartsGrid: adjustIndex(columnMapping.chartsGrid),
               rowFilter: adjustIndex(columnMapping.rowFilter),
               customPopups: adjustIndex(columnMapping.customPopups),
+              categories: adjustIndex(columnMapping.categories ? columnMapping.categories[0] : null) ? [adjustIndex(columnMapping.categories![0])!] : null,
               values: columnMapping.values
                 .filter((idx) => !(idx >= deletedIndex && idx < deletedEndIndex)) // Remove deleted values
                 .map((idx) => (idx >= deletedEndIndex ? idx - deletedCount : idx)), // Adjust remaining values
@@ -1021,6 +1048,12 @@ export const useChartStore = create<ChartStore>()(
                 columnMapping.customPopups <= maxIndex
                   ? columnMapping.customPopups
                   : null,
+              categories:
+                columnMapping.categories !== null &&
+                columnMapping.categories.every(c => c <= maxIndex)
+                  ? columnMapping.categories
+                  : null,
+
             };
           }
 
@@ -1036,6 +1069,7 @@ export const useChartStore = create<ChartStore>()(
               chartsGrid: null,
               rowFilter: null,
               customPopups: null,
+              categories: null,
             },
           });
         }
@@ -1084,7 +1118,7 @@ export const useChartStore = create<ChartStore>()(
       },
 
       // Initial column mapping
-      columnMapping: { labels: null, values: [], series: null, chartsGrid: null, rowFilter: null, customPopups: null },
+      columnMapping: { labels: null, values: [], series: null, chartsGrid: null, rowFilter: null, customPopups: null, categories: null }, // Added categories
 
       setColumnMapping: (mapping) =>
         set((state) => ({
@@ -1105,6 +1139,7 @@ export const useChartStore = create<ChartStore>()(
               chartsGrid: null,
               rowFilter: null,
               customPopups: null,
+              categories: null, // Added categories
             },
           });
         }
@@ -1802,9 +1837,33 @@ export const useChartStore = create<ChartStore>()(
       yAxisTickPosition: 'outside',
       setYAxisTickPosition: (position) => set({ yAxisTickPosition: position }),
       
+
+
+      // Treemap settings
+      treemapTileMethod: 'squarify',
+      setTreemapTileMethod: (method) => set({ treemapTileMethod: method }),
+
+      treemapPadding: 1,
+      setTreemapPadding: (padding) => set({ treemapPadding: padding }),
+
+      treemapColorMode: 'depth',
+      setTreemapColorMode: (mode) => set({ treemapColorMode: mode }),
+
+      treemapGradientSteepness: 0.3,
+      setTreemapGradientSteepness: (steepness) => set({ treemapGradientSteepness: steepness }),
+
+      treemapCategoryLabelColor: '#ffffff',
+      setTreemapCategoryLabelColor: (color) => set({ treemapCategoryLabelColor: color }),
+
+      treemapStrokeWidth: 1,
+      setTreemapStrokeWidth: (width) => set({ treemapStrokeWidth: width }),
+
+      treemapStrokeColor: '#ffffff',
+      setTreemapStrokeColor: (color) => set({ treemapStrokeColor: color }),
+      
       yAxisLabelSize: 12,
       setYAxisLabelSize: (size) => set({ yAxisLabelSize: size }),
-      
+
       yAxisLabelColor: '#000000',
       setYAxisLabelColor: (color) => set({ yAxisLabelColor: color }),
       
@@ -1956,6 +2015,9 @@ export const useChartStore = create<ChartStore>()(
       labelFontWeight: 'normal',
       setLabelFontWeight: (weight) => set({ labelFontWeight: weight }),
 
+      labelPadding: 4,
+      setLabelPadding: (padding) => set({ labelPadding: padding }),
+
       // Diverging Bar Chart settings
       divergingBarSortBy: 'ascending',
       setDivergingBarSortBy: (sortBy) => set({ divergingBarSortBy: sortBy }),
@@ -1994,9 +2056,11 @@ export const useChartStore = create<ChartStore>()(
           columnMapping: {
             labels: null,
             values: [],
+            series: null,
             chartsGrid: null,
             rowFilter: null,
             customPopups: null,
+            categories: null,
           },
           chartType: 'bar',
           chartConfig: {

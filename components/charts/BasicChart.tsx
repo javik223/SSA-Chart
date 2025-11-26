@@ -150,6 +150,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const labelColor = useChartStore( ( state ) => state.labelColor );
   const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
 
+  const labelPadding = useChartStore( ( state ) => state.labelPadding );
+
   // Diverging Bar Chart settings
   const divergingBarSortBy = useChartStore( ( state ) => state.divergingBarSortBy );
   const divergingBarLabelPosition = useChartStore( ( state ) => state.divergingBarLabelPosition );
@@ -157,23 +159,35 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
   const divergingBarPositiveColor = useChartStore( ( state ) => state.divergingBarPositiveColor );
   const divergingBarNegativeColor = useChartStore( ( state ) => state.divergingBarNegativeColor );
 
-  // Transform data for chart
-  const { chartData, valueKeys } = useMemo( () => {
-    // Skip calculation if not visible
-    if ( !isVisible ) return { chartData: [], valueKeys: [] };
+  // Treemap settings
+  const treemapGradientSteepness = useChartStore( ( state ) => state.treemapGradientSteepness );
+  const treemapCategoryLabelColor = useChartStore( ( state ) => state.treemapCategoryLabelColor );
+  const treemapStrokeWidth = useChartStore( ( state ) => state.treemapStrokeWidth );
+  const treemapStrokeColor = useChartStore( ( state ) => state.treemapStrokeColor );
 
-    if ( !data || data.length < 2 ) return { chartData: [], valueKeys: [] };
+  // Transform data for chart
+  const { chartData, valueKeys, categoryKeys } = useMemo( () => {
+    // Skip calculation if not visible
+    if ( !isVisible ) return { chartData: [], valueKeys: [], categoryKeys: [] };
+
+    if ( !data || data.length < 2 ) return { chartData: [], valueKeys: [], categoryKeys: [] };
     if ( columnMapping.labels === null || columnMapping.values.length === 0 ) {
-      return { chartData: [], valueKeys: [] };
+      return { chartData: [], valueKeys: [], categoryKeys: [] };
     }
 
     const headers = data[ 0 ];
     const labelIndex = columnMapping.labels;
     const valueIndices = columnMapping.values;
     const seriesIndex = columnMapping.series;
+    const categoryIndices = columnMapping.categories;
 
     // Get label column name
     const labelKey = String( headers[ labelIndex ] || 'label' );
+
+    // Get category column names
+    const categoryKeys = categoryIndices
+      ? categoryIndices.map( idx => String( headers[ idx ] || `category${ idx }` ) )
+      : [];
 
     // Standard value keys (for wide format)
     const standardValueKeys = valueIndices.map( ( idx ) => String( headers[ idx ] || `value${ idx }` ) );
@@ -220,7 +234,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
 
       return {
         chartData: pivotedData,
-        valueKeys: Array.from( uniqueSeries ).sort()
+        valueKeys: Array.from( uniqueSeries ).sort(),
+        categoryKeys: []
       };
     }
 
@@ -236,9 +251,16 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
           item[ standardValueKeys[ i ] ] = isNaN( value ) ? 0 : value;
         } );
 
+        // Add category columns
+        if ( categoryIndices ) {
+          categoryIndices.forEach( ( idx, i ) => {
+            item[ categoryKeys[ i ] ] = String( row[ idx ] || '' );
+          } );
+        }
+
         return item;
       } );
-      return { chartData: processedData, valueKeys: standardValueKeys };
+      return { chartData: processedData, valueKeys: standardValueKeys, categoryKeys };
     } else {
       // Aggregate data by label
       const aggregated: Record<string, Record<string, number[]>> = {};
@@ -278,9 +300,23 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
           }
         } );
 
+        // Add category columns (take first value found for the label group)
+        // Note: This assumes categories are consistent within a label group, which might not always be true but is a reasonable default for aggregation
+        if ( categoryIndices ) {
+          // Find a row that matches this label to get category values
+          // This is expensive, better to store it during aggregation
+          // For now, let's just find the first row with this label
+          const matchRow = rows.find( r => String( r[ labelIndex ] || '' ) === label );
+          if ( matchRow ) {
+            categoryIndices.forEach( ( idx, i ) => {
+              item[ categoryKeys[ i ] ] = String( matchRow[ idx ] || '' );
+            } );
+          }
+        }
+
         return item;
       } );
-      return { chartData: aggregatedData, valueKeys: standardValueKeys };
+      return { chartData: aggregatedData, valueKeys: standardValueKeys, categoryKeys };
     }
   }, [ data, columnMapping, aggregationMode, isVisible ] );
 
@@ -309,6 +345,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     data: chartData,
     labelKey,
     valueKeys,
+    categoryKeys,
     width: previewDevice === 'mobile' ? mobileViewBoxWidth : desktopViewBoxWidth,
     height: previewDevice === 'mobile' ? mobileViewBoxHeight : desktopViewBoxHeight,
     colors: palette.colors,
@@ -349,6 +386,8 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     xAxisGridOpacity,
     xAxisGridDashArray,
 
+
+
     // Line settings
     curveType,
     lineWidth,
@@ -371,6 +410,7 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     labelFontSize,
     labelColor,
     labelFontWeight,
+    labelPadding: labelPadding,
 
     // Diverging Bar Chart settings
     sortBy: divergingBarSortBy,
@@ -379,6 +419,12 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
     positiveColor: divergingBarPositiveColor,
     negativeColor: divergingBarNegativeColor,
     showLabels: labelShow,
+
+    // Treemap settings
+    treemapGradientSteepness,
+    treemapCategoryLabelColor,
+    treemapStrokeWidth,
+    treemapStrokeColor,
 
     // Y Axis Config
     yAxis: {

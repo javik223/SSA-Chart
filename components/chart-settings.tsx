@@ -43,6 +43,7 @@ import { LinesSettings } from '@/components/settings/LinesSettings';
 import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
 import { DivergingBarSettings } from '@/components/settings/DivergingBarSettings';
+import { TreemapSettings } from '@/components/settings/TreemapSettings';
 import { ColorsSection } from '@/components/settings/ColorsSection';
 import { FormField } from '@/components/ui/form-field';
 import { FormSection } from '@/components/ui/form-section';
@@ -179,6 +180,12 @@ export function ChartSettings() {
       keywords: [ 'diverging', 'bar', 'sort', 'gradient', 'colors', 'labels' ],
     },
     {
+      value: 'treemap',
+      title: 'Treemap Options',
+      description: 'Configure treemap tiling and layout',
+      keywords: [ 'treemap', 'tile', 'squarify', 'hierarchy', 'padding' ],
+    },
+    {
       value: 'x-axis',
       title: 'X axis',
       description: 'Configure horizontal axis settings',
@@ -260,7 +267,8 @@ export function ChartSettings() {
   ];
 
   const accordionSections = allAccordionSections.filter( section =>
-    section.value !== 'diverging-bar' || chartType === 'diverging-bar'
+    ( section.value !== 'diverging-bar' || chartType === 'diverging-bar' ) &&
+    ( section.value !== 'treemap' || chartType === 'treemap' )
   );
 
   // Check if a section matches the search query
@@ -332,6 +340,8 @@ export function ChartSettings() {
                       <LabelsSettings />
                     ) : section.value === 'diverging-bar' ? (
                       <DivergingBarSettings />
+                    ) : section.value === 'treemap' ? (
+                      <TreemapSettings />
                     ) : section.value === 'theme' ? (
                       <div className='settings-container'>
                         <FormSection title='Theme' helpIcon>

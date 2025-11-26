@@ -21,6 +21,7 @@ import { RadialBarChart } from '@/components/charts/RadialBarChart';
 import { PolarAreaChart } from '@/components/charts/PolarAreaChart';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { DivergingBarChart } from '@/components/charts/DivergingBarChart';
+import { TreemapChart } from '@/components/charts/TreemapChart';
 
 /**
  * Register all charts
@@ -220,6 +221,22 @@ export function initializeCharts() {
       requiredColumns: {
         label: true,
         value: true,
+      },
+    },
+    {
+      type: 'treemap',
+      name: 'Treemap',
+      category: 'hierarchical-network',
+      description: 'Visualize hierarchical data using nested rectangles',
+      component: TreemapChart,
+      supportsMultipleSeries: false,
+      supportsAnimation: true,
+      status: 'stable',
+      tags: ['hierarchy', 'part-to-whole', 'tiling', 'nested'],
+      requiredColumns: {
+        label: true,
+        value: true,
+        category: true,
       },
     },
 

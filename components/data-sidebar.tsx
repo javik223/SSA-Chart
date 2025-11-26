@@ -52,6 +52,7 @@ export function DataSidebar() {
       chartsGrid: false,
       rowFilter: false,
       customPopups: false,
+      categories: false,
     }
   );
 
@@ -81,6 +82,10 @@ export function DataSidebar() {
 
   const handleCustomPopupsSelect = ( index: number | number[] | null ) => {
     setColumnMapping( { customPopups: index as number } );
+  };
+
+  const handleCategoriesSelect = ( index: number | number[] | null ) => {
+    setColumnMapping( { categories: Array.isArray( index ) ? index : ( index !== null ? [ index ] : null ) } );
   };
 
   const getColumnLabel = ( index: number | null ) => {
@@ -460,6 +465,48 @@ export function DataSidebar() {
             ) }
           </div>
         </div>
+
+        { chartType === 'treemap' && (
+          <>
+            <Separator />
+            <div className='space-y-2'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-2'>
+                  <Label className='text-sm font-medium text-zinc-900'>
+                    Categories/nesting
+                  </Label>
+                  <button
+                    onClick={ () => toggleField( 'categories' ) }
+                    className='rounded-full p-0.5 hover:bg-zinc-100'
+                  >
+                    <CircleHelp className='h-4 w-4 text-zinc-500' />
+                  </button>
+                  <span className='rounded border border-zinc-300 bg-white px-1.5 py-0 text-[10px] font-normal uppercase text-zinc-600'>
+                    Optional
+                  </span>
+                </div>
+                <ColumnSelector
+                  availableColumns={ availableColumns }
+                  selectedColumns={ columnMapping.categories }
+                  onSelect={ handleCategoriesSelect }
+                  mode='multiple'
+                  placeholder=''
+                  color='orange'
+                  compact
+                  allowClear
+                />
+              </div>
+
+              { expandedFields.categories && (
+                <div className='space-y-2 animate-in slide-in-from-top-2'>
+                  <p className='text-xs text-zinc-500'>
+                    Select a categorical column to group the treemap.
+                  </p>
+                </div>
+              ) }
+            </div>
+          </>
+        ) }
 
         { chartType === 'multi-line' && (
           <>

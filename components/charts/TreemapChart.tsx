@@ -1,0 +1,517 @@
+'use client';
+
+import { useEffect, useRef, useMemo, useState } from 'react';
+import * as d3 from 'd3';
+import { useChartStore } from '@/store/useChartStore';
+import { ChartComponentProps } from '@/lib/chartRegistry';
+import { getColorPalette } from '@/lib/colorPalettes';
+
+export function TreemapChart( {
+  data,
+  labelKey,
+  valueKeys,
+  categoryKeys, // Add categoryKeys prop
+  width,
+  height,
+  colors,
+  colorMode = 'by-column',
+  labelColor,
+  labelFontSize,
+  labelFontWeight,
+  labelPadding,
+  treemapGradientSteepness,
+  treemapCategoryLabelColor,
+  treemapStrokeWidth,
+  treemapStrokeColor,
+}: ChartComponentProps ) {
+  const containerRef = useRef<HTMLDivElement>( null );
+  const svgRef = useRef<SVGSVGElement>( null );
+  const [ tooltipData, setTooltipData ] = useState<{
+    x: number;
+    y: number;
+    label: string;
+    value: number;
+    color: string;
+    extraFields?: { key: string; value: any; }[];
+  } | null>( null );
+
+  // Store state
+  const treemapTileMethod = useChartStore( ( state ) => state.treemapTileMethod );
+  const treemapPadding = useChartStore( ( state ) => state.treemapPadding );
+  const treemapColorMode = useChartStore( ( state ) => state.treemapColorMode );
+  const theme = useChartStore( ( state ) => state.theme );
+
+  // Dimensions
+  const margin = { top: 10, right: 10, bottom: 10, left: 0 };
+  const innerWidth = Math.max( 0, ( width || 600 ) - margin.left - margin.right );
+  const innerHeight = Math.max( 0, ( height || 400 ) - margin.top - margin.bottom );
+
+  // Process data into hierarchy
+  const root = useMemo( () => {
+    if ( !data || data.length === 0 ) return null;
+
+    const valueKey = valueKeys[ 0 ];
+
+    // Check if we have explicit parentId structure
+    const hasParentId = 'parentId' in data[ 0 ] && 'id' in data[ 0 ];
+
+    // Check for 'path' or 'PATH' column
+    const pathKey = Object.keys( data[ 0 ] ).find( k => k.toLowerCase() === 'path' );
+
+    // Check for category column (from settings)
+    const hasCategories = categoryKeys && categoryKeys.length > 0;
+
+    console.log( '[Treemap] categoryKeys:', categoryKeys );
+    console.log( '[Treemap] hasCategories:', hasCategories );
+
+    let hierarchy;
+
+    if ( hasCategories ) {
+      // Use category columns for grouping
+      // d3.group can take multiple keys for nested grouping
+      const grouped = d3.group( data, ...categoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
+
+      // Helper to convert Map to hierarchy object
+      const mapToNode = ( name: string, value: any ): any => {
+        if ( value instanceof Map ) {
+          return { name, children: Array.from( value, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+        }
+        return { name, children: value };
+      };
+
+      const rootData = { name: 'root', children: Array.from( grouped, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+      hierarchy = d3.hierarchy( rootData );
+    } else if ( pathKey ) {
+      try {
+        // Transform path-based data into flat data with synthetic columns
+        // This allows us to reuse the robust d3.group logic below
+
+        // Auto-detect separator
+        const firstPath = String( data[ 0 ]?.[ pathKey ] || '' );
+        const separator = firstPath.includes( '/' ) ? '/' : '.';
+
+        // 1. Determine max depth and create synthetic columns
+        let maxDepth = 0;
+        const transformedData = data.map( ( d: any ) => {
+          const path = String( d[ pathKey ] );
+          const parts = path.split( separator );
+          maxDepth = Math.max( maxDepth, parts.length );
+
+          const newProps: any = {};
+          parts.forEach( ( part, i ) => {
+            newProps[ `__level_${ i }` ] = part;
+          } );
+
+          return { ...d, ...newProps };
+        } );
+
+        // 2. Generate category keys for the levels
+        // If we have 'flare.analytics.cluster', we want levels 0 and 1 as categories
+        // The last level is usually the leaf name, but d3.group handles leaves automatically
+        // if we group by all levels.
+        // However, usually for 'flare.analytics.cluster', 'cluster' is the leaf node.
+        // If we group by L0, L1, L2, we get:
+        // flare -> analytics -> cluster -> [Leaf Object]
+        // This is correct.
+
+        const syntheticCategoryKeys = Array.from( { length: maxDepth }, ( _, i ) => `__level_${ i }` );
+
+        // 3. Use d3.group with the synthetic keys
+        const grouped = d3.group( transformedData, ...syntheticCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
+
+        // 4. Convert Map to hierarchy object (reusing the helper)
+        // Note: We need to define mapToNode here or move it out if it's not accessible
+        const mapToNode = ( name: string, value: any ): any => {
+          if ( value instanceof Map ) {
+            return { name, children: Array.from( value, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+          }
+          return { name, children: value };
+        };
+
+        const rootData = { name: 'root', children: Array.from( grouped, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+
+        // Optimization: If root has only one child (e.g. 'flare'), make that the root
+        if ( rootData.children.length === 1 ) {
+          hierarchy = d3.hierarchy( rootData.children[ 0 ] );
+        } else {
+          hierarchy = d3.hierarchy( rootData );
+        }
+
+      } catch ( e ) {
+        console.warn( 'Failed to build hierarchy from path data', e );
+        hierarchy = d3.hierarchy( { children: data } );
+      }
+    } else if ( hasParentId ) {
+      try {
+        hierarchy = d3.stratify()
+          .id( ( d: any ) => d.id )
+          .parentId( ( d: any ) => d.parentId )
+          ( data );
+      } catch ( e ) {
+        console.warn( 'Failed to stratify data, falling back to flat hierarchy', e );
+        // Fallback to flat
+        hierarchy = d3.hierarchy( { children: data } );
+      }
+    } else {
+      // Group by labelKey (and potentially series/category if available)
+      // For now, we'll assume a simple flat list or 1-level grouping if 'group' column exists
+      const hasGroup = 'group' in data[ 0 ];
+
+      if ( hasGroup ) {
+        const grouped = d3.group( data, ( d: any ) => d.group );
+        hierarchy = d3.hierarchy( grouped );
+      } else {
+        // Flat hierarchy
+        hierarchy = d3.hierarchy( {
+          name: 'root',
+          children: data
+        } );
+      }
+    }
+
+    // Sum and sort
+    hierarchy
+      .sum( ( d: any ) => d ? Number( d[ valueKey ] ) || 0 : 0 )
+      .sort( ( a, b ) => ( b.value || 0 ) - ( a.value || 0 ) );
+
+    return hierarchy;
+  }, [ data, valueKeys, categoryKeys ] );
+
+  // Layout
+  const treemapRoot = useMemo( () => {
+    if ( !root ) return null;
+
+    const tileMethod = {
+      'binary': d3.treemapBinary,
+      'squarify': d3.treemapSquarify,
+      'resquarify': d3.treemapResquarify,
+      'slice': d3.treemapSlice,
+      'dice': d3.treemapDice,
+      'slice-dice': d3.treemapSliceDice,
+    }[ treemapTileMethod ] || d3.treemapSquarify;
+
+    const treemap = d3.treemap<any>()
+      .tile( tileMethod )
+      .size( [ innerWidth, innerHeight ] )
+      .paddingOuter( 0 )
+      .paddingTop( ( node ) => {
+        // Add padding for headers in category mode for top-level groups
+        if ( treemapColorMode === 'category' && node.depth === 1 ) {
+          // Calculate padding based on the header font size (baseSize * 1.3) plus some spacing
+          const baseSize = labelFontSize || 10;
+          const headerSize = baseSize * 1.3;
+          return headerSize * 1.5; // 1.5x the header font size for comfortable spacing
+        }
+        return 0;
+      } )
+      .paddingInner( 0 )
+      .round( true );
+
+    return treemap( root.copy() );
+  }, [ root, innerWidth, innerHeight, treemapTileMethod, treemapPadding, treemapColorMode ] );
+
+  // Color scale
+  const colorScale = useMemo( () => {
+    const paletteObj = getColorPalette( useChartStore.getState().colorPalette );
+    const palette = paletteObj.colors;
+
+    if ( treemapColorMode === 'depth' ) {
+      return d3.scaleOrdinal<string, string>( palette );
+    } else if ( treemapColorMode === 'value' ) {
+      const values = root?.leaves().map( d => d.value || 0 ) || [];
+      const minValue = d3.min( values ) || 0;
+      const maxValue = d3.max( values ) || 0;
+
+      // Create a multi-color gradient using all colors in the palette
+      // This creates interpolation points at equal intervals across the palette
+      const colorInterpolator = ( t: number ) => {
+        const index = t * ( palette.length - 1 );
+        const lowerIndex = Math.floor( index );
+        const upperIndex = Math.ceil( index );
+        const localT = index - lowerIndex;
+
+        if ( lowerIndex === upperIndex ) return palette[ lowerIndex ];
+
+        return d3.interpolateRgb( palette[ lowerIndex ], palette[ upperIndex ] )( localT );
+      };
+
+      return d3.scaleSequential( colorInterpolator )
+        .domain( [ minValue, maxValue ] );
+    } else {
+      // Category (formerly root logic) - Color by top-level parent
+      const topLevelChildren = root?.children || [];
+      const categories = topLevelChildren.map( d => {
+        // Use id or label for category identification
+        return ( d.data as any ).id || ( d.data as any ).name || String( ( d.data as any )[ labelKey ] );
+      } );
+      return d3.scaleOrdinal<string, string>( palette ).domain( categories as any );
+    }
+  }, [ root, colors, treemapColorMode, labelKey ] );
+
+  // Calculate value extents per top-level group for gradient coloring
+  const groupValueExtents = useMemo( () => {
+    if ( !root || treemapColorMode !== 'category' ) return new Map();
+
+    const extents = new Map<string, [ number, number ]>();
+
+    // Iterate over top-level children (groups)
+    ( root.children || [] ).forEach( ( group: any ) => {
+      const groupId = ( group.data as any ).id || ( group.data as any ).name || String( ( group.data as any )[ labelKey ] );
+      const leaves = group.leaves();
+      const values = leaves.map( ( d: any ) => d.value || 0 );
+      const min = d3.min( values ) || 0;
+      const max = d3.max( values ) || 0;
+      extents.set( groupId, [ min, max ] );
+    } );
+
+    return extents;
+  }, [ root, treemapColorMode, labelKey ] );
+
+  // Helper to get top-level parent for a node
+  const getTopLevelParent = ( node: any ): string => {
+    if ( !node.parent ) return ''; // Root
+    let current = node;
+    while ( current.parent && current.parent.depth > 0 ) {
+      current = current.parent;
+    }
+    return ( current.data as any ).id || ( current.data as any ).name || String( ( current.data as any )[ labelKey ] );
+  };
+
+  // Render
+  useEffect( () => {
+    if ( !svgRef.current || !treemapRoot ) return;
+
+    const svg = d3.select( svgRef.current );
+    svg.selectAll( '*' ).remove();
+
+    const g = svg.append( 'g' )
+      .attr( 'transform', `translate(${ margin.left },${ margin.top })` );
+
+    // Select nodes based on mode
+    // Render all descendants to show hierarchy nesting
+    // Filter out root if we don't want to draw the main container
+    const nodes = treemapRoot.descendants();
+
+    const cell = g.selectAll( 'g' )
+      .data( nodes )
+      .join( 'g' )
+      .attr( 'transform', d => `translate(${ d.x0 },${ d.y0 })` );
+
+    // Rects
+    cell.append( 'rect' )
+      .attr( 'id', ( d, i ) => `rect-${ i }` )
+      .attr( 'width', d => Math.max( 0, d.x1 - d.x0 ) )
+      .attr( 'height', d => Math.max( 0, d.y1 - d.y0 ) )
+      .attr( 'fill', ( d: any ) => {
+        if ( treemapColorMode === 'category' ) {
+          // Both groups and leaves get the category color
+          // For groups (depth 1), use a slightly darker shade of the base color
+          if ( d.depth === 1 ) {
+            const baseColor = colorScale( ( ( d.data as any ).id || String( ( d.data as any )[ labelKey ] || ( d.data as any ).name ) ) as any );
+            // Darken the color by interpolating 20% towards black
+            return d3.interpolateRgb( baseColor, '#000000' )( 0.2 );
+          }
+
+          // Leaves use the top-level parent's ID
+          const parentId = getTopLevelParent( d );
+          const baseColor = colorScale( parentId as any );
+
+          // Apply gradient based on value within the group
+          const extents = groupValueExtents.get( parentId );
+          if ( extents ) {
+            const [ min, max ] = extents;
+            const value = d.value || 0;
+            // Avoid divide by zero if min === max
+            const t = min === max ? 1 : ( value - min ) / ( max - min );
+
+            // Interpolate from a lighter version (mixed with white) to the full color
+            // Use gradient steepness to control the range (0 = no gradient, 1 = maximum gradient)
+            const steepness = treemapGradientSteepness ?? 0.3;
+            const startPoint = 1 - steepness; // e.g., 0.3 steepness -> start at 0.7
+            return d3.interpolateRgb( '#ffffff', baseColor )( startPoint + steepness * t );
+          }
+
+          return baseColor;
+        }
+
+        if ( treemapColorMode === 'depth' ) return colorScale( String( d.depth ) as any );
+        if ( treemapColorMode === 'value' ) return colorScale( d.value || 0 );
+        return colorScale( String( ( d.data as any )[ labelKey ] ) as any );
+      } )
+      .attr( 'fill-opacity', 1 )
+      .attr( 'stroke', treemapStrokeColor || '#ffffff' )
+      .attr( 'stroke-width', treemapStrokeWidth ?? 1 )
+      .on( 'mouseover', ( event, d: any ) => {
+        // Don't show tooltip for group headers
+        if ( d.children ) return;
+
+        // Extract all other properties for the tooltip
+        const data = d.data as any;
+        const excludeKeys = [ 'id', 'parentId', 'children', 'path', labelKey, ...valueKeys, 'value' ];
+        const extraFields = Object.keys( data )
+          .filter( k => !excludeKeys.includes( k ) && typeof data[ k ] !== 'object' )
+          .map( k => ( { key: k, value: data[ k ] } ) );
+
+        setTooltipData( {
+          x: event.pageX,
+          y: event.pageY,
+          label: String( data[ labelKey ] || data.name || data[ 0 ] || '' ),
+          value: d.value || 0,
+          color: String(
+            treemapColorMode === 'value' ? colorScale( d.value || 0 ) :
+              treemapColorMode === 'category' ? colorScale( getTopLevelParent( d ) as any ) :
+                colorScale( String( ( d.data as any )[ labelKey ] ) as any )
+          ),
+          extraFields
+        } );
+        d3.select( event.currentTarget ).attr( 'opacity', 0.9 );
+      } )
+      .on( 'mousemove', ( event ) => {
+        setTooltipData( prev => prev ? { ...prev, x: event.pageX, y: event.pageY } : null );
+      } )
+      .on( 'mouseleave', ( event ) => {
+        setTooltipData( null );
+        d3.select( event.currentTarget ).attr( 'opacity', 1 );
+      } );
+
+    // Labels
+    cell.append( 'clipPath' )
+      .attr( 'id', ( d, i ) => `clip-${ i }` )
+      .append( 'rect' )
+      .attr( 'width', d => Math.max( 0, d.x1 - d.x0 ) )
+      .attr( 'height', d => Math.max( 0, d.y1 - d.y0 ) );
+
+    cell.append( 'text' )
+      .attr( 'clip-path', ( d, i ) => `url(#clip-${ i })` )
+      .selectAll( 'tspan' )
+      .data( ( d: any ) => {
+        // For group nodes (depth 1), show the group label
+        if ( treemapColorMode === 'category' && d.depth === 1 ) {
+          const id = ( d.data as any ).id || ( d.data as any ).name || String( ( d.data as any )[ labelKey ] );
+          const label = id.split( /[\/.]/ ).pop() || id;
+          return [ label ];
+        }
+        // For leaves, show leaf name
+        if ( !d.children ) {
+          const fullLabel = String( ( d.data as any )[ labelKey ] || ( d.data as any ).name || d.data[ 0 ] || '' );
+          const separator = fullLabel.includes( '/' ) ? '/' : '.';
+          const leafName = fullLabel.split( separator ).pop() || fullLabel;
+          // Only show label if box is big enough
+          if ( ( d.x1 - d.x0 ) > 30 && ( d.y1 - d.y0 ) > 20 ) {
+            return leafName.split( /(?=[A-Z][^A-Z])/g ).concat( d3.format( "," )( d.value || 0 ) );
+          }
+        }
+        return [];
+      } )
+      .join( 'tspan' )
+      .attr( 'x', labelPadding || 4 )
+      .attr( 'y', function ( d, i ) {
+        const parent = this.parentNode as Element;
+        const node = ( parent as any ).__data__;
+        const baseSize = labelFontSize || 10;
+        const fontSize = node.depth === 1 ? baseSize * 1.3 : baseSize;
+        const lineHeight = fontSize * 1.2;
+        return lineHeight + i * lineHeight;
+      } )
+      .text( d => String( d ) )
+      .attr( 'fill', function ( d: any ) {
+        const parent = this.parentNode as Element;
+        const node = ( parent as any ).__data__;
+
+        // Use category label color for category headers (depth 1)
+        if ( node.depth === 1 && treemapCategoryLabelColor ) return treemapCategoryLabelColor;
+
+        // Use user-specified label color if provided
+        if ( labelColor ) return labelColor;
+
+        // White text for headers and leaves in category mode (assuming dark/vibrant colors)
+        if ( treemapColorMode === 'category' ) return '#fff';
+        return '#333';
+      } )
+      .attr( 'font-size', function ( d: any ) {
+        const parent = this.parentNode as Element;
+        const node = ( parent as any ).__data__;
+        const baseSize = labelFontSize || 10;
+        if ( node.depth === 1 ) return `${ baseSize * 1.3 }px`;
+        return `${ baseSize }px`;
+      } )
+      .attr( 'font-weight', function ( d: any, i, nodes ) {
+        const parent = this.parentNode as Element;
+        const node = ( parent as any ).__data__;
+        if ( node.depth === 1 ) return '600'; // Medium bold for headers
+        if ( labelFontWeight ) return labelFontWeight;
+        return i === nodes.length - 1 ? 'bold' : 'normal';
+      } )
+      .attr( 'text-transform', function ( d: any ) {
+        const parent = this.parentNode as Element;
+        const node = ( parent as any ).__data__;
+        return node.depth === 1 ? 'uppercase' : 'none';
+      } );
+
+  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor ] );
+
+  return (
+    <div className='relative w-full h-full flex flex-col' ref={ containerRef }>
+      {/* Custom Legend for Category Mode */ }
+      { treemapColorMode === 'category' && root && (
+        <div className="flex flex-wrap justify-start items-start gap-4 mb-2">
+          { ( root.children || [] ).map( ( child: any, i: number ) => {
+            const id = ( child.data as any ).id || ( child.data as any ).name || String( ( child.data as any )[ labelKey ] );
+            const label = id.split( /[\/.]/ ).pop() || id;
+            const color = colorScale( id );
+            return (
+              <div key={ i } className="flex items-center gap-1.5">
+                <div className="w-3 h-3" style={ { backgroundColor: color } } />
+                <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">{ label }</span>
+              </div>
+            );
+          } ) }
+        </div>
+      ) }
+
+      <div className="flex-1 min-h-0">
+        <svg
+          ref={ svgRef }
+          width="100%"
+          height="100%"
+          viewBox={ `0 0 ${ width } ${ height ? ( treemapColorMode === 'category' ? height - 40 : height ) : 400 }` }
+          preserveAspectRatio="xMidYMid meet"
+          className='w-full h-full'
+          style={ { overflow: 'visible' } }
+        />
+      </div>
+
+      { tooltipData && (
+        <div
+          className='fixed pointer-events-none z-50 bg-white dark:bg-zinc-900 rounded-lg shadow-xl border border-zinc-200 dark:border-zinc-800 text-sm overflow-hidden'
+          style={ {
+            left: tooltipData.x,
+            top: tooltipData.y,
+            transform: 'translate(-50%, -100%)',
+            marginTop: '-10px',
+            minWidth: '200px'
+          } }
+        >
+          {/* Tooltip Header */ }
+          <div className="px-3 py-2 bg-zinc-800 text-white font-semibold">
+            { tooltipData.label }
+          </div>
+
+          {/* Tooltip Body */ }
+          <div className="p-3 space-y-1">
+            { ( tooltipData as any ).extraFields?.map( ( field: any, i: number ) => (
+              <div key={ i } className="flex justify-between gap-4 text-xs">
+                <span className="text-zinc-500 dark:text-zinc-400 capitalize">{ field.key.replace( /([A-Z])/g, ' $1' ).trim() }</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">{ field.value }</span>
+              </div>
+            ) ) }
+            <div className="flex justify-between gap-4 text-xs pt-1 border-t border-zinc-100 dark:border-zinc-800 mt-1">
+              <span className="text-zinc-500 dark:text-zinc-400">Value</span>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">{ tooltipData.value.toLocaleString() }</span>
+            </div>
+          </div>
+        </div>
+      ) }
+    </div>
+  );
+};
