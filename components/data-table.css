@@ -4,7 +4,7 @@
 @import '../styles/theme.css';
 
 .data-table-container {
-  @apply flex h-full flex-col bg-white;
+  @apply flex h-full flex-col bg-zinc-50 max-md:p-2 md:pl-4;
 }
 
 .data-table-content {

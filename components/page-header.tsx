@@ -1,9 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Settings, Share2 } from 'lucide-react';
-import { ExportDropdown } from '@/components/export-dropdown';
-
 export function PageHeader() {
   return (
     <header className='border-b bg-white px-4 py-4 md:px-6'>
@@ -14,19 +10,6 @@ export function PageHeader() {
               SSA Charts
             </h1>
           </div>
-          <span className='hidden text-sm text-zinc-500 md:inline'>
-            Untitled Chart
-          </span>
-        </div>
-
-        <div className='flex items-center gap-2'>
-          <Button variant='outline' size='icon' className='hidden md:flex'>
-            <Settings />
-          </Button>
-          <Button variant='outline' size='icon' className='hidden sm:flex'>
-            <Share2 />
-          </Button>
-          <ExportDropdown />
         </div>
       </div>
     </header>

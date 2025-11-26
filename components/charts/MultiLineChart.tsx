@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 import { createScale } from '@/utils/chartScales';
 import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
@@ -88,20 +89,38 @@ export function MultiLineChart( {
   const previousZoomDomainRef = useRef<any>( null );
 
   // Store hooks
-  const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
-  const curveType = useChartStore( ( state ) => state.curveType );
-  const lineWidth = useChartStore( ( state ) => state.lineWidth );
-  const lineStyle = useChartStore( ( state ) => state.lineStyle );
-  const showPoints = useChartStore( ( state ) => state.showPoints );
-  const pointSize = useChartStore( ( state ) => state.pointSize );
-  const pointShape = useChartStore( ( state ) => state.pointShape );
-  const pointColor = useChartStore( ( state ) => state.pointColor );
-  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
-  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
-  const showArea = useChartStore( ( state ) => state.showArea );
-  const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
-  const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
-  const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
+  // Store hooks
+  const {
+    setXAxisScaleType,
+    curveType,
+    lineWidth,
+    lineStyle,
+    showPoints,
+    pointSize,
+    pointShape,
+    pointColor,
+    pointOutlineWidth,
+    pointOutlineColor,
+    showArea,
+    areaOpacity,
+    zoomDomain,
+    setZoomDomain,
+  } = useChartStore( useShallow( ( state ) => ( {
+    setXAxisScaleType: state.setXAxisScaleType,
+    curveType: state.curveType,
+    lineWidth: state.lineWidth,
+    lineStyle: state.lineStyle,
+    showPoints: state.showPoints,
+    pointSize: state.pointSize,
+    pointShape: state.pointShape,
+    pointColor: state.pointColor,
+    pointOutlineWidth: state.pointOutlineWidth,
+    pointOutlineColor: state.pointOutlineColor,
+    showArea: state.showArea,
+    areaOpacity: state.areaOpacity,
+    zoomDomain: state.zoomDomain,
+    setZoomDomain: state.setZoomDomain,
+  } ) ) );
 
   // Automatically infer and set X-axis scale type
   useEffect( () => {

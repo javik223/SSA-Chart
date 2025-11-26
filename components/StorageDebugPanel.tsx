@@ -23,8 +23,10 @@ import {
   CheckCircle2,
   HardDrive,
 } from 'lucide-react';
+import { useAlertDialog } from '@/components/ui/alert-dialog-simple';
 
 export function StorageDebugPanel() {
+  const { showAlert, showConfirm } = useAlertDialog();
   const {
     storageInfo,
     isLoading,
@@ -55,18 +57,28 @@ export function StorageDebugPanel() {
   };
 
   const handleClear = async () => {
-    if (
-      confirm(
-        'Are you sure you want to clear all stored data? This cannot be undone.'
-      )
-    ) {
+    const confirmed = await showConfirm({
+      title: 'Clear All Storage',
+      description: 'Are you sure you want to clear all stored data? This cannot be undone.',
+      confirmText: 'Clear',
+      cancelText: 'Cancel',
+      variant: 'destructive',
+    });
+
+    if (confirmed) {
       const success = await clearAllData();
       if (success) {
-        alert('Storage cleared successfully!');
+        showAlert({
+          title: 'Success',
+          description: 'Storage cleared successfully!',
+        });
         await loadKeys();
         await refresh();
       } else {
-        alert('Failed to clear storage. Check console for errors.');
+        showAlert({
+          title: 'Clear Failed',
+          description: 'Failed to clear storage. Check console for errors.',
+        });
       }
     }
   };
@@ -74,11 +86,12 @@ export function StorageDebugPanel() {
   const handleRequestPersistence = async () => {
     const granted = await requestPersistence();
     setIsPersisted(granted);
-    alert(
-      granted
+    showAlert({
+      title: granted ? 'Success' : 'Request Denied',
+      description: granted
         ? 'Persistent storage granted!'
-        : 'Persistent storage denied or not supported'
-    );
+        : 'Persistent storage denied or not supported',
+    });
   };
 
   const handleRefresh = async () => {

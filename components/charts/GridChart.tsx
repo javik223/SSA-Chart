@@ -2,131 +2,228 @@
 
 import { useMemo } from 'react';
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 import { getChart } from '@/lib/chartRegistry';
 import { getColorPalette } from '@/lib/colorPalettes';
 
 export function GridChart( { isVisible = true }: { isVisible?: boolean; } ) {
-  const data = useChartStore( ( state ) => state.data );
-  const columnMapping = useChartStore( ( state ) => state.columnMapping );
-  const chartType = useChartStore( ( state ) => state.chartType );
-  const gridSplitBy = useChartStore( ( state ) => state.gridSplitBy );
-  const gridColumns = useChartStore( ( state ) => state.gridColumns );
-  const gridColumnsMobile = useChartStore( ( state ) => state.gridColumnsMobile );
-  const gridAspectRatio = useChartStore( ( state ) => state.gridAspectRatio );
-  const desktopViewBoxWidth = useChartStore( ( state ) => state.desktopViewBoxWidth );
-  const desktopViewBoxHeight = useChartStore( ( state ) => state.desktopViewBoxHeight );
-  const mobileViewBoxWidth = useChartStore( ( state ) => state.mobileViewBoxWidth );
-  const mobileViewBoxHeight = useChartStore( ( state ) => state.mobileViewBoxHeight );
-  const previewDevice = useChartStore( ( state ) => state.previewDevice );
-
-  // Get all chart settings from store (matching BasicChart)
-  const colorPalette = useChartStore( ( state ) => state.colorPalette );
-  const colorMode = useChartStore( ( state ) => state.colorMode );
-
-  // X Axis settings
-  const xAxisShow = useChartStore( ( state ) => state.xAxisShow );
-  const xAxisTitle = useChartStore( ( state ) => state.xAxisTitle );
-  const xAxisShowGrid = useChartStore( ( state ) => state.xAxisShowGrid );
-  const xAxisShowDomain = useChartStore( ( state ) => state.xAxisShowDomain );
-  const xAxisTickCount = useChartStore( ( state ) => state.xAxisTickCount );
-  const xAxisTickSize = useChartStore( ( state ) => state.xAxisTickSize );
-  const xAxisTickPadding = useChartStore( ( state ) => state.xAxisTickPadding );
-  const xAxisLabelRotation = useChartStore( ( state ) => state.xAxisLabelRotation );
-  const xAxisTickFormat = useChartStore( ( state ) => state.xAxisTickFormat );
-  const xAxisPosition = useChartStore( ( state ) => state.xAxisPosition );
-  const xAxisScaleType = useChartStore( ( state ) => state.xAxisScaleType );
-  const xAxisMin = useChartStore( ( state ) => state.xAxisMin );
-  const xAxisMax = useChartStore( ( state ) => state.xAxisMax );
-  const xAxisTitleType = useChartStore( ( state ) => state.xAxisTitleType );
-  const xAxisTitleWeight = useChartStore( ( state ) => state.xAxisTitleWeight );
-  const xAxisTitleColor = useChartStore( ( state ) => state.xAxisTitleColor );
-  const xAxisTitleSize = useChartStore( ( state ) => state.xAxisTitleSize );
-  const xAxisTitlePadding = useChartStore( ( state ) => state.xAxisTitlePadding );
-  const xAxisTickPosition = useChartStore( ( state ) => state.xAxisTickPosition );
-  const xAxisLabelWeight = useChartStore( ( state ) => state.xAxisLabelWeight );
-  const xAxisLabelColor = useChartStore( ( state ) => state.xAxisLabelColor );
-  const xAxisLabelSize = useChartStore( ( state ) => state.xAxisLabelSize );
-  const xAxisLabelSpacing = useChartStore( ( state ) => state.xAxisLabelSpacing );
-  const xAxisGridColor = useChartStore( ( state ) => state.xAxisGridColor );
-  const xAxisGridWidth = useChartStore( ( state ) => state.xAxisGridWidth );
-  const xAxisGridOpacity = useChartStore( ( state ) => state.xAxisGridOpacity );
-  const xAxisGridDashArray = useChartStore( ( state ) => state.xAxisGridDashArray );
-
-  // Y Axis settings
-  const yAxisShow = useChartStore( ( state ) => state.yAxisShow );
-  const yAxisTitle = useChartStore( ( state ) => state.yAxisTitle );
-  const yAxisShowGrid = useChartStore( ( state ) => state.yAxisShowGrid );
-  const yAxisShowDomain = useChartStore( ( state ) => state.yAxisShowDomain );
-  const yAxisTickCount = useChartStore( ( state ) => state.yAxisTickCount );
-  const yAxisTickSize = useChartStore( ( state ) => state.yAxisTickSize );
-  const yAxisTickPadding = useChartStore( ( state ) => state.yAxisTickPadding );
-  const yAxisTickFormat = useChartStore( ( state ) => state.yAxisTickFormat );
-  const yAxisMin = useChartStore( ( state ) => state.yAxisMin );
-  const yAxisMax = useChartStore( ( state ) => state.yAxisMax );
-  const yAxisPosition = useChartStore( ( state ) => state.yAxisPosition );
-  const yAxisScaleType = useChartStore( ( state ) => state.yAxisScaleType );
-  const yAxisFlip = useChartStore( ( state ) => state.yAxisFlip );
-  const yAxisConfigureDefaultMinMax = useChartStore( ( state ) => state.yAxisConfigureDefaultMinMax );
-  const yAxisRoundMin = useChartStore( ( state ) => state.yAxisRoundMin );
-  const yAxisRoundMax = useChartStore( ( state ) => state.yAxisRoundMax );
-  const yAxisTitleType = useChartStore( ( state ) => state.yAxisTitleType );
-  const yAxisTitlePosition = useChartStore( ( state ) => state.yAxisTitlePosition );
-  const yAxisTitleWeight = useChartStore( ( state ) => state.yAxisTitleWeight );
-  const yAxisTitleColor = useChartStore( ( state ) => state.yAxisTitleColor );
-  const yAxisTitleSize = useChartStore( ( state ) => state.yAxisTitleSize );
-  const yAxisTitlePadding = useChartStore( ( state ) => state.yAxisTitlePadding );
-  const yAxisTickPosition = useChartStore( ( state ) => state.yAxisTickPosition );
-  const yAxisLabelSize = useChartStore( ( state ) => state.yAxisLabelSize );
-  const yAxisLabelColor = useChartStore( ( state ) => state.yAxisLabelColor );
-  const yAxisLabelPadding = useChartStore( ( state ) => state.yAxisLabelPadding );
-  const yAxisLabelAngle = useChartStore( ( state ) => state.yAxisLabelAngle );
-  const yAxisLabelRotation = useChartStore( ( state ) => state.yAxisLabelRotation );
-  const yAxisLabelWeight = useChartStore( ( state ) => state.yAxisLabelWeight );
-  const yAxisLabelMaxLines = useChartStore( ( state ) => state.yAxisLabelMaxLines );
-  const yAxisLabelLineHeight = useChartStore( ( state ) => state.yAxisLabelLineHeight );
-  const yAxisLabelSpacing = useChartStore( ( state ) => state.yAxisLabelSpacing );
-  const yAxisTickMode = useChartStore( ( state ) => state.yAxisTickMode );
-  const yAxisTickNumber = useChartStore( ( state ) => state.yAxisTickNumber );
-  const yAxisOneTickLabelPerLine = useChartStore( ( state ) => state.yAxisOneTickLabelPerLine );
-  const yAxisGridColor = useChartStore( ( state ) => state.yAxisGridColor );
-  const yAxisGridStyle = useChartStore( ( state ) => state.yAxisGridStyle );
-  const yAxisGridWidth = useChartStore( ( state ) => state.yAxisGridWidth );
-  const yAxisGridDash = useChartStore( ( state ) => state.yAxisGridDash );
-  const yAxisGridSpace = useChartStore( ( state ) => state.yAxisGridSpace );
-  const yAxisGridExtend = useChartStore( ( state ) => state.yAxisGridExtend );
-  const yAxisGridOpacity = useChartStore( ( state ) => state.yAxisGridOpacity );
-  const yAxisGridDashArray = useChartStore( ( state ) => state.yAxisGridDashArray );
-  const yAxisLineColor = useChartStore( ( state ) => state.yAxisLineColor );
-  const yAxisLineWidth = useChartStore( ( state ) => state.yAxisLineWidth );
-  const yAxisTickLength = useChartStore( ( state ) => state.yAxisTickLength );
-  const yAxisShowAxisLine = useChartStore( ( state ) => state.yAxisShowAxisLine );
-  const yAxisEdgePadding = useChartStore( ( state ) => state.yAxisEdgePadding );
-  const yAxisTitleAlignment = useChartStore( ( state ) => state.yAxisTitleAlignment );
-  const yAxisTitleArrow = useChartStore( ( state ) => state.yAxisTitleArrow );
-  const yAxisDomainColor = useChartStore( ( state ) => state.yAxisDomainColor );
-
-  // Line settings
-  const curveType = useChartStore( ( state ) => state.curveType );
-  const lineWidth = useChartStore( ( state ) => state.lineWidth );
-  const lineStyle = useChartStore( ( state ) => state.lineStyle );
-
-  // Point settings
-  const showPoints = useChartStore( ( state ) => state.showPoints );
-  const pointSize = useChartStore( ( state ) => state.pointSize );
-  const pointShape = useChartStore( ( state ) => state.pointShape );
-  const pointColor = useChartStore( ( state ) => state.pointColor );
-  const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
-  const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
-
-  // Area settings
-  const showArea = useChartStore( ( state ) => state.showArea );
-  const areaOpacity = useChartStore( ( state ) => state.areaOpacity );
-
-  // Label settings
-  const labelShow = useChartStore( ( state ) => state.labelShow );
-  const labelFontSize = useChartStore( ( state ) => state.labelFontSize );
-  const labelColor = useChartStore( ( state ) => state.labelColor );
-  const labelFontWeight = useChartStore( ( state ) => state.labelFontWeight );
+  const {
+    data,
+    columnMapping,
+    chartType,
+    gridSplitBy,
+    gridColumns,
+    gridColumnsMobile,
+    gridAspectRatio,
+    desktopViewBoxWidth,
+    desktopViewBoxHeight,
+    mobileViewBoxWidth,
+    mobileViewBoxHeight,
+    previewDevice,
+    colorPalette,
+    colorMode,
+    xAxisShow,
+    xAxisTitle,
+    xAxisShowGrid,
+    xAxisShowDomain,
+    xAxisTickCount,
+    xAxisTickSize,
+    xAxisTickPadding,
+    xAxisLabelRotation,
+    xAxisTickFormat,
+    xAxisPosition,
+    xAxisScaleType,
+    xAxisMin,
+    xAxisMax,
+    xAxisTitleType,
+    xAxisTitleWeight,
+    xAxisTitleColor,
+    xAxisTitleSize,
+    xAxisTitlePadding,
+    xAxisTickPosition,
+    xAxisLabelWeight,
+    xAxisLabelColor,
+    xAxisLabelSize,
+    xAxisLabelSpacing,
+    xAxisGridColor,
+    xAxisGridWidth,
+    xAxisGridOpacity,
+    xAxisGridDashArray,
+    yAxisShow,
+    yAxisTitle,
+    yAxisShowGrid,
+    yAxisShowDomain,
+    yAxisTickCount,
+    yAxisTickSize,
+    yAxisTickPadding,
+    yAxisTickFormat,
+    yAxisMin,
+    yAxisMax,
+    yAxisPosition,
+    yAxisScaleType,
+    yAxisFlip,
+    yAxisConfigureDefaultMinMax,
+    yAxisRoundMin,
+    yAxisRoundMax,
+    yAxisTitleType,
+    yAxisTitlePosition,
+    yAxisTitleWeight,
+    yAxisTitleColor,
+    yAxisTitleSize,
+    yAxisTitlePadding,
+    yAxisTickPosition,
+    yAxisLabelSize,
+    yAxisLabelColor,
+    yAxisLabelPadding,
+    yAxisLabelAngle,
+    yAxisLabelRotation,
+    yAxisLabelWeight,
+    yAxisLabelMaxLines,
+    yAxisLabelLineHeight,
+    yAxisLabelSpacing,
+    yAxisTickMode,
+    yAxisTickNumber,
+    yAxisOneTickLabelPerLine,
+    yAxisGridColor,
+    yAxisGridStyle,
+    yAxisGridWidth,
+    yAxisGridDash,
+    yAxisGridSpace,
+    yAxisGridExtend,
+    yAxisGridOpacity,
+    yAxisGridDashArray,
+    yAxisLineColor,
+    yAxisLineWidth,
+    yAxisTickLength,
+    yAxisShowAxisLine,
+    yAxisEdgePadding,
+    yAxisTitleAlignment,
+    yAxisTitleArrow,
+    yAxisDomainColor,
+    curveType,
+    lineWidth,
+    lineStyle,
+    showPoints,
+    pointSize,
+    pointShape,
+    pointColor,
+    pointOutlineWidth,
+    pointOutlineColor,
+    showArea,
+    areaOpacity,
+    labelShow,
+    labelFontSize,
+    labelColor,
+    labelFontWeight,
+  } = useChartStore( useShallow( ( state ) => ( {
+    data: state.data,
+    columnMapping: state.columnMapping,
+    chartType: state.chartType,
+    gridSplitBy: state.gridSplitBy,
+    gridColumns: state.gridColumns,
+    gridColumnsMobile: state.gridColumnsMobile,
+    gridAspectRatio: state.gridAspectRatio,
+    desktopViewBoxWidth: state.desktopViewBoxWidth,
+    desktopViewBoxHeight: state.desktopViewBoxHeight,
+    mobileViewBoxWidth: state.mobileViewBoxWidth,
+    mobileViewBoxHeight: state.mobileViewBoxHeight,
+    previewDevice: state.previewDevice,
+    colorPalette: state.colorPalette,
+    colorMode: state.colorMode,
+    xAxisShow: state.xAxisShow,
+    xAxisTitle: state.xAxisTitle,
+    xAxisShowGrid: state.xAxisShowGrid,
+    xAxisShowDomain: state.xAxisShowDomain,
+    xAxisTickCount: state.xAxisTickCount,
+    xAxisTickSize: state.xAxisTickSize,
+    xAxisTickPadding: state.xAxisTickPadding,
+    xAxisLabelRotation: state.xAxisLabelRotation,
+    xAxisTickFormat: state.xAxisTickFormat,
+    xAxisPosition: state.xAxisPosition,
+    xAxisScaleType: state.xAxisScaleType,
+    xAxisMin: state.xAxisMin,
+    xAxisMax: state.xAxisMax,
+    xAxisTitleType: state.xAxisTitleType,
+    xAxisTitleWeight: state.xAxisTitleWeight,
+    xAxisTitleColor: state.xAxisTitleColor,
+    xAxisTitleSize: state.xAxisTitleSize,
+    xAxisTitlePadding: state.xAxisTitlePadding,
+    xAxisTickPosition: state.xAxisTickPosition,
+    xAxisLabelWeight: state.xAxisLabelWeight,
+    xAxisLabelColor: state.xAxisLabelColor,
+    xAxisLabelSize: state.xAxisLabelSize,
+    xAxisLabelSpacing: state.xAxisLabelSpacing,
+    xAxisGridColor: state.xAxisGridColor,
+    xAxisGridWidth: state.xAxisGridWidth,
+    xAxisGridOpacity: state.xAxisGridOpacity,
+    xAxisGridDashArray: state.xAxisGridDashArray,
+    yAxisShow: state.yAxisShow,
+    yAxisTitle: state.yAxisTitle,
+    yAxisShowGrid: state.yAxisShowGrid,
+    yAxisShowDomain: state.yAxisShowDomain,
+    yAxisTickCount: state.yAxisTickCount,
+    yAxisTickSize: state.yAxisTickSize,
+    yAxisTickPadding: state.yAxisTickPadding,
+    yAxisTickFormat: state.yAxisTickFormat,
+    yAxisMin: state.yAxisMin,
+    yAxisMax: state.yAxisMax,
+    yAxisPosition: state.yAxisPosition,
+    yAxisScaleType: state.yAxisScaleType,
+    yAxisFlip: state.yAxisFlip,
+    yAxisConfigureDefaultMinMax: state.yAxisConfigureDefaultMinMax,
+    yAxisRoundMin: state.yAxisRoundMin,
+    yAxisRoundMax: state.yAxisRoundMax,
+    yAxisTitleType: state.yAxisTitleType,
+    yAxisTitlePosition: state.yAxisTitlePosition,
+    yAxisTitleWeight: state.yAxisTitleWeight,
+    yAxisTitleColor: state.yAxisTitleColor,
+    yAxisTitleSize: state.yAxisTitleSize,
+    yAxisTitlePadding: state.yAxisTitlePadding,
+    yAxisTickPosition: state.yAxisTickPosition,
+    yAxisLabelSize: state.yAxisLabelSize,
+    yAxisLabelColor: state.yAxisLabelColor,
+    yAxisLabelPadding: state.yAxisLabelPadding,
+    yAxisLabelAngle: state.yAxisLabelAngle,
+    yAxisLabelRotation: state.yAxisLabelRotation,
+    yAxisLabelWeight: state.yAxisLabelWeight,
+    yAxisLabelMaxLines: state.yAxisLabelMaxLines,
+    yAxisLabelLineHeight: state.yAxisLabelLineHeight,
+    yAxisLabelSpacing: state.yAxisLabelSpacing,
+    yAxisTickMode: state.yAxisTickMode,
+    yAxisTickNumber: state.yAxisTickNumber,
+    yAxisOneTickLabelPerLine: state.yAxisOneTickLabelPerLine,
+    yAxisGridColor: state.yAxisGridColor,
+    yAxisGridStyle: state.yAxisGridStyle,
+    yAxisGridWidth: state.yAxisGridWidth,
+    yAxisGridDash: state.yAxisGridDash,
+    yAxisGridSpace: state.yAxisGridSpace,
+    yAxisGridExtend: state.yAxisGridExtend,
+    yAxisGridOpacity: state.yAxisGridOpacity,
+    yAxisGridDashArray: state.yAxisGridDashArray,
+    yAxisLineColor: state.yAxisLineColor,
+    yAxisLineWidth: state.yAxisLineWidth,
+    yAxisTickLength: state.yAxisTickLength,
+    yAxisShowAxisLine: state.yAxisShowAxisLine,
+    yAxisEdgePadding: state.yAxisEdgePadding,
+    yAxisTitleAlignment: state.yAxisTitleAlignment,
+    yAxisTitleArrow: state.yAxisTitleArrow,
+    yAxisDomainColor: state.yAxisDomainColor,
+    curveType: state.curveType,
+    lineWidth: state.lineWidth,
+    lineStyle: state.lineStyle,
+    showPoints: state.showPoints,
+    pointSize: state.pointSize,
+    pointShape: state.pointShape,
+    pointColor: state.pointColor,
+    pointOutlineWidth: state.pointOutlineWidth,
+    pointOutlineColor: state.pointOutlineColor,
+    showArea: state.showArea,
+    areaOpacity: state.areaOpacity,
+    labelShow: state.labelShow,
+    labelFontSize: state.labelFontSize,
+    labelColor: state.labelColor,
+    labelFontWeight: state.labelFontWeight,
+  } ) ) );
 
   // Split data into groups
   const chartGroups = useMemo( (): Array<{

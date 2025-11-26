@@ -111,13 +111,22 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
           return oldIndex; // Mapped column unaffected
         };
 
+        // Helper to adjust array of indices
+        const adjustIndices = (indices: number[] | null) => {
+          if (!indices || indices.length === 0) return null;
+          const adjusted = indices
+            .map(adjustIndex)
+            .filter((idx): idx is number => idx !== null);
+          return adjusted.length > 0 ? adjusted : null;
+        };
+
         newMapping = {
           labels: adjustIndex(columnMapping.labels),
-          series: adjustIndex(columnMapping.series),
+          series: adjustIndices(columnMapping.series),
           chartsGrid: adjustIndex(columnMapping.chartsGrid),
           rowFilter: adjustIndex(columnMapping.rowFilter),
           customPopups: adjustIndex(columnMapping.customPopups),
-          categories: adjustIndex(columnMapping.categories ? columnMapping.categories[0] : null) ? [adjustIndex(columnMapping.categories![0])!] : null,
+          categories: adjustIndices(columnMapping.categories),
           values: columnMapping.values
             .filter((idx) => !(idx >= deletedIndex && idx < deletedEndIndex)) // Remove deleted values
             .map((idx) => (idx >= deletedEndIndex ? idx - deletedCount : idx)), // Adjust remaining values
@@ -132,8 +141,8 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
               ? columnMapping.labels
               : null,
           series:
-            columnMapping.series !== null && columnMapping.series <= maxIndex
-              ? columnMapping.series
+            columnMapping.series !== null && columnMapping.series.length > 0
+              ? columnMapping.series.filter((idx) => idx <= maxIndex)
               : null,
           values: columnMapping.values.filter((idx) => idx <= maxIndex),
           chartsGrid:

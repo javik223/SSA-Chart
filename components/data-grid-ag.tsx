@@ -20,6 +20,7 @@ import { useChartStore } from '@/store/useChartStore';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { getColumnTypeIcon, type ColumnType } from '@/utils/dataTypeUtils';
+import { useAlertDialog } from '@/components/ui/alert-dialog-simple';
 import './data-grid-ag.css';
 
 ModuleRegistry.registerModules( [ AllEnterpriseModule, AllCommunityModule ] );
@@ -239,6 +240,7 @@ class EditableHeader {
 }
 
 export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps ) {
+  const { showConfirm } = useAlertDialog();
   const data = useChartStore( ( state ) => state.data );
   const setData = useChartStore( ( state ) => state.setData );
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
@@ -547,7 +549,7 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
         {
           name: 'Delete Column',
           icon: '<span class="ag-icon ag-icon-cross"></span>',
-          action: () => {
+          action: async () => {
             if ( !params.column ) return;
             const colMatch = params.column.getColId().match( /col_(\d+)/ );
             if ( !colMatch ) return;
@@ -556,7 +558,15 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
             // Confirm deletion
             const headerName = headers[ colIndex ] || `Column ${ colIndex + 1 }`;
-            if ( !confirm( `Are you sure you want to delete column "${ headerName }"?` ) ) {
+            const confirmed = await showConfirm( {
+              title: 'Delete Column',
+              description: `Are you sure you want to delete column "${ headerName }"?`,
+              confirmText: 'Delete',
+              cancelText: 'Cancel',
+              variant: 'destructive',
+            } );
+
+            if ( !confirmed ) {
               return;
             }
 
@@ -791,17 +801,6 @@ export function DataGridAG( { virtualData, searchQuery = '' }: DataGridAGProps )
 
   return (
     <div className='data-grid-container'>
-      {/* Toolbar */ }
-      <div className='data-grid-toolbar'>
-        <div className='data-grid-toolbar-left'>
-          <Button variant='outline' size='sm' onClick={ handleExport }>
-            <Download className='data-grid-export-icon' />
-            Export CSV
-          </Button>
-        </div>
-      </div>
-
-      {/* Grid */ }
       <div className='data-grid-wrapper ag-theme-alpine'>
         <AgGridReact
           ref={ gridRef }

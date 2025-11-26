@@ -134,3 +134,7 @@
 .data-grid-export-icon {
   @apply h-4 w-4 mr-1;
 }
+
+.ag-header-cell-resize {
+  @apply w-1 hover:w-3 after:content-[''] after:absolute after:top-0 after:right-0 after:h-full after:w-1 after:bg-gray-200 after:z-[1000] hover:after:translate-x-[4px]! hover:after:bg-blue-400;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 import { ChartComponentProps } from '@/lib/chartRegistry';
 import { getColorPalette } from '@/lib/colorPalettes';
 
@@ -36,11 +37,20 @@ export function TreemapChart( {
   } | null>( null );
 
   // Store state
-  const treemapTileMethod = useChartStore( ( state ) => state.treemapTileMethod );
-  const treemapPadding = useChartStore( ( state ) => state.treemapPadding );
-  const treemapColorMode = useChartStore( ( state ) => state.treemapColorMode );
-  const treemapCategoryLevel = useChartStore( ( state ) => state.treemapCategoryLevel );
-  const theme = useChartStore( ( state ) => state.theme );
+  // Store state
+  const {
+    treemapTileMethod,
+    treemapPadding,
+    treemapColorMode,
+    treemapCategoryLevel,
+    theme,
+  } = useChartStore( useShallow( ( state ) => ( {
+    treemapTileMethod: state.treemapTileMethod,
+    treemapPadding: state.treemapPadding,
+    treemapColorMode: state.treemapColorMode,
+    treemapCategoryLevel: state.treemapCategoryLevel,
+    theme: state.theme,
+  } ) ) );
 
   // Dimensions
   const margin = { top: 10, right: 10, bottom: 10, left: 0 };

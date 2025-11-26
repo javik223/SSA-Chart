@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ColumnSelector } from '@/components/column-selector';
 import { useChartStore } from '@/store/useChartStore';
-import { ChevronDown, CircleHelp, Upload } from 'lucide-react';
+import { ChevronDown, CircleHelp, Upload, Download } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2 } from 'lucide-react';
 
+import { useShallow } from 'zustand/react/shallow';
+
 export function DataSidebar() {
   const {
     availableColumns,
@@ -38,7 +40,19 @@ export function DataSidebar() {
     replaceData,
     mergeData,
     chartType,
-  } = useChartStore();
+    data,
+  } = useChartStore(
+    useShallow( ( state ) => ( {
+      availableColumns: state.availableColumns,
+      columnMapping: state.columnMapping,
+      setColumnMapping: state.setColumnMapping,
+      autoSetColumns: state.autoSetColumns,
+      replaceData: state.replaceData,
+      mergeData: state.mergeData,
+      chartType: state.chartType,
+      data: state.data,
+    } ) )
+  );
   const fileInputRef = useRef<HTMLInputElement>( null );
   const [ uploadMode, setUploadMode ] = useState<'replace' | 'merge'>( 'replace' );
   const [ isAlertOpen, setIsAlertOpen ] = useState( false );
@@ -68,8 +82,8 @@ export function DataSidebar() {
     setColumnMapping( { values: Array.isArray( indices ) ? indices : [ indices as number ] } );
   };
 
-  const handleSeriesSelect = ( index: number | number[] | null ) => {
-    setColumnMapping( { series: index as number | null } );
+  const handleSeriesSelect = ( indices: number | number[] | null ) => {
+    setColumnMapping( { series: Array.isArray( indices ) ? indices : ( indices !== null ? [ indices ] : null ) } );
   };
 
   const handleChartsGridSelect = ( index: number | number[] | null ) => {
@@ -170,6 +184,58 @@ export function DataSidebar() {
     } );
   };
 
+  const handleExportCSV = () => {
+    if ( !data || data.length === 0 ) {
+      toast( {
+        title: 'No data to export',
+        description: 'Please upload some data first',
+        variant: 'destructive',
+      } );
+      return;
+    }
+
+    try {
+      // Convert data array to CSV string
+      const csvContent = data
+        .map( ( row ) =>
+          row
+            .map( ( cell ) => {
+              // Escape quotes and wrap in quotes if needed
+              const cellStr = String( cell ?? '' );
+              if ( cellStr.includes( ',' ) || cellStr.includes( '"' ) || cellStr.includes( '\n' ) ) {
+                return `"${ cellStr.replace( /"/g, '""' ) }"`;
+              }
+              return cellStr;
+            } )
+            .join( ',' )
+        )
+        .join( '\n' );
+
+      // Create blob and download
+      const blob = new Blob( [ csvContent ], { type: 'text/csv;charset=utf-8;' } );
+      const link = document.createElement( 'a' );
+      const url = URL.createObjectURL( blob );
+
+      link.setAttribute( 'href', url );
+      link.setAttribute( 'download', 'data-export.csv' );
+      link.style.visibility = 'hidden';
+      document.body.appendChild( link );
+      link.click();
+      document.body.removeChild( link );
+
+      toast( {
+        title: 'Export successful',
+        description: 'Data has been exported as CSV',
+      } );
+    } catch ( error ) {
+      toast( {
+        title: 'Export failed',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      } );
+    }
+  };
+
   return (
     <div className='h-full overflow-y-auto border-l bg-white p-6'>
       <div className='space-y-4'>
@@ -185,52 +251,64 @@ export function DataSidebar() {
         {/* Header */ }
         <div className='flex justify-between'>
           <h2 className='text-lg font-semibold text-zinc-900'>Data</h2>
-          <div className='flex items-center gap-2'>
-            <span className='text-xs text-zinc-500'>Saved</span>
+          <div className='flex items-center gap-0 rounded-md border border-zinc-200'>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={ handleExportCSV }
+              className='h-8 rounded-none border-r border-zinc-200 text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
+            >
+              <Download className='h-3.5 w-3.5 mr-1.5' />
+              Export
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button size='sm' className='rounded-full' variant='outline'>
-                  <Upload className='h-4 w-4' />
-                  <ChevronDown className='h-2 w-2' />
+                <Button size='sm' className='h-8 rounded-none text-xs hover:bg-zinc-50' variant='ghost'>
+                  <Upload className='h-3.5 w-3.5 mr-1.5' />
+                  Upload
+                  <ChevronDown className='h-3 w-3 ml-1' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end'>
                 <DropdownMenuItem
-                  className='flex flex-col items-start gap-1 cursor-pointer'
                   onClick={ () => handleUploadClick( 'replace' ) }
                 >
-                  <h3 className='text-sm font-medium'>Upload data file</h3>
-                  <small className='text-slate-500 font-normal'>
-                    Replace data with uploaded file <br />
-                    (Excel, CSV, TSV, JSON, GeoJSON)
-                  </small>
+                  <div className='flex! flex-col! items-start gap-1 cursor-pointer'>
+                    <h3 className='text-sm font-medium'>Upload data file</h3>
+                    <small className='text-slate-500 font-normal'>
+                      Replace data with uploaded file <br />
+                      (Excel, CSV, TSV, JSON, GeoJSON)
+                    </small>
+                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className='flex flex-col items-start gap-1 cursor-pointer'
                   onClick={ () => handleUploadClick( 'merge' ) }
                 >
-                  <h3 className='text-sm font-medium'>Upload data and merge</h3>
-                  <small className='text-slate-500 font-normal'>
-                    Merge current sheet with the uploaded file <br />
-                    (Excel, CSV, TSV, JSON, GeoJSON)
-                  </small>
+                  <div className='flex! flex-col! items-start gap-1 cursor-pointer'>
+                    <h3 className='text-sm font-medium'>Upload data and merge</h3>
+                    <small className='text-slate-500 font-normal'>
+                      Merge current sheet with the uploaded file <br />
+                      (Excel, CSV, TSV, JSON, GeoJSON)
+                    </small>
+                  </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className='flex flex-col items-start gap-1 cursor-pointer text-red-600'
                   onSelect={ ( e ) => {
                     e.preventDefault();
                     setIsAlertOpen( true );
                   } }
                 >
-                  <div className='flex items-center gap-2'>
-                    <Trash2 className='h-4 w-4' />
-                    <h3 className='text-sm font-medium'>Clear all data</h3>
+                  <div className='flex flex-col gap-2'>
+                    <div className='flex gap-2'>
+                      <Trash2 className='h-4 w-4' />
+                      <h3 className='text-sm font-medium -mt-0.5'>Clear all data</h3>
+                    </div>
+                    <small className='text-slate-500 font-normal'>
+                      Remove all data from the spreadsheet
+                    </small>
                   </div>
-                  <small className='text-slate-500 font-normal'>
-                    Remove all data from the spreadsheet
-                  </small>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -525,7 +603,7 @@ export function DataSidebar() {
                   availableColumns={ availableColumns }
                   selectedColumns={ columnMapping.series }
                   onSelect={ handleSeriesSelect }
-                  mode='single'
+                  mode='multiple'
                   placeholder=''
                   color='orange'
                   compact
@@ -533,7 +611,7 @@ export function DataSidebar() {
                 />
               </div>
               <p className='text-xs text-zinc-500'>
-                Select a column to group data into multiple lines.
+                Select one or more columns to group data into multiple series.
               </p>
             </div>
           </>

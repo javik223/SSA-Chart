@@ -1,6 +1,7 @@
 'use client';
 
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 import { cn } from '@/lib/utils';
 
 /**
@@ -9,56 +10,62 @@ import { cn } from '@/lib/utils';
  */
 export function ChartFooterSection() {
   // Footer content
-  const footerSourceName = useChartStore( ( state ) => state.footerSourceName );
-  const footerSourceUrl = useChartStore( ( state ) => state.footerSourceUrl );
-  const footerSourceLabel = useChartStore( ( state ) => state.footerSourceLabel );
-  const footerNote = useChartStore( ( state ) => state.footerNote );
-  const footerNoteSecondary = useChartStore(
-    ( state ) => state.footerNoteSecondary
-  );
-
-  // Footer settings
-  const footerAlignment = useChartStore( ( state ) => state.footerAlignment );
-  const footerStylesEnabled = useChartStore(
-    ( state ) => state.footerStylesEnabled
-  );
-  const footerFont = useChartStore( ( state ) => state.footerFont );
-  const footerFontWeight = useChartStore( ( state ) => state.footerFontWeight );
-
-  // Border settings
-  const footerBorder = useChartStore( ( state ) => state.footerBorder );
-  const footerBorderStyle = useChartStore( ( state ) => state.footerBorderStyle );
-  const footerBorderSpace = useChartStore( ( state ) => state.footerBorderSpace );
-  const footerBorderWidth = useChartStore( ( state ) => state.footerBorderWidth );
-  const footerBorderColor = useChartStore( ( state ) => state.footerBorderColor );
-
-  // Logo settings
-  const footerLogoEnabled = useChartStore( ( state ) => state.footerLogoEnabled );
-  const footerLogoImageUrl = useChartStore(
-    ( state ) => state.footerLogoImageUrl
-  );
-  const footerLogoImageLink = useChartStore(
-    ( state ) => state.footerLogoImageLink
-  );
-  const footerLogoHeight = useChartStore( ( state ) => state.footerLogoHeight );
-  const footerLogoAlign = useChartStore( ( state ) => state.footerLogoAlign );
-  const footerLogoPosition = useChartStore( ( state ) => state.footerLogoPosition );
-  const footerLogoPositionTop = useChartStore(
-    ( state ) => state.footerLogoPositionTop
-  );
-  const footerLogoPositionRight = useChartStore(
-    ( state ) => state.footerLogoPositionRight
-  );
-  const footerLogoPositionBottom = useChartStore(
-    ( state ) => state.footerLogoPositionBottom
-  );
-  const footerLogoPositionLeft = useChartStore(
-    ( state ) => state.footerLogoPositionLeft
-  );
-
-  // Layout padding
-  const layoutPaddingLeft = useChartStore( ( state ) => state.layoutPaddingLeft );
-  const layoutPaddingRight = useChartStore( ( state ) => state.layoutPaddingRight );
+  // Footer content
+  const {
+    footerSourceName,
+    footerSourceUrl,
+    footerSourceLabel,
+    footerNote,
+    footerNoteSecondary,
+    footerAlignment,
+    footerStylesEnabled,
+    footerFont,
+    footerFontWeight,
+    footerBorder,
+    footerBorderStyle,
+    footerBorderSpace,
+    footerBorderWidth,
+    footerBorderColor,
+    footerLogoEnabled,
+    footerLogoImageUrl,
+    footerLogoImageLink,
+    footerLogoHeight,
+    footerLogoAlign,
+    footerLogoPosition,
+    footerLogoPositionTop,
+    footerLogoPositionRight,
+    footerLogoPositionBottom,
+    footerLogoPositionLeft,
+    layoutPaddingLeft,
+    layoutPaddingRight,
+  } = useChartStore( useShallow( ( state ) => ( {
+    footerSourceName: state.footerSourceName,
+    footerSourceUrl: state.footerSourceUrl,
+    footerSourceLabel: state.footerSourceLabel,
+    footerNote: state.footerNote,
+    footerNoteSecondary: state.footerNoteSecondary,
+    footerAlignment: state.footerAlignment,
+    footerStylesEnabled: state.footerStylesEnabled,
+    footerFont: state.footerFont,
+    footerFontWeight: state.footerFontWeight,
+    footerBorder: state.footerBorder,
+    footerBorderStyle: state.footerBorderStyle,
+    footerBorderSpace: state.footerBorderSpace,
+    footerBorderWidth: state.footerBorderWidth,
+    footerBorderColor: state.footerBorderColor,
+    footerLogoEnabled: state.footerLogoEnabled,
+    footerLogoImageUrl: state.footerLogoImageUrl,
+    footerLogoImageLink: state.footerLogoImageLink,
+    footerLogoHeight: state.footerLogoHeight,
+    footerLogoAlign: state.footerLogoAlign,
+    footerLogoPosition: state.footerLogoPosition,
+    footerLogoPositionTop: state.footerLogoPositionTop,
+    footerLogoPositionRight: state.footerLogoPositionRight,
+    footerLogoPositionBottom: state.footerLogoPositionBottom,
+    footerLogoPositionLeft: state.footerLogoPositionLeft,
+    layoutPaddingLeft: state.layoutPaddingLeft,
+    layoutPaddingRight: state.layoutPaddingRight,
+  } ) ) );
 
   // If all content is empty, don't render anything
   const hasContent =

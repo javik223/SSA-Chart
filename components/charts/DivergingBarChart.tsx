@@ -4,6 +4,7 @@ import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 import { ChartZoomControls } from './ChartZoomControls';
 import {
   calculateChartMargins,
@@ -145,8 +146,11 @@ export function DivergingBarChart( {
   const svgRef = useRef<SVGSVGElement>( null );
 
   // Store hooks
-  const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
-  const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
+  // Store hooks
+  const { zoomDomain, setZoomDomain } = useChartStore( useShallow( ( state ) => ( {
+    zoomDomain: state.zoomDomain,
+    setZoomDomain: state.setZoomDomain,
+  } ) ) );
 
   const previousZoomDomainRef = useRef<typeof zoomDomain>( null );
 

@@ -32,15 +32,26 @@ interface DonutChartProps {
  * The center displays the total value.
  */
 import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
 
 export function DonutChart( props: DonutChartProps ) {
-  const donutInnerRadius = useChartStore( ( state ) => state.donutInnerRadius );
-  const donutPadAngle = useChartStore( ( state ) => state.donutPadAngle );
-  const donutCornerRadius = useChartStore( ( state ) => state.donutCornerRadius );
-  const donutStartAngle = useChartStore( ( state ) => state.donutStartAngle );
-  const donutEndAngle = useChartStore( ( state ) => state.donutEndAngle );
-  const donutShowTotal = useChartStore( ( state ) => state.donutShowTotal );
-  const donutCenterLabel = useChartStore( ( state ) => state.donutCenterLabel );
+  const {
+    donutInnerRadius,
+    donutPadAngle,
+    donutCornerRadius,
+    donutStartAngle,
+    donutEndAngle,
+    donutShowTotal,
+    donutCenterLabel,
+  } = useChartStore( useShallow( ( state ) => ( {
+    donutInnerRadius: state.donutInnerRadius,
+    donutPadAngle: state.donutPadAngle,
+    donutCornerRadius: state.donutCornerRadius,
+    donutStartAngle: state.donutStartAngle,
+    donutEndAngle: state.donutEndAngle,
+    donutShowTotal: state.donutShowTotal,
+    donutCenterLabel: state.donutCenterLabel,
+  } ) ) );
 
   return (
     <PieChart

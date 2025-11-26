@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 // But for now, let's create a simple functional replacement using standard React state
 // to avoid breaking the build.
 
-const TooltipProvider = ( { children }: { children: React.ReactNode; } ) => <>{ children }</>;
+const TooltipProvider = ( { children, delayDuration }: { children: React.ReactNode; delayDuration?: number; } ) => <>{ children }</>;
 
 const Tooltip = ( { children }: { children: React.ReactNode; } ) => {
   const [ open, setOpen ] = React.useState( false );
