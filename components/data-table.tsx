@@ -1,6 +1,6 @@
 'use client';
 
-import { BasicChart } from '@/components/charts/BasicChart';
+import { ChartDisplay } from '@/components/ChartDisplay';
 import { DataGridAG } from '@/components/data-grid-ag';
 import { DataSidebar } from '@/components/data-sidebar';
 import { Button } from '@/components/ui/button';
@@ -248,16 +248,16 @@ export function DataTable() {
           default={ {
             x: chartPreviewPosition.x,
             y: chartPreviewPosition.y,
-            width: 500,
-            height: 400,
+            width: 300,
+            height: 260,
           } }
           minWidth={ 300 }
-          minHeight={ 200 }
-          className='data-table-chart-preview'
-          style={ { position: 'fixed' } }
+          minHeight={ 240 }
+          className='data-table-chart-preview right-4! bottom-4! h-max'
+          style={ { position: 'absolute' } }
         >
           <div className='data-table-chart-preview-content'>
-            <BasicChart isFloatingPreview />
+            <ChartDisplay isVisible={ true } minimal={ true } />
           </div>
         </Rnd>
       ) }

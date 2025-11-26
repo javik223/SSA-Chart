@@ -10,7 +10,7 @@ import { ChartLegend } from '@/components/chart-legend';
 import { ChartFooterSection } from '@/components/chart-footer-section';
 import { ChartControls } from '@/components/chart-controls';
 
-export function ChartDisplay( { isVisible = true }: { isVisible?: boolean; } ) {
+export function ChartDisplay( { isVisible = true, minimal = false }: { isVisible?: boolean; minimal?: boolean; } ) {
   const {
     legendPosition,
     gridMode,
@@ -175,17 +175,17 @@ export function ChartDisplay( { isVisible = true }: { isVisible?: boolean; } ) {
   const renderContent = () => {
     // Components map
     const components = {
-      header: <ChartHeaderSection key="header" />,
-      controls: <ChartControls key="controls" />,
-      legend: (
+      header: !minimal ? <ChartHeaderSection key="header" /> : null,
+      controls: !minimal ? <ChartControls key="controls" /> : null,
+      legend: !minimal ? (
         <div key="legend" className="w-full">
           { legendPosition === 'top' && <ChartLegend valueKeys={ valueKeys } /> }
           { legendPosition === 'bottom' && <ChartLegend valueKeys={ valueKeys } /> }
         </div>
-      ),
+      ) : null,
       graphic: (
         <div key="graphic" className='chart-preview-graphic-wrapper'>
-          { legendPosition === 'left' && gridMode === 'single' && (
+          { !minimal && legendPosition === 'left' && gridMode === 'single' && (
             <ChartLegend valueKeys={ valueKeys } />
           ) }
 
@@ -197,12 +197,12 @@ export function ChartDisplay( { isVisible = true }: { isVisible?: boolean; } ) {
             ) }
           </div>
 
-          { legendPosition === 'right' && gridMode === 'single' && (
+          { !minimal && legendPosition === 'right' && gridMode === 'single' && (
             <ChartLegend valueKeys={ valueKeys } />
           ) }
         </div>
       ),
-      footer: <ChartFooterSection key="footer" />,
+      footer: !minimal ? <ChartFooterSection key="footer" /> : null,
     };
 
     // Special case for Grid Mode

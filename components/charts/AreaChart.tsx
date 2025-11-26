@@ -9,16 +9,10 @@ import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
 import {
   calculateChartMargins,
-  createClipPath,
-  getXPosition as getXPositionHelper,
-  renderXAxis,
-  renderYAxis,
-  renderXGrid,
-  renderYGrid,
-  renderLegend,
-  setupBrushZoom,
-  setupPan
+  getXPosition as getXPositionHelper
 } from '@/utils/chartHelpers';
+import { BaseChart } from './BaseChart';
+import { getColorPalette } from '@/lib/colorPalettes';
 
 interface AreaChartProps {
   data: Array<Record<string, string | number>>;
@@ -76,6 +70,167 @@ interface AreaChartProps {
 
 const DEFAULT_COLORS = [ '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f' ];
 
+
+
+interface AreaChartContentProps {
+  data: Array<Record<string, string | number>>;
+  labelKey: string;
+  valueKeys: string[];
+  xScale: any;
+  yScale: any;
+  colors: string[];
+  curveType: 'monotone' | 'step' | 'linear';
+  lineWidth: number;
+  lineStyle: 'solid' | 'dashed' | 'dotted';
+  showPoints: boolean;
+  pointSize: number;
+  pointShape: 'circle' | 'square' | 'diamond' | 'triangle';
+  pointColor: string;
+  pointOutlineWidth: number;
+  pointOutlineColor: string;
+  fillOpacity: number;
+  xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
+  innerHeight: number;
+}
+
+const AreaChartContent = ( {
+  data,
+  labelKey,
+  valueKeys,
+  xScale,
+  yScale,
+  colors,
+  curveType,
+  lineWidth,
+  lineStyle,
+  showPoints,
+  pointSize,
+  pointShape,
+  pointColor,
+  pointOutlineWidth,
+  pointOutlineColor,
+  fillOpacity,
+  xAxisScaleType,
+  innerHeight
+}: AreaChartContentProps ) => {
+  const gRef = useRef<SVGGElement>( null );
+
+  // Helper function to get X position based on scale type
+  const getXPosition = ( d: any ): number => {
+    return getXPositionHelper( d, labelKey, xScale, xAxisScaleType );
+  };
+
+  useEffect( () => {
+    if ( !gRef.current || !data ) return;
+
+    const g = d3.select( gRef.current );
+
+    // Draw lines for each value key
+    valueKeys.forEach( ( key, index ) => {
+      const color = colors[ index % colors.length ];
+
+      // Area generator
+      const area = d3
+        .area<any>()
+        .x( ( d ) => getXPosition( d ) )
+        .y0( innerHeight )
+        .y1( ( d ) => yScale( Number( d[ key ] ) ) );
+
+      if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
+      if ( curveType === 'step' ) area.curve( d3.curveStep );
+      if ( curveType === 'linear' ) area.curve( d3.curveLinear );
+
+      // Draw Area
+      let areaPath = g.select<SVGPathElement>( `.area-${ index }` );
+      if ( areaPath.empty() ) {
+        areaPath = g.append( 'path' ).attr( 'class', `area-${ index }` );
+      }
+
+      areaPath
+        .datum( data )
+        .attr( 'fill', color )
+        .attr( 'fill-opacity', fillOpacity )
+        .transition()
+        .duration( 500 )
+        .ease( d3.easeCubicInOut )
+        .attr( 'd', area( data ) );
+
+      // Line generator
+      const line = d3
+        .line<any>()
+        .x( ( d ) => getXPosition( d ) )
+        .y( ( d ) => yScale( Number( d[ key ] ) ) );
+
+      if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
+      if ( curveType === 'step' ) line.curve( d3.curveStep );
+      if ( curveType === 'linear' ) line.curve( d3.curveLinear );
+
+      // Line
+      let linePath = g.select<SVGPathElement>( `.line-${ index }` );
+      if ( linePath.empty() ) {
+        linePath = g.append( 'path' ).attr( 'class', `line-${ index }` );
+      }
+
+      linePath
+        .datum( data )
+        .attr( 'fill', 'none' )
+        .attr( 'stroke', color )
+        .attr( 'stroke-width', lineWidth )
+        .attr( 'stroke-dasharray', lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0' )
+        .transition()
+        .duration( 500 )
+        .ease( d3.easeCubicInOut )
+        .attr( 'd', line( data ) );
+
+      // Dots
+      if ( showPoints ) {
+        const dots = g.selectAll( `.dot-${ index }` )
+          .data( data );
+
+        // Exit old dots
+        dots.exit()
+          .transition()
+          .duration( 100 )
+          .style( 'opacity', 0 )
+          .remove();
+
+        // Enter new dots
+        const dotsEnter = dots.enter()
+          .append( 'path' )
+          .attr( 'class', `dot-${ index }` )
+          .attr( 'fill', pointColor || color )
+          .attr( 'stroke', pointOutlineColor )
+          .attr( 'stroke-width', pointOutlineWidth )
+          .style( 'opacity', 0 );
+
+        const fullSize = Math.PI * Math.pow( pointSize, 2 );
+        const symbolGenerator = d3.symbol().type(
+          pointShape === 'square' ? d3.symbolSquare :
+            pointShape === 'diamond' ? d3.symbolDiamond :
+              pointShape === 'triangle' ? d3.symbolTriangle :
+                d3.symbolCircle
+        );
+
+        // Update all dots (existing + new)
+        ( ( dots as any ).merge( dotsEnter ) )
+          .transition()
+          .duration( 500 )
+          .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+          .style( 'opacity', 1 )
+          .attrTween( 'd', () => {
+            const i = d3.interpolate( 0, fullSize );
+            return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
+          } );
+      } else {
+        g.selectAll( `.dot-${ index }` ).remove();
+      }
+    } );
+
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, fillOpacity, xAxisScaleType, innerHeight ] );
+
+  return <g ref={ gRef } className="area-chart-content" />;
+};
+
 export function AreaChart( {
   data,
   labelKey,
@@ -126,13 +281,8 @@ export function AreaChart( {
   // Y Axis
   yAxis = DEFAULT_Y_AXIS_CONFIG,
 }: AreaChartProps ) {
-  const svgRef = useRef<SVGSVGElement>( null );
-  const previousZoomDomainRef = useRef<any>( null );
-
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
-  const setZoomDomain = useChartStore( ( state ) => state.setZoomDomain );
-  const showZoomControls = useChartStore( ( state ) => state.showZoomControls );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
 
   // Visual settings
@@ -145,15 +295,10 @@ export function AreaChart( {
   const pointColor = useChartStore( ( state ) => state.pointColor );
   const pointOutlineWidth = useChartStore( ( state ) => state.pointOutlineWidth );
   const pointOutlineColor = useChartStore( ( state ) => state.pointOutlineColor );
-  // Area settings are passed as props or store? 
-  // LineChart uses store for showArea/areaOpacity. AreaChart has fillOpacity prop.
-  // We should probably respect the prop but maybe allow store override?
-  // For now, let's stick to the prop for opacity as it's specific to AreaChart, 
-  // but we could also use the store's areaOpacity if we wanted to unify.
-  // Let's use the store's areaOpacity if available, or fallback to prop.
+
+  // Use store opacity if available, otherwise prop
   const storeAreaOpacity = useChartStore( ( state ) => state.areaOpacity );
   const effectiveFillOpacity = storeAreaOpacity ?? fillOpacity;
-
 
   // Automatically infer and set X-axis scale type when data or labelKey changes
   useEffect( () => {
@@ -163,38 +308,45 @@ export function AreaChart( {
     const inferredType = inferScaleType( values );
 
     // Only update if the inferred type is different to avoid unnecessary re-renders
+    // We use the store action directly
     setXAxisScaleType( inferredType );
   }, [ data, labelKey, setXAxisScaleType ] );
 
-  // 1. Calculate Dimensions using utility function
-  const { innerWidth, innerHeight, margin: chartMargin } = useMemo( () => {
-    return calculateChartMargins( {
-      width: propWidth,
-      height: propHeight,
-      legendShow,
-      legendPosition,
-      xAxisShow,
-      xAxisPosition,
-      xAxisTitlePadding,
-      xAxisLabelSpacing,
-      yAxis
-    } );
-  }, [
+  // Chart dimensions
+  const margin = useMemo( () => calculateChartMargins( {
+    width: propWidth,
+    height: propHeight,
+    legendShow,
+    legendPosition,
+    xAxisShow,
+    xAxisPosition,
+    xAxisTitlePadding,
+    xAxisLabelSpacing,
+    xAxisTickSize,
+    xAxisTickPadding,
+    xAxisLabelSize,
+    xAxisTitleSize,
+    yAxis
+  } ), [
     propWidth, propHeight, legendShow, legendPosition,
     xAxisShow, xAxisPosition, xAxisTitlePadding, xAxisLabelSpacing,
+    xAxisTickSize, xAxisTickPadding, xAxisLabelSize, xAxisTitleSize,
     yAxis
   ] );
 
-  // 2. Filter Data
+  const { innerWidth, innerHeight } = margin;
+
+  // Filter Data
   const filteredData = useMemo( () => {
     if ( !zoomDomain?.x ) return data;
     const [ xMin, xMax ] = zoomDomain.x;
     return data.filter( ( d, i ) => {
+      // For point scale, we use indices
       return i >= xMin && i <= xMax;
     } );
   }, [ data, zoomDomain?.x ] );
 
-  // 3. Create Scales
+  // Create Scales
   const xScale = useMemo( () => {
     let domainValues: any[];
     if ( xAxisScaleType === 'linear' ) {
@@ -205,430 +357,110 @@ export function AreaChart( {
       domainValues = filteredData.map( ( d ) => String( d[ labelKey ] ) );
     }
 
-    return createScale( xAxisScaleType, {
-      domain: domainValues,
-      range: [ 0, innerWidth ],
-      padding: 0.5 // for point/band scales
-    } );
+    return createScale(
+      ( xAxisScaleType || 'point' ) as any,
+      {
+        domain: domainValues,
+        range: [ 0, innerWidth ],
+        padding: 0.5,
+      }
+    ) as d3.ScalePoint<string> | d3.ScaleLinear<number, number>;
   }, [ filteredData, labelKey, xAxisScaleType, innerWidth ] );
 
   const yScale = useMemo( () => {
-    const yMin = yAxis.min !== null ? yAxis.min : 0;
-    const yMax = yAxis.max !== null ? yAxis.max : ( d3.max( filteredData, ( d ) =>
+    // Calculate Y domain
+    let yMin = yAxis.min !== null ? yAxis.min : 0;
+    let yMax = yAxis.max !== null ? yAxis.max : ( d3.max( filteredData, ( d ) =>
       Math.max( ...valueKeys.map( ( key ) => Number( d[ key ] ) || 0 ) )
     ) || 0 );
+
+    // Apply zoom domain to Y if it exists
+    if ( zoomDomain?.y ) {
+      [ yMin, yMax ] = zoomDomain.y;
+    }
 
     const scale = d3.scaleLinear()
       .domain( [ yMin, yMax ] )
       .range( [ innerHeight, 0 ] );
 
-    if ( yAxis.min === null && yAxis.max === null ) {
+    // Only apply nice() if not using custom domain and not zoomed
+    if ( yAxis.min === null && yAxis.max === null && !zoomDomain?.y ) {
       scale.nice();
     }
 
     return scale;
-  }, [ filteredData, valueKeys, yAxis.min, yAxis.max, innerHeight ] );
-
-  // Helper to get X position (uses utility)
-  const getXPosition = ( d: any ) => {
-    return getXPositionHelper( d, labelKey, xScale, xAxisScaleType );
-  };
-
-  // Render Chart
-  useEffect( () => {
-    if ( !svgRef.current || !xScale || !yScale ) return;
-
-    // Check if this is a zoom update (smooth transition) vs full redraw
-    const isZoomUpdate = previousZoomDomainRef.current !== null &&
-      JSON.stringify( previousZoomDomainRef.current ) !== JSON.stringify( zoomDomain );
-
-    // Update the ref for next render
-    previousZoomDomainRef.current = zoomDomain;
-
-    // Transition duration
-    const transitionDuration = isZoomUpdate ? 500 : 0;
-
-    const svg = d3.select( svgRef.current );
-
-    // If it's a zoom update, just update the existing elements
-    if ( isZoomUpdate ) {
-      const g = svg.select( 'g.main-group' );
-
-      // Check if main-group exists (might not exist after chart type change)
-      if ( g.empty() ) {
-        // Main group doesn't exist, do a full redraw instead
-        svg.selectAll( '*' ).remove();
-        previousZoomDomainRef.current = null;
-        // Continue to full render below
-      } else {
-        const contentGroup = g.select( 'g.content-group' );
-
-        // Update areas and lines with transition
-        valueKeys.forEach( ( key, index ) => {
-          const color = colors[ index % colors.length ];
-
-          const area = d3
-            .area<any>()
-            .x( ( d ) => getXPosition( d ) )
-            .y0( innerHeight )
-            .y1( ( d ) => yScale( Number( d[ key ] ) ) );
-
-          if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
-          if ( curveType === 'step' ) area.curve( d3.curveStep );
-          if ( curveType === 'linear' ) area.curve( d3.curveLinear );
-
-          // Update area path with transition
-          contentGroup.select( `path.area-${ index }` )
-            .datum( filteredData )
-            .transition()
-            .duration( transitionDuration )
-            .ease( d3.easeCubicInOut )
-            .attr( 'd', area( filteredData ) );
-
-          // Update line
-          const line = d3
-            .line<any>()
-            .x( ( d ) => getXPosition( d ) )
-            .y( ( d ) => yScale( Number( d[ key ] ) ) );
-
-          if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
-          if ( curveType === 'step' ) line.curve( d3.curveStep );
-          if ( curveType === 'linear' ) line.curve( d3.curveLinear );
-
-          contentGroup.select( `path.line-${ index }` )
-            .datum( filteredData )
-            .transition()
-            .duration( transitionDuration )
-            .ease( d3.easeCubicInOut )
-            .attr( 'd', line( filteredData ) );
-
-          // Update dots with transition
-          if ( showPoints ) {
-            const dots = contentGroup.selectAll( `.dot-${ index }` )
-              .data( filteredData );
-
-            // Exit old dots
-            dots.exit()
-              .transition()
-              .duration( 100 )
-              .style( 'opacity', 0 )
-              .remove();
-
-            // Enter new dots
-            const dotsEnter = dots.enter()
-              .append( 'path' )
-              .attr( 'class', `dot-${ index }` )
-              .attr( 'fill', pointColor || color )
-              .attr( 'stroke', pointOutlineColor )
-              .attr( 'stroke-width', pointOutlineWidth )
-              .style( 'opacity', 0 );
-
-            const fullSize = Math.PI * Math.pow( pointSize, 2 );
-            const symbolGenerator = d3.symbol().type(
-              pointShape === 'square' ? d3.symbolSquare :
-                pointShape === 'diamond' ? d3.symbolDiamond :
-                  pointShape === 'triangle' ? d3.symbolTriangle :
-                    d3.symbolCircle
-            );
-
-            // Update all dots (existing + new)
-            ( ( dots as any ).merge( dotsEnter ) )
-              .transition()
-              .duration( 100 )
-              .style( 'opacity', 0 )
-              .on( 'end', function ( this: any, d: any, i: number ) {
-                d3.select( this )
-                  .attr( 'transform', `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-                  .transition()
-                  .delay( i * 2 )
-                  .duration( 250 )
-                  .ease( d3.easeBackOut )
-                  .style( 'opacity', 1 )
-                  .attrTween( 'd', () => {
-                    const i = d3.interpolate( 0, fullSize );
-                    return ( t ) => symbolGenerator.size( i( t ) )() || '';
-                  } );
-              } );
-          }
-        } );
-
-        // Update axes by re-rendering them
-        // Axes and grids are updated in place
-        // Axis helper functions are idempotent and handle their own text elements
-        // g.selectAll( 'text' ).remove();
-
-        // Re-render X Grid
-        renderXGrid( g as any, {
-          xScale,
-          innerWidth,
-          innerHeight,
-          xAxisShowGrid,
-          xAxisGridColor,
-          xAxisGridWidth,
-          xAxisGridOpacity,
-          xAxisGridDashArray,
-          xAxisTickCount
-        } );
-
-        // Re-render Y Grid
-        renderYGrid( g as any, {
-          yScale,
-          innerWidth,
-          innerHeight,
-          yAxis
-        } );
-
-        // Re-render X Axis
-        if ( xAxisShow && xAxisPosition !== 'hidden' ) {
-          renderXAxis( g as any, {
-            xScale,
-            innerWidth,
-            innerHeight,
-            xAxisShow,
-            xAxisPosition,
-            xAxisTickSize,
-            xAxisTickPadding,
-            xAxisTickCount,
-            xAxisTickFormat,
-            xAxisScaleType,
-            xAxisLabelSize,
-            xAxisLabelWeight,
-            xAxisLabelColor,
-            xAxisLabelRotation,
-            xAxisLabelSpacing,
-            xAxisTitle,
-            xAxisTitleSize,
-            xAxisTitleWeight,
-            xAxisTitleColor,
-            xAxisTitlePadding,
-            xAxisName,
-            yAxisPosition: yAxis.position,
-            xAxisShowDomain
-          } );
-        }
-
-        // Re-initialize brush zoom
-        setupBrushZoom( {
-          g: g as any,
-          innerWidth,
-          innerHeight,
-          data,
-          labelKey,
-          valueKeys,
-          setZoomDomain
-        } );
-
-        // Setup Pan
-        setupPan( {
-          g: g as any,
-          innerWidth,
-          innerHeight,
-          data,
-          zoomDomain: zoomDomain as any,
-          setZoomDomain,
-          valueKeys
-        } );
-
-        // Re-render Y Axis
-        renderYAxis( g as any, {
-          yScale,
-          innerWidth,
-          innerHeight,
-          yAxis,
-          xAxisPosition
-        } );
-
-        return; // Skip the rest of the rendering
-      }
-    }
-
-    svg.selectAll( '*' ).remove();
-
-    // Set viewBox for responsiveness
-    svg
-      .attr( 'viewBox', `0 0 ${ propWidth } ${ propHeight }` )
-      .attr( 'preserveAspectRatio', 'xMidYMid meet' );
-
-    // Clip Path (using utility)
-    const clipId = createClipPath( svg, innerWidth, innerHeight );
-
-    const g = svg
-      .append( 'g' )
-      .attr( 'class', 'main-group' )
-      .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
-
-    // X Grid (using utility)
-    renderXGrid( g, {
-      xScale,
-      innerWidth,
-      innerHeight,
-      xAxisShowGrid,
-      xAxisGridColor,
-      xAxisGridWidth,
-      xAxisGridOpacity,
-      xAxisGridDashArray,
-      xAxisTickCount
-    } );
-
-    // Y Grid (using utility)
-    renderYGrid( g, {
-      yScale,
-      innerWidth,
-      innerHeight,
-      yAxis
-    } );
-
-    // Areas and Lines (Clipped)
-    const contentGroup = g.append( 'g' )
-      .attr( 'class', 'content-group' )
-      .attr( 'clip-path', `url(#${ clipId })` );
-
-    valueKeys.forEach( ( key, index ) => {
-      const color = colors[ index % colors.length ];
-
-      // Area generator
-      const area = d3.area<any>()
-        .x( ( d ) => getXPosition( d ) )
-        .y0( innerHeight )
-        .y1( ( d ) => yScale( Number( d[ key ] ) ) );
-
-      if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
-      if ( curveType === 'step' ) area.curve( d3.curveStep );
-      if ( curveType === 'linear' ) area.curve( d3.curveLinear );
-
-      // Line generator
-      const line = d3.line<any>()
-        .x( ( d ) => getXPosition( d ) )
-        .y( ( d ) => yScale( Number( d[ key ] ) ) );
-
-      if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
-      if ( curveType === 'step' ) line.curve( d3.curveStep );
-      if ( curveType === 'linear' ) line.curve( d3.curveLinear );
-
-      // Draw Area
-      contentGroup.append( 'path' )
-        .attr( 'class', `area-${ index }` )
-        .datum( filteredData )
-        .attr( 'fill', color )
-        .attr( 'fill-opacity', effectiveFillOpacity )
-        .attr( 'd', area( filteredData ) );
-
-      // Draw Line
-      contentGroup.append( 'path' )
-        .attr( 'class', `line-${ index }` )
-        .datum( filteredData )
-        .attr( 'fill', 'none' )
-        .attr( 'stroke', color )
-        .attr( 'stroke-width', lineWidth )
-        .attr( 'stroke-dasharray', lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0' )
-        .attr( 'd', line( filteredData ) );
-
-      // Draw Dots
-      if ( showPoints ) {
-        contentGroup.selectAll( `.dot-${ index }` )
-          .data( filteredData )
-          .enter()
-          .append( 'path' )
-          .attr( 'class', `dot-${ index }` )
-          .attr( 'transform', ( d ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .attr( 'fill', pointColor || color )
-          .attr( 'stroke', pointOutlineColor )
-          .attr( 'stroke-width', pointOutlineWidth )
-          .attr( 'd', d3.symbol().type(
-            pointShape === 'square' ? d3.symbolSquare :
-              pointShape === 'diamond' ? d3.symbolDiamond :
-                pointShape === 'triangle' ? d3.symbolTriangle :
-                  d3.symbolCircle
-          ).size( Math.PI * Math.pow( pointSize, 2 ) ) );
-      }
-    } );
-
-    // X Axis (using utility)
-    renderXAxis( g, {
-      xScale,
-      innerWidth,
-      innerHeight,
-      xAxisShow,
-      xAxisPosition,
-      xAxisTickSize,
-      xAxisTickPadding,
-      xAxisTickCount,
-      xAxisTickFormat,
-      xAxisScaleType,
-      xAxisLabelSize,
-      xAxisLabelWeight,
-      xAxisLabelColor,
-      xAxisLabelRotation,
-      xAxisLabelSpacing,
-      xAxisTitle,
-      xAxisTitleSize,
-      xAxisTitleWeight,
-      xAxisTitleColor,
-      xAxisTitlePadding,
-      xAxisName,
-      yAxisPosition: yAxis.position,
-      xAxisShowDomain
-    } );
-
-    // Y Axis (using utility)
-    renderYAxis( g, {
-      yScale,
-      innerWidth,
-      innerHeight,
-      yAxis,
-      xAxisPosition
-    } );
-
-    // Legend (using utility)
-    renderLegend( {
-      svg,
-      width: propWidth,
-      height: propHeight,
-      chartMargin,
-      innerWidth,
-      valueKeys,
-      colors,
-      legendShow,
-      legendPosition,
-      legendAlignment,
-      legendFontSize,
-      legendGap,
-      legendPaddingTop,
-      legendPaddingRight,
-      legendPaddingBottom,
-      legendPaddingLeft
-    } );
-
-    // Brush zoom (using utility)
-    setupBrushZoom( {
-      g,
-      innerWidth,
-      innerHeight,
-      data,
-      labelKey,
-      valueKeys,
-      setZoomDomain
-    } );
-
-  }, [
-    filteredData, xScale, yScale, innerWidth, innerHeight, chartMargin,
-    colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, effectiveFillOpacity,
-    xAxisShow, xAxisShowGrid, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray,
-    yAxis, xAxisPosition, xAxisTickSize, xAxisTickPadding, xAxisTickCount, xAxisTickFormat,
-    xAxisLabelSize, xAxisLabelWeight, xAxisLabelColor, xAxisLabelRotation,
-    xAxisTitle, xAxisTitleSize, xAxisTitleWeight, xAxisTitleColor, xAxisTitlePadding,
-    legendShow, legendPosition, valueKeys
-  ] );
+  }, [ filteredData, valueKeys, yAxis.min, yAxis.max, zoomDomain?.y, innerHeight ] );
 
   return (
-    <div className='relative w-full h-full'>
-      <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data.length } />
-      <svg
-        ref={ svgRef }
-        viewBox={ `0 0 ${ propWidth } ${ propHeight }` }
-        preserveAspectRatio="xMidYMid meet"
-        className='w-full h-full overflow-visible'
+    <BaseChart
+      data={ filteredData }
+      labelKey={ labelKey }
+      valueKeys={ valueKeys }
+      width={ propWidth }
+      height={ propHeight }
+      colors={ colors }
+      colorMode={ colorMode }
+      legendShow={ legendShow }
+      legendPosition={ legendPosition }
+      legendAlignment={ legendAlignment }
+      legendFontSize={ legendFontSize }
+      legendGap={ legendGap }
+      legendPaddingTop={ legendPaddingTop }
+      legendPaddingRight={ legendPaddingRight }
+      legendPaddingBottom={ legendPaddingBottom }
+      legendPaddingLeft={ legendPaddingLeft }
+      xAxisShow={ xAxisShow }
+      xAxisTitle={ xAxisTitle }
+      xAxisName={ xAxisName }
+      xAxisShowGrid={ xAxisShowGrid }
+      xAxisShowDomain={ xAxisShowDomain }
+      xAxisTickCount={ xAxisTickCount }
+      xAxisTickSize={ xAxisTickSize }
+      xAxisTickPadding={ xAxisTickPadding }
+      xAxisLabelRotation={ xAxisLabelRotation }
+      xAxisTickFormat={ xAxisTickFormat }
+      xAxisPosition={ xAxisPosition }
+      xAxisScaleType={ xAxisScaleType }
+      xAxisMin={ xAxisMin }
+      xAxisMax={ xAxisMax }
+      xAxisTitleType={ xAxisTitleType }
+      xAxisTitleWeight={ xAxisTitleWeight }
+      xAxisTitleColor={ xAxisTitleColor }
+      xAxisTitleSize={ xAxisTitleSize }
+      xAxisTitlePadding={ xAxisTitlePadding }
+      xAxisTickPosition={ xAxisTickPosition }
+      xAxisLabelWeight={ xAxisLabelWeight }
+      xAxisLabelColor={ xAxisLabelColor }
+      xAxisLabelSize={ xAxisLabelSize }
+      xAxisLabelSpacing={ xAxisLabelSpacing }
+      xAxisGridColor={ xAxisGridColor }
+      xAxisGridWidth={ xAxisGridWidth }
+      xAxisGridOpacity={ xAxisGridOpacity }
+      xAxisGridDashArray={ xAxisGridDashArray }
+      yAxis={ yAxis }
+      xScale={ xScale }
+      yScale={ yScale }
+    >
+      <AreaChartContent
+        data={ filteredData }
+        labelKey={ labelKey }
+        valueKeys={ valueKeys }
+        xScale={ xScale }
+        yScale={ yScale }
+        colors={ colors }
+        curveType={ curveType }
+        lineWidth={ lineWidth }
+        lineStyle={ lineStyle }
+        showPoints={ showPoints }
+        pointSize={ pointSize }
+        pointShape={ pointShape }
+        pointColor={ pointColor }
+        pointOutlineWidth={ pointOutlineWidth }
+        pointOutlineColor={ pointOutlineColor }
+        fillOpacity={ effectiveFillOpacity }
+        xAxisScaleType={ xAxisScaleType }
+        innerHeight={ innerHeight }
       />
-    </div>
+    </BaseChart>
   );
 }

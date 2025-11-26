@@ -2,6 +2,8 @@ export interface BaseChartProps {
   width?: number;
   height?: number;
   colors?: string[];
+  colorMode?: 'by-column' | 'by-row';
+  colorPalette?: string;
   isFloatingPreview?: boolean;
 
   // Legend
@@ -29,6 +31,10 @@ export interface BaseChartProps {
   xAxisLabelRotation?: number;
   xAxisTickFormat?: string;
   xAxisPosition?: 'bottom' | 'top' | 'hidden';
+  xAxisScaleType?: 'linear' | 'log' | 'time' | 'band' | 'point';
+  xAxisMin?: number | null;
+  xAxisMax?: number | null;
+  xAxisTitleType?: 'auto' | 'custom';
   xAxisTitleWeight?: 'bold' | 'regular';
   xAxisTitleColor?: string;
   xAxisTitleSize?: number;

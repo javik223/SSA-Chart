@@ -30,13 +30,28 @@ export function calculateChartMargins(config: MarginConfig): ChartDimensions {
 
   // Adjust margins for axis titles and labels
   if (config.xAxisShow && config.xAxisPosition !== 'hidden') {
-    if (config.xAxisPosition === 'bottom') margin.bottom += config.xAxisTitlePadding + config.xAxisLabelSpacing;
-    if (config.xAxisPosition === 'top') margin.top += config.xAxisTitlePadding + config.xAxisLabelSpacing;
+    const xAxisTickSize = config.xAxisTickSize ?? 6;
+    const xAxisTickPadding = config.xAxisTickPadding ?? 8;
+    const xAxisLabelSize = config.xAxisLabelSize ?? 12;
+    const xAxisTitleSize = config.xAxisTitleSize ?? 12;
+
+    // Calculate total space needed:
+    // tick size + tick padding + label height + label spacing + title padding + title size
+    const labelHeight = xAxisLabelSize * 1.2; // Account for line height
+    const totalSpace = xAxisTickSize + xAxisTickPadding + labelHeight + config.xAxisLabelSpacing + config.xAxisTitlePadding + xAxisTitleSize;
+
+    if (config.xAxisPosition === 'bottom') margin.bottom += totalSpace;
+    if (config.xAxisPosition === 'top') margin.top += totalSpace;
   }
 
   if (config.yAxis.show && config.yAxis.position !== 'hidden') {
-    if (config.yAxis.position === 'left') margin.left += config.yAxis.titlePadding + config.yAxis.labelSpacing;
-    if (config.yAxis.position === 'right') margin.right += config.yAxis.titlePadding + config.yAxis.labelSpacing;
+    // Calculate total space needed for Y-axis:
+    // tick length + tick padding + estimated label width + label spacing + title padding + title size
+    const estimatedLabelWidth = (config.yAxis.labelSize || 12) * 4; // Rough estimate for numeric labels
+    const totalSpace = (config.yAxis.tickLength || 6) + (config.yAxis.tickPadding || 3) + estimatedLabelWidth + (config.yAxis.labelSpacing || 4) + (config.yAxis.titlePadding || 10) + (config.yAxis.titleSize || 12);
+
+    if (config.yAxis.position === 'left') margin.left += totalSpace;
+    if (config.yAxis.position === 'right') margin.right += totalSpace;
   }
 
   // Add edge padding

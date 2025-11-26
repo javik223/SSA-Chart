@@ -3,10 +3,10 @@
 import { useEffect, useRef, ReactNode } from 'react';
 import * as d3 from 'd3';
 import { BaseChartProps, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
-import { calculateChartLayout } from '@/utils/chartLayout';
+import { calculateChartMargins, setupPan, renderXAxis, renderYAxis, renderXGrid, renderYGrid, renderLegend } from '@/utils/chartHelpers';
 import { useChartStore } from '@/store/useChartStore';
 import { ChartZoomControls } from './ChartZoomControls';
-import { setupPan } from '@/utils/chartHelpers';
+
 
 interface BaseChartComponentProps extends BaseChartProps {
   children?: ReactNode;
@@ -47,7 +47,22 @@ export function BaseChart( {
     margin: chartMargin,
     innerWidth,
     innerHeight,
-  } = calculateChartLayout( props, width, height );
+  } = calculateChartMargins( {
+    ...props,
+    width,
+    height,
+    yAxis,
+    legendShow: props.legendShow ?? true,
+    legendPosition: props.legendPosition ?? 'right',
+    xAxisShow: props.xAxisShow ?? true,
+    xAxisPosition: props.xAxisPosition ?? 'bottom',
+    xAxisTitlePadding: props.xAxisTitlePadding ?? 35,
+    xAxisLabelSpacing: props.xAxisLabelSpacing ?? 3,
+    xAxisTickSize: props.xAxisTickSize ?? 6,
+    xAxisTickPadding: props.xAxisTickPadding ?? 3,
+    xAxisLabelSize: props.xAxisLabelSize ?? 12,
+    xAxisTitleSize: props.xAxisTitleSize ?? 12,
+  } );
 
   // Destructure props needed for rendering (excluding those handled by layout utility if not needed elsewhere)
   const {

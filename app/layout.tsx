@@ -1,13 +1,9 @@
-import type { Metadata, Viewport } from 'next';
-import localFont from 'next/font/local';
-import { Toaster } from '@/components/ui/sonner';
 import { ChartInitializer } from '@/components/ChartInitializer';
 import { AlertDialogProvider } from '@/components/ui/alert-dialog-simple';
+import { Toaster } from '@/components/ui/sonner';
 import '@/styles/globals.css';
-import { AppSidebar } from '@/components/app-sidebar';
-import { SiteHeader } from '@/components/site-header';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { html } from 'd3';
+import type { Metadata, Viewport } from 'next';
+import localFont from 'next/font/local';
 
 const canvaSans = localFont( {
   src: [
@@ -70,13 +66,8 @@ export default function RootLayout( {
         suppressHydrationWarning
       >
         <AlertDialogProvider>
+          { children }
           <ChartInitializer />
-          <SidebarProvider>
-            <AppSidebar variant='inset' />
-            <SidebarInset>
-              { children }
-            </SidebarInset>
-          </SidebarProvider>
           <Toaster />
         </AlertDialogProvider>
       </body>

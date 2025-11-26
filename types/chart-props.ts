@@ -97,5 +97,9 @@ export interface MarginConfig {
   xAxisPosition: 'bottom' | 'top' | 'hidden';
   xAxisTitlePadding: number;
   xAxisLabelSpacing: number;
+  xAxisTickSize?: number;
+  xAxisTickPadding?: number;
+  xAxisLabelSize?: number;
+  xAxisTitleSize?: number;
   yAxis: YAxisConfig;
 }

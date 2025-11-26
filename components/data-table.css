@@ -120,7 +120,7 @@
 }
 
 .data-table-chart-preview-content {
-  @apply w-full h-full p-4;
+  @apply w-full h-full;
 }
 
 .data-table-sidebar-panel {
