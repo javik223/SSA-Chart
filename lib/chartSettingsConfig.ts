@@ -7,7 +7,9 @@ export type PanelId =
   | 'lines'
   | 'labels'
   | 'divergingBar'
+  | 'divergingBar'
   | 'donut'
+  | 'radialBar'
   | 'treemap'
   | 'xAxis'
   | 'yAxis'
@@ -83,6 +85,12 @@ export const PANEL_CONFIGS: Record<PanelId, PanelConfig> = {
     title: 'Donut Options',
     description: 'Configure donut chart geometry and center content',
     keywords: ['donut', 'radius', 'angle', 'center', 'total'],
+  },
+  radialBar: {
+    id: 'radialBar',
+    title: 'Radial Bar Options',
+    description: 'Configure radial bar chart geometry and angles',
+    keywords: ['radial', 'radius', 'angle', 'inner', 'outer'],
   },
   treemap: {
     id: 'treemap',
@@ -204,6 +212,8 @@ export const CHART_SPECIFIC_PANELS: Record<string, PanelId[]> = {
   'chord': ['labels'],
   'choropleth': ['labels'],
   'bubble-map': ['labels'],
+  'radial-bar': ['radialBar', 'labels'],
+  'radial-stacked-bar': ['radialBar', 'labels'],
 };
 
 export const EXCLUDED_PANELS: Record<string, PanelId[]> = {

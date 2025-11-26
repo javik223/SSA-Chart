@@ -22,6 +22,7 @@ import { PolarAreaChart } from '@/components/charts/PolarAreaChart';
 import { RadarChart } from '@/components/charts/RadarChart';
 import { DivergingBarChart } from '@/components/charts/DivergingBarChart';
 import { TreemapChart } from '@/components/charts/TreemapChart';
+import { RadialStackedBarChart } from '@/components/charts/RadialStackedBarChart';
 
 /**
  * Register all charts
@@ -167,8 +168,23 @@ export function initializeCharts() {
       type: 'radial-bar',
       name: 'Radial bar chart',
       category: 'line-bar-pie',
-      description: 'Stacked bars arranged in a circular layout',
+      description: 'Bars arranged in a circular layout',
       component: RadialBarChart,
+      supportsMultipleSeries: true,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['radial', 'circular', 'comparison'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
+      type: 'radial-stacked-bar',
+      name: 'Radial Stacked Bar',
+      category: 'line-bar-pie',
+      description: 'Stacked bars arranged in a circular layout',
+      component: RadialStackedBarChart,
       supportsMultipleSeries: true,
       supportsAnimation: false,
       status: 'stable',

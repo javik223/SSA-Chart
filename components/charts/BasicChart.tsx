@@ -326,11 +326,6 @@ export const BasicChart = memo( function BasicChart( { isVisible = true, isFloat
         };
       } );
 
-      console.log( '[BasicChart] Pivoted Data:', JSON.stringify( {
-        rows: pivotedData.length,
-        keys: Array.from( uniqueSeries ).sort()
-      } ) );
-
       return {
         chartData: pivotedData,
         valueKeys: Array.from( uniqueSeries ).sort(),

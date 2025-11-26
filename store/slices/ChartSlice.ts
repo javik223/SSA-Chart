@@ -136,6 +136,11 @@ export const createChartSlice: StateCreator<ChartSlice, [], [], ChartSlice> = (s
       aggregationMode: 'sum',
       showOnChartControls: false,
 
+      // Reset text properties (from TextSlice)
+      chartTitle: '',
+      chartSubtitle: '',
+      chartFooter: '',
+
       // Reset data-related properties (from DataSlice)
       dataTable: null,
       data: Array(6).fill(Array(5).fill('')),

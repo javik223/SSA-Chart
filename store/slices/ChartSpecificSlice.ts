@@ -63,6 +63,22 @@ export interface ChartSpecificSlice {
 
   treemapStrokeColor: string;
   setTreemapStrokeColor: ( color: string ) => void;
+
+  // Radial Bar Chart specific settings
+  radialInnerRadius: number;
+  setRadialInnerRadius: (radius: number) => void;
+
+  radialStartAngle: number;
+  setRadialStartAngle: (angle: number) => void;
+
+  radialEndAngle: number;
+  setRadialEndAngle: (angle: number) => void;
+
+  radialPadAngle: number;
+  setRadialPadAngle: (angle: number) => void;
+
+  radialCornerRadius: number;
+  setRadialCornerRadius: (radius: number) => void;
 }
 
 export const createChartSpecificSlice: StateCreator<ChartSpecificSlice, [], [], ChartSpecificSlice> = (set) => ({
@@ -128,4 +144,20 @@ export const createChartSpecificSlice: StateCreator<ChartSpecificSlice, [], [], 
 
   treemapStrokeColor: '#ffffff',
   setTreemapStrokeColor: (color) => set({ treemapStrokeColor: color }),
+
+  // Radial Bar Chart settings
+  radialInnerRadius: 180,
+  setRadialInnerRadius: (radius) => set({ radialInnerRadius: radius }),
+
+  radialStartAngle: 0,
+  setRadialStartAngle: (angle) => set({ radialStartAngle: angle }),
+
+  radialEndAngle: 360,
+  setRadialEndAngle: (angle) => set({ radialEndAngle: angle }),
+
+  radialPadAngle: 0.01,
+  setRadialPadAngle: (angle) => set({ radialPadAngle: angle }),
+
+  radialCornerRadius: 0,
+  setRadialCornerRadius: (radius) => set({ radialCornerRadius: radius }),
 });

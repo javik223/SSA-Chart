@@ -23,6 +23,7 @@ import { YAxisSettings } from '@/components/settings/YAxisSettings';
 import { LinesSettings } from '@/components/settings/LinesSettings';
 import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
+import { RadialBarSettings } from '@/components/settings/RadialBarSettings';
 import { DivergingBarSettings } from '@/components/settings/DivergingBarSettings';
 import { TreemapSettings } from '@/components/settings/TreemapSettings';
 import { DonutSettings } from '@/components/settings/DonutSettings';
@@ -53,6 +54,7 @@ const PANEL_COMPONENTS: Record<PanelId, React.ComponentType> = {
   colors: ColorsSection,
   lines: LinesSettings,
   labels: LabelsSettings,
+  radialBar: RadialBarSettings,
   divergingBar: DivergingBarSettings,
   donut: DonutSettings,
   treemap: TreemapSettings,
@@ -98,6 +100,7 @@ export function ChartSettings() {
     'controls',
     'colors',
     'lines',
+    'radialBar',
     'divergingBar',
     'donut',
     'treemap',

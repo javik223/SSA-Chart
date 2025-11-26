@@ -80,6 +80,31 @@ export function ChartDisplay( { isVisible = true, minimal = false }: { isVisible
   // Calculate valueKeys for legend
   const valueKeys = useMemo( () => {
     if ( !data || data.length === 0 ) return [];
+
+    // Check for Series column (Long Format)
+    const seriesIndex = columnMapping.series;
+    if ( seriesIndex !== null && seriesIndex !== undefined && seriesIndex.length > 0 ) {
+      const headers = data[ 0 ];
+      const uniqueSeries = new Set<string>();
+
+      // We need to scan the data to find all unique series values
+      // This duplicates logic from BasicChart but is necessary for the external legend
+      const rows = data.slice( 1 );
+
+      seriesIndex.forEach( ( sIdx ) => {
+        const seriesKey = String( headers[ sIdx ] || `series${ sIdx }` );
+        rows.forEach( ( row ) => {
+          const series = String( row[ sIdx ] || '' );
+          if ( series ) {
+            uniqueSeries.add( `${ seriesKey }: ${ series }` );
+          }
+        } );
+      } );
+
+      return Array.from( uniqueSeries ).sort();
+    }
+
+    // Standard Wide Format
     const headers = data[ 0 ];
     return columnMapping.values.map( ( idx ) =>
       String( headers[ idx ] || `value${ idx }` )

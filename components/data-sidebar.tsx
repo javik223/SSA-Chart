@@ -586,7 +586,7 @@ export function DataSidebar() {
           </>
         ) }
 
-        { chartType === 'multi-line' && (
+        { ( chartType === 'multi-line' || chartType === 'radial-stacked-bar' ) && (
           <>
             <Separator />
             <div className='space-y-2'>

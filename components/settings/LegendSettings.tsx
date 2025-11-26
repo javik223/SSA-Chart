@@ -77,6 +77,10 @@ export function LegendSettings() {
                       value: 'left',
                       icon: <ArrowLeft className='icon-sm' />,
                     },
+                    {
+                      value: 'center',
+                      icon: <AlignCenter className='icon-sm' />,
+                    },
                   ] }
                 />
               </FormCol>
@@ -112,7 +116,7 @@ export function LegendSettings() {
             <FormGrid columns={ 2 }>
               <FormField
                 type='number'
-                label='Size'
+                label='Font Scale'
                 value={ legendFontSize }
                 onChange={ ( v ) => setLegendFontSize( v ?? 1 ) }
                 min={ 0.1 }

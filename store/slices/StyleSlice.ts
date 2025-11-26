@@ -159,8 +159,8 @@ export interface StyleSlice {
   legendShow: boolean;
   setLegendShow: (show: boolean) => void;
 
-  legendPosition: 'top' | 'right' | 'bottom' | 'left';
-  setLegendPosition: (position: 'top' | 'right' | 'bottom' | 'left') => void;
+  legendPosition: 'top' | 'right' | 'bottom' | 'left' | 'center';
+  setLegendPosition: (position: 'top' | 'right' | 'bottom' | 'left' | 'center') => void;
 
   legendAlignment: 'start' | 'center' | 'end';
   setLegendAlignment: (alignment: 'start' | 'center' | 'end') => void;

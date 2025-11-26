@@ -1,0 +1,82 @@
+@import 'tailwindcss';
+@import '../styles/theme.css';
+
+.recent-charts-loading-container {
+  @apply w-full h-48 flex items-center justify-center border rounded-lg bg-muted/10;
+}
+
+.recent-charts-loading-spinner {
+  @apply animate-spin rounded-full h-8 w-8 border-b-2 border-primary;
+}
+
+.recent-charts-container {
+  @apply space-y-4;
+}
+
+.recent-charts-header {
+  @apply flex items-center justify-between;
+}
+
+.recent-charts-title {
+  @apply text-2xl font-bold tracking-tight;
+}
+
+.recent-charts-view-all {
+  @apply text-sm text-muted-foreground hover:text-primary;
+}
+
+.recent-charts-scroll-container {
+  @apply relative w-full;
+}
+
+.recent-charts-scroll-pane {
+  @apply flex overflow-x-auto pb-6 gap-4 snap-x snap-mandatory;
+}
+
+.recent-charts-item-link {
+  @apply flex-none w-full md:w-[calc(33.333%-11px)] lg:w-[calc(20%-13px)] snap-start;
+}
+
+.recent-charts-card {
+  @apply h-full hover:border-primary transition-colors cursor-pointer overflow-hidden flex flex-col p-0;
+}
+
+.recent-charts-thumbnail-container {
+  @apply aspect-video w-full bg-muted/20 relative border-b;
+}
+
+.recent-charts-thumbnail-image {
+  @apply w-full h-40 object-cover;
+}
+
+.recent-charts-thumbnail-placeholder {
+  @apply w-full h-40 flex items-center justify-center bg-zinc-100;
+}
+
+.recent-charts-placeholder-icon {
+  @apply h-10 w-10 opacity-20;
+}
+
+.recent-charts-card-header {
+  @apply px-4;
+}
+
+.recent-charts-card-title {
+  @apply text-base line-clamp-1;
+}
+
+.recent-charts-card-description {
+  @apply text-xs text-muted-foreground line-clamp-2;
+}
+
+.recent-charts-card-content {
+  @apply px-4 pt-0 flex-1;
+}
+
+.recent-charts-card-footer {
+  @apply p-4 pt-0 text-xs text-muted-foreground flex items-center gap-2 mt-auto;
+}
+
+.recent-charts-clock-icon {
+  @apply h-3 w-3;
+}

@@ -43,6 +43,7 @@ export type LineBarPieChartType =
   | 'step-chart'
   | 'circular-barplot'
   | 'radial-bar'
+  | 'radial-stacked-bar'
   | 'polar-area'
   | 'radar';
 

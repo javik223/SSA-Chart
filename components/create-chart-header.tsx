@@ -44,7 +44,7 @@ export function CreateChartHeader() {
       resetChart();
 
       // Navigate to create page to ensure clean state
-      router.push( '/create' );
+      router.push( '/dashboard/create' );
 
       console.log( 'New chart created - all state reset' );
     }

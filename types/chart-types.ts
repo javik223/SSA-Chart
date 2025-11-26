@@ -8,7 +8,7 @@ export interface BaseChartProps {
 
   // Legend
   legendShow?: boolean;
-  legendPosition?: 'top' | 'right' | 'bottom' | 'left';
+  legendPosition?: 'top' | 'right' | 'bottom' | 'left' | 'center';
   legendAlignment?: 'start' | 'center' | 'end';
   legendFontSize?: number;
   legendGap?: number;
