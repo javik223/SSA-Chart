@@ -31,7 +31,9 @@ export function TreemapChart( {
   const svgRef = useRef<SVGSVGElement>( null );
   const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
-  // Store state
+  // Zoom state - track current zoom node
+  const [ currentZoomNode, setCurrentZoomNode ] = useState<any>( null );
+
   // Store state
   const {
     treemapTileMethod,
@@ -39,12 +41,16 @@ export function TreemapChart( {
     treemapColorMode,
     treemapCategoryLevel,
     theme,
+    columnMapping,
+    availableColumns,
   } = useChartStore( useShallow( ( state ) => ( {
     treemapTileMethod: state.treemapTileMethod,
     treemapPadding: state.treemapPadding,
     treemapColorMode: state.treemapColorMode,
     treemapCategoryLevel: state.treemapCategoryLevel,
     theme: state.theme,
+    columnMapping: state.columnMapping,
+    availableColumns: state.availableColumns,
   } ) ) );
 
   // Dimensions
@@ -294,9 +300,16 @@ export function TreemapChart( {
     return ( current.data as any ).id || ( current.data as any ).name || String( ( current.data as any )[ labelKey ] );
   };
 
+  // Initialize zoom node to root when treemapRoot changes
+  useEffect( () => {
+    if ( treemapRoot && !currentZoomNode ) {
+      setCurrentZoomNode( treemapRoot );
+    }
+  }, [ treemapRoot ] );
+
   // Render
   useEffect( () => {
-    if ( !svgRef.current || !treemapRoot ) return;
+    if ( !svgRef.current || !treemapRoot || !currentZoomNode ) return;
 
     const svg = d3.select( containerRef.current ).select( 'svg' );
 
@@ -304,6 +317,15 @@ export function TreemapChart( {
     const g = svg.select( 'g' ).empty()
       ? svg.append( 'g' ).attr( 'transform', `translate(${ margin.left },${ margin.top })` )
       : svg.select( 'g' );
+
+    // Create scales for zooming - map node coordinates to SVG space
+    const x = d3.scaleLinear()
+      .domain( [ currentZoomNode.x0, currentZoomNode.x1 ] )
+      .range( [ 0, innerWidth ] );
+
+    const y = d3.scaleLinear()
+      .domain( [ currentZoomNode.y0, currentZoomNode.y1 ] )
+      .range( [ 0, innerHeight ] );
 
     // Render all descendants to show hierarchy nesting
     const nodes = treemapRoot.descendants();
@@ -322,14 +344,38 @@ export function TreemapChart( {
 
     const t = svg.transition().duration( 750 ) as any;
 
+    // Zoom functions
+    const zoomIn = ( d: any ) => {
+      if ( !d.children ) return; // Only zoom into parent nodes
+      setCurrentZoomNode( d );
+    };
+
+    const zoomOut = () => {
+      if ( currentZoomNode.parent ) {
+        setCurrentZoomNode( currentZoomNode.parent );
+      }
+    };
+
+    // Position function - apply zoom transforms
+    const position = ( selection: any, node: any ) => {
+      selection
+        .attr( 'transform', ( d: any ) => `translate(${ x( d.x0 ) },${ y( d.y0 ) })` )
+        .select( 'rect' )
+        .attr( 'width', ( d: any ) => Math.max( 0, x( d.x1 ) - x( d.x0 ) ) )
+        .attr( 'height', ( d: any ) => Math.max( 0, y( d.y1 ) - y( d.y0 ) ) );
+    };
+
     const cell = ( g as any ).selectAll( 'g.node' )
       .data( nodes, key as any )
       .join(
         ( enter: any ) => {
           const enterG = enter.append( 'g' )
             .attr( 'class', 'node' )
-            .attr( 'transform', ( d: any ) => `translate(${ d.x0 },${ d.y0 })` )
+            .attr( 'cursor', ( d: any ) => d.children ? 'pointer' : 'default' )
             .attr( 'opacity', 0 );
+
+          // Apply initial positioning with zoom
+          enterG.call( position, currentZoomNode );
 
           enterG.append( 'rect' )
             .attr( 'id', ( d: any, i: number ) => `rect-${ i }` )
@@ -347,11 +393,27 @@ export function TreemapChart( {
 
           return enterG.call( ( enter: any ) => enter.transition( t ).attr( 'opacity', 1 ) );
         },
-        ( update: any ) => update.call( ( update: any ) => update.transition( t )
-          .attr( 'transform', ( d: any ) => `translate(${ d.x0 },${ d.y0 })` )
-          .attr( 'opacity', 1 ) ),
+        ( update: any ) => update.call( ( update: any ) => {
+          update.transition( t )
+            .attr( 'cursor', ( d: any ) => d.children ? 'pointer' : 'default' )
+            .call( position, currentZoomNode )
+            .attr( 'opacity', 1 );
+        } ),
         ( exit: any ) => exit.call( ( exit: any ) => exit.transition( t ).attr( 'opacity', 0 ).remove() )
       );
+
+    // Add click handlers for zoom
+    cell
+      .filter( ( d: any ) => d.children )
+      .on( 'click', ( event: any, d: any ) => {
+        // Don't zoom if this is the current zoom node (clicking the header)
+        if ( d === currentZoomNode && currentZoomNode.parent ) {
+          zoomOut();
+        } else if ( d.children ) {
+          zoomIn( d );
+        }
+        event.stopPropagation();
+      } );
 
     // Update Rects (for both enter and update selections)
     cell.select( 'rect' )
@@ -441,6 +503,20 @@ export function TreemapChart( {
                   { value.toLocaleString() }
                 </span>
               </div>
+              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                  { columnMapping.customPopups.map( ( colIndex: number ) => {
+                    const colName = availableColumns[ colIndex ];
+                    const val = ( d.data as any )[ colName ];
+                    return (
+                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                        <span className="text-muted-foreground">{ colName }:</span>
+                        <span className="font-medium">{ String( val ) }</span>
+                      </div>
+                    );
+                  } ) }
+                </div>
+              ) }
             </div>
           </div>,
           event.pageX,
@@ -526,10 +602,53 @@ export function TreemapChart( {
         return node.depth === 1 ? 'uppercase' : 'none';
       } );
 
-  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor, showTooltip, hideTooltip, tooltipState.content ] );
+  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor, showTooltip, hideTooltip, tooltipState.content, currentZoomNode ] );
+
+  // Build breadcrumb path
+  const breadcrumbPath = useMemo( () => {
+    if ( !currentZoomNode ) return [];
+    const path: any[] = [];
+    let node = currentZoomNode;
+    while ( node ) {
+      path.unshift( node );
+      node = node.parent;
+    }
+    return path;
+  }, [ currentZoomNode ] );
 
   return (
     <div className='relative w-full h-full flex flex-col' ref={ containerRef }>
+      {/* Breadcrumb Navigation */ }
+      { currentZoomNode && currentZoomNode !== treemapRoot && (
+        <div className="flex items-center gap-2 mb-2 text-xs">
+          <button
+            onClick={ () => setCurrentZoomNode( treemapRoot ) }
+            className="px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Root
+          </button>
+          { breadcrumbPath.slice( 1, -1 ).map( ( node: any, i: number ) => (
+            <div key={ i } className="flex items-center gap-2">
+              <span className="text-zinc-400">/</span>
+              <button
+                onClick={ () => setCurrentZoomNode( node ) }
+                className="px-2 py-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                { ( node.data as any ).name || ( node.data as any )[ labelKey ] || 'Node' }
+              </button>
+            </div>
+          ) ) }
+          { breadcrumbPath.length > 1 && (
+            <>
+              <span className="text-zinc-400">/</span>
+              <span className="px-2 py-1 font-medium text-zinc-900 dark:text-zinc-100">
+                { ( currentZoomNode.data as any ).name || ( currentZoomNode.data as any )[ labelKey ] || 'Current' }
+              </span>
+            </>
+          ) }
+        </div>
+      ) }
+
       {/* Custom Legend for Category Mode */ }
       { treemapColorMode === 'category' && root && (
         <div className="flex flex-wrap justify-start items-start gap-4 mb-2">

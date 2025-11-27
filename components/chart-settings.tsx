@@ -24,6 +24,7 @@ import { LinesSettings } from '@/components/settings/LinesSettings';
 import { LegendSettings } from '@/components/settings/LegendSettings';
 import { LabelsSettings } from '@/components/settings/LabelsSettings';
 import { RadialBarSettings } from '@/components/settings/RadialBarSettings';
+import { RadialAreaSettings } from '@/components/settings/RadialAreaSettings';
 import { DivergingBarSettings } from '@/components/settings/DivergingBarSettings';
 import { TreemapSettings } from '@/components/settings/TreemapSettings';
 import { DonutSettings } from '@/components/settings/DonutSettings';
@@ -36,7 +37,7 @@ import { AnimationSettings } from '@/components/settings/AnimationSettings';
 import { PlotBackgroundSettings } from '@/components/settings/PlotBackgroundSettings';
 import { NumberFormattingSettings } from '@/components/settings/NumberFormattingSettings';
 import { AnnotationsSettings } from '@/components/settings/AnnotationsSettings';
-import { PopupsSettings } from '@/components/settings/PopupsSettings';
+import { TooltipSettings } from '@/components/settings/TooltipSettings';
 import { ControlsSettings } from '@/components/settings/ControlsSettings';
 import {
   PANEL_CONFIGS,
@@ -55,6 +56,7 @@ const PANEL_COMPONENTS: Record<PanelId, React.ComponentType> = {
   lines: LinesSettings,
   labels: LabelsSettings,
   radialBar: RadialBarSettings,
+  radialArea: RadialAreaSettings,
   divergingBar: DivergingBarSettings,
   donut: DonutSettings,
   treemap: TreemapSettings,
@@ -63,7 +65,7 @@ const PANEL_COMPONENTS: Record<PanelId, React.ComponentType> = {
   background: PlotBackgroundSettings,
   formatting: NumberFormattingSettings,
   legend: LegendSettings,
-  popups: PopupsSettings,
+  popups: TooltipSettings,
   annotations: AnnotationsSettings,
   animations: AnimationSettings,
   zoom: ZoomSettings,
@@ -101,6 +103,7 @@ export function ChartSettings() {
     'colors',
     'lines',
     'radialBar',
+    'radialArea',
     'divergingBar',
     'donut',
     'treemap',

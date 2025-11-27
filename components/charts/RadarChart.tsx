@@ -3,6 +3,9 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { useChartStore } from '@/store/useChartStore';
 
 interface RadarChartProps {
   data: Array<Record<string, string | number>>;
@@ -32,6 +35,9 @@ export function RadarChart( {
   labelFontWeight = 'normal',
 }: RadarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
   useEffect( () => {
     if ( !svgRef.current || !data || data.length === 0 ) return;
@@ -121,6 +127,7 @@ export function RadarChart( {
           y: r * Math.sin( angle ),
           value: value,
           label: String( d[ labelKey ] ),
+          originalData: d,
         };
       } );
 
@@ -150,15 +157,61 @@ export function RadarChart( {
         .style( 'fill', palette[ seriesIndex % palette.length ] )
         .style( 'stroke', '#fff' )
         .style( 'stroke-width', '2px' )
-        .append( 'title' )
-        .text( d => `${ d.label } - ${ valueKey }: ${ d.value.toLocaleString() }` );
+        .on( 'mouseenter', function ( event, d ) {
+          d3.select( this ).attr( 'r', 6 );
+
+          showTooltip(
+            <div className="flex flex-col gap-1">
+              <div className="font-semibold text-xs">{ d.label }</div>
+              <div className="flex items-center gap-2 text-xs">
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={ { backgroundColor: palette[ seriesIndex % palette.length ] } }
+                />
+                <span className="text-muted-foreground">{ valueKey }:</span>
+                <span className="font-medium">
+                  { d.value.toLocaleString() }
+                </span>
+              </div>
+              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                  { columnMapping.customPopups.map( ( colIndex: number ) => {
+                    const colName = availableColumns[ colIndex ];
+                    const val = d.originalData[ colName ];
+                    return (
+                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                        <span className="text-muted-foreground">{ colName }:</span>
+                        <span className="font-medium">{ String( val ) }</span>
+                      </div>
+                    );
+                  } ) }
+                </div>
+              ) }
+            </div>,
+            event.pageX,
+            event.pageY
+          );
+        } )
+        .on( 'mousemove', ( event ) => {
+          showTooltip( tooltipState.content, event.pageX, event.pageY );
+        } )
+        .on( 'mouseleave', function () {
+          d3.select( this ).attr( 'r', 4 );
+          hideTooltip();
+        } );
     } );
 
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight ] );
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content, columnMapping, availableColumns ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <svg ref={ svgRef } style={ { maxWidth: '100%', maxHeight: '100%' } } />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
+      />
     </div>
   );
 }

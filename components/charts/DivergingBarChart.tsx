@@ -13,6 +13,8 @@ import {
   setupPanY,
 } from '@/utils/chartHelpers';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
 
 interface DivergingBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -144,8 +146,10 @@ export function DivergingBarChart( {
 }: DivergingBarChartProps ) {
 
   const svgRef = useRef<SVGSVGElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
-  // Store hooks
   // Store hooks
   const { zoomDomain, setZoomDomain } = useChartStore( useShallow( ( state ) => ( {
     zoomDomain: state.zoomDomain,
@@ -378,7 +382,49 @@ export function DivergingBarChart( {
         return d.value >= 0 ? positiveColor : negativeColor;
       } )
       .attr( 'rx', 0 ) // No rounded corners like the reference
-      .attr( 'ry', 0 );
+      .attr( 'ry', 0 )
+      .on( 'mouseenter', function ( event, d ) {
+        d3.select( this ).attr( 'opacity', 0.8 );
+
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ d.label }</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={ { backgroundColor: d.value >= 0 ? positiveColor : negativeColor } }
+              />
+              <span className="text-muted-foreground">Value:</span>
+              <span className="font-medium">
+                { d.value.toLocaleString() }
+              </span>
+            </div>
+            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                { columnMapping.customPopups.map( ( colIndex: number ) => {
+                  const colName = availableColumns[ colIndex ];
+                  const val = d.rawData[ colName ];
+                  return (
+                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-muted-foreground">{ colName }:</span>
+                      <span className="font-medium">{ String( val ) }</span>
+                    </div>
+                  );
+                } ) }
+              </div>
+            ) }
+          </div>,
+          event.pageX,
+          event.pageY
+        );
+      } )
+      .on( 'mousemove', ( event ) => {
+        showTooltip( tooltipState.content, event.pageX, event.pageY );
+      } )
+      .on( 'mouseleave', function () {
+        d3.select( this ).attr( 'opacity', 1 );
+        hideTooltip();
+      } );
 
     // Animate bars from zero
     barsMerge
@@ -608,7 +654,12 @@ export function DivergingBarChart( {
     sortBy,
     useGradientColors,
     labelPosition,
-    divergingColorScale
+    divergingColorScale,
+    showTooltip,
+    hideTooltip,
+    tooltipState.content,
+    columnMapping,
+    availableColumns
   ] );
 
   return (
@@ -623,6 +674,12 @@ export function DivergingBarChart( {
         xScale={ xScale }
         yScale={ yScale }
         dataLength={ data.length }
+      />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </div>
   );

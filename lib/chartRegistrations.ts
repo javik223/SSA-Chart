@@ -23,6 +23,8 @@ import { RadarChart } from '@/components/charts/RadarChart';
 import { DivergingBarChart } from '@/components/charts/DivergingBarChart';
 import { TreemapChart } from '@/components/charts/TreemapChart';
 import { RadialStackedBarChart } from '@/components/charts/RadialStackedBarChart';
+import { CirclePackingChart } from '@/components/charts/CirclePackingChart';
+import { RadialAreaChart } from '@/components/charts/RadialAreaChart';
 
 /**
  * Register all charts
@@ -195,6 +197,21 @@ export function initializeCharts() {
       },
     },
     {
+      type: 'radial-area',
+      name: 'Radial Area Chart',
+      category: 'line-bar-pie',
+      description: 'Area chart arranged in a circular layout showing trends around a center point',
+      component: RadialAreaChart,
+      supportsMultipleSeries: true,
+      supportsAnimation: false,
+      status: 'stable',
+      tags: ['radial', 'circular', 'area', 'trend', 'cyclical'],
+      requiredColumns: {
+        label: true,
+        value: true,
+      },
+    },
+    {
       type: 'polar-area',
       name: 'Polar area chart',
       category: 'line-bar-pie',
@@ -249,6 +266,22 @@ export function initializeCharts() {
       supportsAnimation: true,
       status: 'stable',
       tags: ['hierarchy', 'part-to-whole', 'tiling', 'nested'],
+      requiredColumns: {
+        label: true,
+        value: true,
+        category: true,
+      },
+    },
+    {
+      type: 'circle-packing',
+      name: 'Circle Packing',
+      category: 'hierarchical-network',
+      description: 'Zoomable hierarchical visualization using nested circles',
+      component: CirclePackingChart,
+      supportsMultipleSeries: false,
+      supportsAnimation: true,
+      status: 'stable',
+      tags: ['hierarchy', 'zoomable', 'nested', 'circular', 'part-to-whole'],
       requiredColumns: {
         label: true,
         value: true,

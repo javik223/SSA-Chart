@@ -13,6 +13,8 @@ import {
 } from '@/utils/chartHelpers';
 import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { ChartTooltip } from './ChartTooltip';
 
 interface LineChartProps {
   data: Array<Record<string, string | number>>;
@@ -92,6 +94,11 @@ interface LineChartContentProps {
   areaOpacity: number;
   xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
   innerHeight: number;
+  showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
+  hideTooltip: () => void;
+  tooltipState: any;
+  columnMapping: any;
+  availableColumns: string[];
 }
 
 const LineChartContent = ( {
@@ -113,7 +120,12 @@ const LineChartContent = ( {
   showArea,
   areaOpacity,
   xAxisScaleType,
-  innerHeight
+  innerHeight,
+  showTooltip,
+  hideTooltip,
+  tooltipState,
+  columnMapping,
+  availableColumns
 }: LineChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -226,6 +238,48 @@ const LineChartContent = ( {
           .attrTween( 'd', () => {
             const i = d3.interpolate( 0, fullSize );
             return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
+          } )
+          .on( 'mouseenter', ( event: any, d: any ) => {
+            d3.select( event.currentTarget ).attr( 'fill', pointOutlineColor || color ).attr( 'stroke', pointColor || color );
+
+            showTooltip(
+              <div className="flex flex-col gap-1">
+                <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
+                <div className="flex items-center gap-2 text-xs">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={ { backgroundColor: color } }
+                  />
+                  <span className="text-muted-foreground">{ key }:</span>
+                  <span className="font-medium">
+                    { Number( d[ key ] ).toLocaleString() }
+                  </span>
+                </div>
+                { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+                  <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                    { columnMapping.customPopups.map( ( colIndex: number ) => {
+                      const colName = availableColumns[ colIndex ];
+                      const val = d[ colName ];
+                      return (
+                        <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                          <span className="text-muted-foreground">{ colName }:</span>
+                          <span className="font-medium">{ String( val ) }</span>
+                        </div>
+                      );
+                    } ) }
+                  </div>
+                ) }
+              </div>,
+              event.pageX,
+              event.pageY
+            );
+          } )
+          .on( 'mousemove', ( event: any ) => {
+            showTooltip( tooltipState.content, event.pageX, event.pageY );
+          } )
+          .on( 'mouseleave', ( event: any ) => {
+            d3.select( event.currentTarget ).attr( 'fill', pointColor || color ).attr( 'stroke', pointOutlineColor );
+            hideTooltip();
           } );
       } else {
         g.selectAll( `.dot-${ index }` ).remove();
@@ -289,6 +343,9 @@ export function LineChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
   // Visual settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -463,7 +520,19 @@ export function LineChart( {
         showArea={ showArea }
         areaOpacity={ areaOpacity }
         xAxisScaleType={ xAxisScaleType }
+
         innerHeight={ innerHeight }
+        showTooltip={ showTooltip }
+        hideTooltip={ hideTooltip }
+        tooltipState={ tooltipState }
+        columnMapping={ columnMapping }
+        availableColumns={ availableColumns }
+      />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </BaseChart>
   );

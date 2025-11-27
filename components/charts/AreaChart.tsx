@@ -97,6 +97,8 @@ interface AreaChartContentProps {
   showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
   hideTooltip: () => void;
   tooltipState: any;
+  columnMapping: any;
+  availableColumns: string[];
 }
 
 const AreaChartContent = ( {
@@ -121,7 +123,9 @@ const AreaChartContent = ( {
   margin,
   showTooltip,
   hideTooltip,
-  tooltipState
+  tooltipState,
+  columnMapping,
+  availableColumns
 }: AreaChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -252,6 +256,20 @@ const AreaChartContent = ( {
                     { Number( d[ key ] ).toLocaleString() }
                   </span>
                 </div>
+                { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+                  <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                    { columnMapping.customPopups.map( ( colIndex: number ) => {
+                      const colName = availableColumns[ colIndex ];
+                      const val = d[ colName ];
+                      return (
+                        <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                          <span className="text-muted-foreground">{ colName }:</span>
+                          <span className="font-medium">{ String( val ) }</span>
+                        </div>
+                      );
+                    } ) }
+                  </div>
+                ) }
               </div>,
               x + margin.left,
               y + margin.top
@@ -330,6 +348,8 @@ export function AreaChart( {
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
   const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
   // Visual settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -510,6 +530,8 @@ export function AreaChart( {
         showTooltip={ showTooltip }
         hideTooltip={ hideTooltip }
         tooltipState={ tooltipState }
+        columnMapping={ columnMapping }
+        availableColumns={ availableColumns }
       />
       <ChartTooltip
         visible={ tooltipState.visible }

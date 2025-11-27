@@ -13,7 +13,8 @@ import { ChartDimensions, MarginConfig } from '@/types/chart-props';
  * Calculate chart margins based on legend position and axis settings
  */
 export function calculateChartMargins(config: MarginConfig): ChartDimensions {
-  const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+  // Start with minimal margins
+  const margin = { top: 10, right: 10, bottom: 10, left: 0 };
   const legendSpace = 120;
 
   // Adjust margins for legend
@@ -23,10 +24,6 @@ export function calculateChartMargins(config: MarginConfig): ChartDimensions {
     if (config.legendPosition === 'left') margin.left += legendSpace;
     if (config.legendPosition === 'right') margin.right += legendSpace;
   }
-
-  // Default margins if legend is not taking up space
-  if (config.legendPosition !== 'bottom') margin.bottom = Math.max(margin.bottom, 40);
-  if (config.legendPosition !== 'left') margin.left = Math.max(margin.left, 50);
 
   // Adjust margins for axis titles and labels
   if (config.xAxisShow && config.xAxisPosition !== 'hidden') {
@@ -38,7 +35,10 @@ export function calculateChartMargins(config: MarginConfig): ChartDimensions {
     // Calculate total space needed:
     // tick size + tick padding + label height + label spacing + title padding + title size
     const labelHeight = xAxisLabelSize * 1.2; // Account for line height
-    const totalSpace = xAxisTickSize + xAxisTickPadding + labelHeight + config.xAxisLabelSpacing + config.xAxisTitlePadding + xAxisTitleSize;
+    // Only add title space if title is present
+    const titleSpace = config.xAxisTitle ? (config.xAxisTitlePadding + xAxisTitleSize) : 0;
+    
+    const totalSpace = xAxisTickSize + xAxisTickPadding + labelHeight + config.xAxisLabelSpacing + titleSpace;
 
     if (config.xAxisPosition === 'bottom') margin.bottom += totalSpace;
     if (config.xAxisPosition === 'top') margin.top += totalSpace;
@@ -47,16 +47,24 @@ export function calculateChartMargins(config: MarginConfig): ChartDimensions {
   if (config.yAxis.show && config.yAxis.position !== 'hidden') {
     // Calculate total space needed for Y-axis:
     // tick length + tick padding + estimated label width + label spacing + title padding + title size
-    const estimatedLabelWidth = (config.yAxis.labelSize || 12) * 4; // Rough estimate for numeric labels
-    const totalSpace = (config.yAxis.tickLength || 6) + (config.yAxis.tickPadding || 3) + estimatedLabelWidth + (config.yAxis.labelSpacing || 4) + (config.yAxis.titlePadding || 10) + (config.yAxis.titleSize || 12);
+    
+    // Better estimate for label width: assume 3 chars (e.g. "100") unless specified
+    // We could make this dynamic if we had data, but this is a layout util.
+    // Let's use a tighter estimate to minimize left whitespace.
+    const estimatedLabelWidth = (config.yAxis.labelSize || 12) * 3; 
+    
+    // Only add title space if title is present
+    const titleSpace = config.yAxis.title ? ((config.yAxis.titlePadding || 10) + (config.yAxis.titleSize || 12)) : 0;
+
+    const totalSpace = (config.yAxis.tickLength || 6) + (config.yAxis.tickPadding || 3) + estimatedLabelWidth + (config.yAxis.labelSpacing || 4) + titleSpace;
 
     if (config.yAxis.position === 'left') margin.left += totalSpace;
     if (config.yAxis.position === 'right') margin.right += totalSpace;
   }
 
-  // Add edge padding
-  margin.top += config.yAxis.edgePadding;
-  margin.bottom += config.yAxis.edgePadding;
+  // Add edge padding (minimal)
+  margin.top += (config.yAxis.edgePadding || 0);
+  margin.bottom += (config.yAxis.edgePadding || 0);
 
   return {
     width: config.width,

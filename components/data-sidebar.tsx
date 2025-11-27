@@ -95,7 +95,7 @@ export function DataSidebar() {
   };
 
   const handleCustomPopupsSelect = ( index: number | number[] | null ) => {
-    setColumnMapping( { customPopups: index as number } );
+    setColumnMapping( { customPopups: index as number[] } );
   };
 
   const handleCategoriesSelect = ( index: number | number[] | null ) => {
@@ -708,11 +708,13 @@ export function DataSidebar() {
             <ColumnSelector
               availableColumns={ availableColumns }
               selectedColumns={ columnMapping.customPopups }
-              onSelect={ handleCustomPopupsSelect }
-              mode='single'
-              placeholder=''
+              onSelect={ ( index ) =>
+                setColumnMapping( { customPopups: index as number[] } )
+              }
+              mode='multiple'
+              placeholder='Select columns'
               color='cyan'
-              compact
+              allowClear
             />
           </div>
 

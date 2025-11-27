@@ -3,6 +3,9 @@
 import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
+import { ChartTooltip } from './ChartTooltip';
+import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { useChartStore } from '@/store/useChartStore';
 
 interface SunburstChartProps {
   data: Array<Record<string, string | number>>;
@@ -41,6 +44,9 @@ export function SunburstChart( {
   labelFontWeight = 'normal',
 }: SunburstChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
+  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const columnMapping = useChartStore( ( state ) => state.columnMapping );
+  const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
   // 1. Process Data into Hierarchy
   const hierarchyData = useMemo( () => {
@@ -136,10 +142,58 @@ export function SunburstChart( {
       .attr( 'd', ( d: any ) => arc( d.current ) );
 
     path.style( 'cursor', 'pointer' )
-      .on( 'click', clicked );
+      .on( 'click', clicked )
+      .on( 'mouseenter', ( event, d ) => {
+        d3.select( event.currentTarget ).attr( 'fill-opacity', 0.8 );
 
-    path.append( 'title' )
-      .text( ( d ) => `${ d.ancestors().map( ( d ) => d.data.name ).reverse().join( '/' ) }\n${ d.value?.toLocaleString() }` );
+        const label = d.ancestors().map( ( d ) => d.data.name ).reverse().join( '/' ).replace( 'root/', '' );
+        const value = d.value || 0;
+        const color = colorScale( d.depth > 1 ? d.parent!.data.name : d.data.name ) as string;
+
+        showTooltip(
+          <div className="flex flex-col gap-1">
+            <div className="font-semibold text-xs">{ label }</div>
+            <div className="flex items-center gap-2 text-xs">
+              <div
+                className="w-2 h-2 rounded-full"
+                style={ { backgroundColor: color } }
+              />
+              <span className="text-muted-foreground">Value:</span>
+              <span className="font-medium">
+                { value.toLocaleString() }
+              </span>
+            </div>
+            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                { columnMapping.customPopups.map( ( colIndex: number ) => {
+                  const colName = availableColumns[ colIndex ];
+                  // Try to find matching data in original data
+                  // This is tricky for hierarchical data, we might need to rely on leaf nodes or name matching
+                  // For Sunburst, d.data.name is the segment name.
+                  // If it's a leaf, we might find it.
+                  const originalData = data.find( item => String( item[ labelKey ] ).endsWith( d.data.name ) );
+                  const val = originalData ? originalData[ colName ] : '';
+                  return (
+                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-muted-foreground">{ colName }:</span>
+                      <span className="font-medium">{ String( val ) }</span>
+                    </div>
+                  );
+                } ) }
+              </div>
+            ) }
+          </div>,
+          event.pageX,
+          event.pageY
+        );
+      } )
+      .on( 'mousemove', ( event ) => {
+        showTooltip( tooltipState.content, event.pageX, event.pageY );
+      } )
+      .on( 'mouseleave', ( event ) => {
+        d3.select( event.currentTarget ).attr( 'fill-opacity', ( d: any ) => d.children ? 0.6 : 1.0 );
+        hideTooltip();
+      } );
 
     // Labels
     const label = svg.append( 'g' )
@@ -207,7 +261,7 @@ export function SunburstChart( {
       return `rotate(${ x - 90 }) translate(${ y },0) rotate(${ x < 180 ? 0 : 180 })`;
     }
 
-  }, [ hierarchyData, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight ] );
+  }, [ hierarchyData, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content, columnMapping, availableColumns ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">
@@ -216,6 +270,12 @@ export function SunburstChart( {
         width={ propWidth }
         height={ propHeight }
         style={ { maxWidth: '100%', maxHeight: '100%' } }
+      />
+      <ChartTooltip
+        visible={ tooltipState.visible }
+        x={ tooltipState.x }
+        y={ tooltipState.y }
+        content={ tooltipState.content }
       />
     </div>
   );

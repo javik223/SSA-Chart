@@ -57,8 +57,8 @@ export function DataTable() {
   // Set initial position for chart preview (client-side only)
   useEffect( () => {
     setChartPreviewPosition( {
-      x: window.innerWidth - 520,
-      y: window.innerHeight - 420,
+      x: window.innerWidth - 300 - 20,
+      y: window.innerHeight - 260 - 20,
     } );
   }, [] );
 
@@ -253,8 +253,9 @@ export function DataTable() {
           } }
           minWidth={ 300 }
           minHeight={ 240 }
-          className='data-table-chart-preview right-4! bottom-4! h-max'
-          style={ { position: 'absolute' } }
+          className='data-table-chart-preview h-max'
+          style={ { position: 'fixed', zIndex: 50 } }
+          bounds="window"
         >
           <div className='data-table-chart-preview-content'>
             <ChartDisplay isVisible={ true } minimal={ true } />

@@ -125,7 +125,7 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
           series: adjustIndices(columnMapping.series),
           chartsGrid: adjustIndex(columnMapping.chartsGrid),
           rowFilter: adjustIndex(columnMapping.rowFilter),
-          customPopups: adjustIndex(columnMapping.customPopups),
+          customPopups: adjustIndices(columnMapping.customPopups),
           categories: adjustIndices(columnMapping.categories),
           values: columnMapping.values
             .filter((idx) => !(idx >= deletedIndex && idx < deletedEndIndex)) // Remove deleted values
@@ -157,7 +157,7 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
               : null,
           customPopups:
             columnMapping.customPopups !== null &&
-            columnMapping.customPopups <= maxIndex
+            columnMapping.customPopups.every(c => c <= maxIndex)
               ? columnMapping.customPopups
               : null,
           categories:
@@ -230,7 +230,7 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
   },
 
   // Initial column mapping
-  columnMapping: { labels: null, values: [], series: null, chartsGrid: null, rowFilter: null, customPopups: null, categories: null },
+  columnMapping: { labels: null, values: [], series: null, chartsGrid: null, rowFilter: null, customPopups: [], categories: null },
 
   setColumnMapping: (mapping) =>
     set((state) => ({
@@ -250,7 +250,7 @@ export const createDataSlice: StateCreator<DataSlice, [], [], DataSlice> = (set,
           series: null,
           chartsGrid: null,
           rowFilter: null,
-          customPopups: null,
+          customPopups: [],
           categories: null,
         },
       });

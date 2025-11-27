@@ -6,6 +6,6 @@ export interface ColumnMapping {
   series: number[] | null; // Column indices for series (for long-format data) - supports multiple
   chartsGrid: number | null;
   rowFilter: number | null;
-  customPopups: number | null;
+  customPopups: number[] | null;
   categories: number[] | null;
 }

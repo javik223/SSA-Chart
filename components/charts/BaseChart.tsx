@@ -53,7 +53,7 @@ export function BaseChart( {
     height,
     yAxis,
     legendShow: props.legendShow ?? true,
-    legendPosition: props.legendPosition ?? 'right',
+    legendPosition: ( props.legendPosition ?? 'right' ) as 'top' | 'right' | 'bottom' | 'left',
     xAxisShow: props.xAxisShow ?? true,
     xAxisPosition: props.xAxisPosition ?? 'bottom',
     xAxisTitlePadding: props.xAxisTitlePadding ?? 35,
@@ -555,9 +555,9 @@ export function BaseChart( {
 
       <svg
         ref={ svgRef }
-        width={ width }
-        height={ height }
-        style={ { display: 'block', overflow: 'hidden' } }
+        viewBox={ `0 0 ${ width } ${ height }` }
+        preserveAspectRatio="xMidYMid meet"
+        style={ { width: '100%', height: '100%', display: 'block', overflow: 'visible' } }
       >
         <defs>
           <clipPath id={ clipId }>

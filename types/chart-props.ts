@@ -101,5 +101,6 @@ export interface MarginConfig {
   xAxisTickPadding?: number;
   xAxisLabelSize?: number;
   xAxisTitleSize?: number;
+  xAxisTitle?: string;
   yAxis: YAxisConfig;
 }

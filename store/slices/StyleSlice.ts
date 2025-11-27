@@ -210,6 +210,31 @@ export interface StyleSlice {
 
   labelPadding: number;
   setLabelPadding: (padding: number) => void;
+
+  // Tooltip settings
+  tooltipShow: boolean;
+  setTooltipShow: (show: boolean) => void;
+
+  tooltipBackgroundColor: string;
+  setTooltipBackgroundColor: (color: string) => void;
+
+  tooltipTextColor: string;
+  setTooltipTextColor: (color: string) => void;
+
+  tooltipBorderRadius: number;
+  setTooltipBorderRadius: (radius: number) => void;
+
+  tooltipPadding: number;
+  setTooltipPadding: (padding: number) => void;
+
+  tooltipShowArrow: boolean;
+  setTooltipShowArrow: (show: boolean) => void;
+
+  tooltipTitleMode: 'label' | 'custom';
+  setTooltipTitleMode: (mode: 'label' | 'custom') => void;
+
+  tooltipCustomTitle: string;
+  setTooltipCustomTitle: (title: string) => void;
 }
 
 export const createStyleSlice: StateCreator<StyleSlice, [], [], StyleSlice> = (set) => ({
@@ -413,4 +438,29 @@ export const createStyleSlice: StateCreator<StyleSlice, [], [], StyleSlice> = (s
 
   labelPadding: 4,
   setLabelPadding: (padding) => set({ labelPadding: padding }),
+
+  // Tooltip settings
+  tooltipShow: true,
+  setTooltipShow: (show) => set({ tooltipShow: show }),
+
+  tooltipBackgroundColor: '#ffffff',
+  setTooltipBackgroundColor: (color) => set({ tooltipBackgroundColor: color }),
+
+  tooltipTextColor: '#000000',
+  setTooltipTextColor: (color) => set({ tooltipTextColor: color }),
+
+  tooltipBorderRadius: 4,
+  setTooltipBorderRadius: (radius) => set({ tooltipBorderRadius: radius }),
+
+  tooltipPadding: 8,
+  setTooltipPadding: (padding) => set({ tooltipPadding: padding }),
+
+  tooltipShowArrow: false,
+  setTooltipShowArrow: (show) => set({ tooltipShowArrow: show }),
+
+  tooltipTitleMode: 'label',
+  setTooltipTitleMode: (mode) => set({ tooltipTitleMode: mode }),
+
+  tooltipCustomTitle: '',
+  setTooltipCustomTitle: (title) => set({ tooltipCustomTitle: title }),
 });

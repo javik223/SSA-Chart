@@ -91,7 +91,6 @@ export function MultiLineChart( {
   const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
 
   // Store hooks
-  // Store hooks
   const {
     setXAxisScaleType,
     curveType,
@@ -107,6 +106,8 @@ export function MultiLineChart( {
     areaOpacity,
     zoomDomain,
     setZoomDomain,
+    columnMapping,
+    availableColumns,
   } = useChartStore( useShallow( ( state ) => ( {
     setXAxisScaleType: state.setXAxisScaleType,
     curveType: state.curveType,
@@ -122,6 +123,8 @@ export function MultiLineChart( {
     areaOpacity: state.areaOpacity,
     zoomDomain: state.zoomDomain,
     setZoomDomain: state.setZoomDomain,
+    columnMapping: state.columnMapping,
+    availableColumns: state.availableColumns,
   } ) ) );
 
   // Automatically infer and set X-axis scale type
@@ -526,6 +529,20 @@ export function MultiLineChart( {
                 { Number( closestSeries.val ).toLocaleString() }
               </span>
             </div>
+            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
+              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
+                { columnMapping.customPopups.map( ( colIndex ) => {
+                  const colName = availableColumns[ colIndex ];
+                  const val = d[ colName ];
+                  return (
+                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
+                      <span className="text-muted-foreground">{ colName }:</span>
+                      <span className="font-medium">{ String( val ) }</span>
+                    </div>
+                  );
+                } ) }
+              </div>
+            ) }
           </div>,
           tooltipX,
           tooltipY
