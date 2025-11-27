@@ -1,22 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useChartStore } from '@/store/useChartStore';
+import { useShallow } from 'zustand/react/shallow';
+import { useTooltipState } from '@/hooks/useTooltip';
 
 interface ChartTooltipProps {
-  x: number;
-  y: number;
-  content: React.ReactNode;
-  visible: boolean;
   className?: string;
 }
 
-import { useChartStore } from '@/store/useChartStore';
-import { useShallow } from 'zustand/react/shallow';
-
-import { createPortal } from 'react-dom';
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-
-export function ChartTooltip( { x, y, content, visible, className }: ChartTooltipProps ) {
+export function ChartTooltip( { className }: ChartTooltipProps ) {
+  const { x, y, content, visible } = useTooltipState();
   const {
     tooltipShow,
     tooltipBackgroundColor,

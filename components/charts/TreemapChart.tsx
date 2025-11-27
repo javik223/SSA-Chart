@@ -7,10 +7,11 @@ import { useShallow } from 'zustand/react/shallow';
 import { ChartComponentProps } from '@/lib/chartRegistry';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
-export function TreemapChart( {
+function TreemapChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -30,7 +31,7 @@ export function TreemapChart( {
 }: ChartComponentProps ) {
   const containerRef = useRef<HTMLDivElement>( null );
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Zoom state - track current zoom node
   const [ currentZoomNode, setCurrentZoomNode ] = useState<any>( null );
@@ -664,14 +665,15 @@ export function TreemapChart( {
         />
       </div>
 
-      { tooltipState.visible && (
-        <ChartTooltip
-          visible={ tooltipState.visible }
-          x={ tooltipState.x }
-          y={ tooltipState.y }
-          content={ tooltipState.content }
-        />
-      ) }
+      <ChartTooltip />
     </div>
   );
 };
+
+export function TreemapChart( props: ChartComponentProps ) {
+  return (
+    <TooltipProvider>
+      <TreemapChartInner { ...props } />
+    </TooltipProvider>
+  );
+}

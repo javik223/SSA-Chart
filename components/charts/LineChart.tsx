@@ -13,7 +13,7 @@ import {
 } from '@/utils/chartHelpers';
 import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { ChartTooltip } from './ChartTooltip';
 import { TooltipContent } from './TooltipContent';
 
@@ -284,7 +284,10 @@ const LineChartContent = memo( ( {
   return <g ref={ gRef } className="line-chart-content" />;
 } );
 
-export function LineChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function LineChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -336,7 +339,7 @@ export function LineChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -521,12 +524,15 @@ export function LineChart( {
         columnMapping={ columnMapping }
         availableColumns={ availableColumns }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </BaseChart>
+  );
+}
+
+export function LineChart( props: LineChartProps ) {
+  return (
+    <TooltipProvider>
+      <LineChartInner { ...props } />
+    </TooltipProvider>
   );
 }

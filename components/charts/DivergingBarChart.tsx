@@ -14,8 +14,9 @@ import {
 } from '@/utils/chartHelpers';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
 interface DivergingBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -83,7 +84,7 @@ interface DivergingBarChartProps {
 
 const DEFAULT_COLORS = [ '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f' ];
 
-export function DivergingBarChart( {
+function DivergingBarChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -147,7 +148,7 @@ export function DivergingBarChart( {
 }: DivergingBarChartProps ) {
 
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -656,12 +657,15 @@ export function DivergingBarChart( {
         yScale={ yScale }
         dataLength={ data.length }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function DivergingBarChart( props: DivergingBarChartProps ) {
+  return (
+    <TooltipProvider>
+      <DivergingBarChartInner { ...props } />
+    </TooltipProvider>
   );
 }

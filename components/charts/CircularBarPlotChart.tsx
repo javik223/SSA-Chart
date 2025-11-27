@@ -4,9 +4,10 @@ import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
 interface CircularBarPlotChartProps {
   data: Array<Record<string, string | number>>;
@@ -25,7 +26,7 @@ interface CircularBarPlotChartProps {
   labelFontWeight?: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
 }
 
-export function CircularBarPlotChart( {
+function CircularBarPlotChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -40,7 +41,7 @@ export function CircularBarPlotChart( {
   labelFontWeight = 'normal',
 }: CircularBarPlotChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -180,12 +181,15 @@ export function CircularBarPlotChart( {
         ref={ svgRef }
         style={ { maxWidth: '100%', maxHeight: '100%' } }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function CircularBarPlotChart( props: CircularBarPlotChartProps ) {
+  return (
+    <TooltipProvider>
+      <CircularBarPlotChartInner { ...props } />
+    </TooltipProvider>
   );
 }

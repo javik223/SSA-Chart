@@ -6,8 +6,9 @@ import { getColorPalette } from '@/lib/colorPalettes';
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
 interface RadialStackedBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -20,7 +21,7 @@ interface RadialStackedBarChartProps {
   legendShow?: boolean;
 }
 
-export function RadialStackedBarChart( {
+function RadialStackedBarChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -31,7 +32,7 @@ export function RadialStackedBarChart( {
   legendShow = true,
 }: RadialStackedBarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Get chart specific settings from store
   const {
@@ -295,12 +296,15 @@ export function RadialStackedBarChart( {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <svg ref={ svgRef } style={ { maxWidth: '100%', maxHeight: '100%' } } />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function RadialStackedBarChart( props: RadialStackedBarChartProps ) {
+  return (
+    <TooltipProvider>
+      <RadialStackedBarChartInner { ...props } />
+    </TooltipProvider>
   );
 }

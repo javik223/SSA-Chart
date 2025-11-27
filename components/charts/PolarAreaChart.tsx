@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { useChartStore } from '@/store/useChartStore';
 import { TooltipContent } from './TooltipContent';
 
@@ -22,7 +22,10 @@ interface PolarAreaChartProps {
   labelFontWeight?: string;
 }
 
-export function PolarAreaChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function PolarAreaChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -36,7 +39,7 @@ export function PolarAreaChart( {
   labelFontWeight = 'normal',
 }: PolarAreaChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -145,12 +148,15 @@ export function PolarAreaChart( {
   return (
     <div className="relative w-full h-full flex items-center justify-center">
       <svg ref={ svgRef } style={ { maxWidth: '100%', maxHeight: '100%' } } />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function PolarAreaChart( props: PolarAreaChartProps ) {
+  return (
+    <TooltipProvider>
+      <PolarAreaChartInner { ...props } />
+    </TooltipProvider>
   );
 }

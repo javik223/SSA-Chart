@@ -4,12 +4,13 @@ import { useEffect, useRef, useMemo } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
 interface SunburstChartProps {
-  data: Array<Record<string, string | number>>;
+  data: any; // Support both Array<Record> and hierarchical object
   labelKey: string;
   valueKeys: string[];
   width?: number;
@@ -28,10 +29,11 @@ interface SunburstChartProps {
 interface HierarchyNode {
   name: string;
   value?: number;
-  children: HierarchyNode[];
+  children?: HierarchyNode[];
+  [ key: string ]: any;
 }
 
-export function SunburstChart( {
+function SunburstChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -45,13 +47,20 @@ export function SunburstChart( {
   labelFontWeight = 'normal',
 }: SunburstChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
   // 1. Process Data into Hierarchy
   const hierarchyData = useMemo( () => {
-    if ( !data || data.length === 0 ) return null;
+    if ( !data ) return null;
+
+    // If data is already hierarchical (not an array), return it as is
+    if ( !Array.isArray( data ) ) {
+      return data as HierarchyNode;
+    }
+
+    if ( data.length === 0 ) return null;
 
     const root: HierarchyNode = { name: 'root', children: [] };
     const valueKey = valueKeys[ 0 ]; // Use first value key for size
@@ -63,6 +72,7 @@ export function SunburstChart( {
 
       let currentNode = root;
       parts.forEach( ( part, i ) => {
+        if ( !currentNode.children ) currentNode.children = [];
         let child = currentNode.children.find( ( c ) => c.name === part );
         if ( !child ) {
           child = { name: part, children: [] };
@@ -85,7 +95,7 @@ export function SunburstChart( {
 
     const width = propWidth;
     const height = propHeight;
-    const radius = Math.min( width, height ) / 2 * 0.9; // Use 90% of available space
+    const radius = Math.min( width, height ) / 6;
 
     // Clear previous
     const svg = d3.select( svgRef.current );
@@ -94,6 +104,8 @@ export function SunburstChart( {
     svg
       .attr( 'viewBox', `${ -width / 2 } ${ -height / 2 } ${ width } ${ height }` )
       .style( 'font', `${ labelFontWeight } ${ labelFontSize }px sans-serif` );
+
+    const g = svg.append( 'g' ); // No translate needed if viewBox is centered
 
     // Create hierarchy and partition
     const root = d3.hierarchy( hierarchyData )
@@ -129,7 +141,7 @@ export function SunburstChart( {
       .range( palette );
 
     // Render
-    const path = svg.append( 'g' )
+    const path = g.append( 'g' )
       .selectAll( 'path' )
       .data( root.descendants().slice( 1 ) ) // Skip root
       .join( 'path' )
@@ -139,20 +151,33 @@ export function SunburstChart( {
         while ( ancestor.depth > 1 ) ancestor = ancestor.parent!;
         return colorScale( ancestor.data.name ) as string;
       } )
-      .attr( 'fill-opacity', ( d ) => d.children ? 0.6 : 1.0 ) // Fade parents
+      .attr( 'fill-opacity', ( d ) => arcVisible( d.current ) ? ( d.children ? 0.6 : 1.0 ) : 0 )
+      .attr( 'pointer-events', ( d ) => arcVisible( d.current ) ? 'auto' : 'none' )
       .attr( 'd', ( d: any ) => arc( d.current ) );
 
-    path.style( 'cursor', 'pointer' )
-      .on( 'click', clicked )
+
+    path.style( 'cursor', ( d: any ) => d.children ? 'pointer' : 'default' )
+      .on( 'click', ( event, d ) => {
+        if ( d.children ) clicked( event, d );
+      } )
       .on( 'mouseenter', ( event, d ) => {
+        if ( !arcVisible( d.current ) ) return;
+
         d3.select( event.currentTarget ).attr( 'fill-opacity', 0.8 );
 
         const label = d.ancestors().map( ( d ) => d.data.name ).reverse().join( '/' ).replace( 'root/', '' );
         const value = d.value || 0;
         const color = colorScale( d.depth > 1 ? d.parent!.data.name : d.data.name ) as string;
 
-        // Find original data for custom columns (best effort)
-        const originalData = data.find( item => String( item[ labelKey ] ).includes( d.data.name ) ) || {};
+        // Find original data
+        let originalData = {};
+        if ( Array.isArray( data ) ) {
+          // Best effort for flat data
+          originalData = data.find( item => String( item[ labelKey ] ).includes( d.data.name ) ) || {};
+        } else {
+          // For hierarchical data, d.data is the original node
+          originalData = d.data;
+        }
 
         const tooltipData = {
           ...originalData,
@@ -176,13 +201,13 @@ export function SunburstChart( {
       .on( 'mousemove', ( event ) => {
         moveTooltip( event.pageX, event.pageY );
       } )
-      .on( 'mouseleave', ( event ) => {
-        d3.select( event.currentTarget ).attr( 'fill-opacity', ( d: any ) => d.children ? 0.6 : 1.0 );
+      .on( 'mouseleave', ( event, d ) => {
+        d3.select( event.currentTarget ).attr( 'fill-opacity', ( d: any ) => arcVisible( d.current ) ? ( d.children ? 0.6 : 1.0 ) : 0 );
         hideTooltip();
       } );
 
     // Labels
-    const label = svg.append( 'g' )
+    const label = g.append( 'g' )
       .attr( 'pointer-events', 'none' )
       .attr( 'text-anchor', 'middle' )
       .style( 'user-select', 'none' )
@@ -196,7 +221,7 @@ export function SunburstChart( {
       .attr( 'transform', ( d: any ) => labelTransform( d.current ) )
       .text( ( d ) => d.data.name );
 
-    const parent = svg.append( 'circle' )
+    const parent = g.append( 'circle' )
       .datum( root )
       .attr( 'r', radius )
       .attr( 'fill', 'none' )
@@ -253,16 +278,18 @@ export function SunburstChart( {
     <div className="relative w-full h-full flex items-center justify-center">
       <svg
         ref={ svgRef }
-        width={ propWidth }
-        height={ propHeight }
+        viewBox={ `0 0 ${ propWidth } ${ propHeight }` }
         style={ { maxWidth: '100%', maxHeight: '100%' } }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function SunburstChart( props: SunburstChartProps ) {
+  return (
+    <TooltipProvider>
+      <SunburstChartInner { ...props } />
+    </TooltipProvider>
   );
 }

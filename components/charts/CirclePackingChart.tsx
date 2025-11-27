@@ -4,10 +4,11 @@ import { useEffect, useRef, useMemo, useState } from 'react';
 import * as d3 from 'd3';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 import { TooltipContent } from './TooltipContent';
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
 
 interface CirclePackingChartProps {
   data: Array<Record<string, string | number>>;
@@ -37,7 +38,7 @@ interface HierarchyNode {
   [ key: string ]: any;
 }
 
-export function CirclePackingChart( {
+function CirclePackingChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -55,7 +56,7 @@ export function CirclePackingChart( {
 }: CirclePackingChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
   const containerRef = useRef<HTMLDivElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // View state - tracks current zoom focus [x, y, radius]
   const [ view, setView ] = useState<[ number, number, number ]>( [ propWidth / 2, propHeight / 2, propWidth / 2 ] );
@@ -309,12 +310,15 @@ export function CirclePackingChart( {
         viewBox={ `0 0 ${ width } ${ height }` }
         style={ { maxWidth: '100%', maxHeight: '100%' } }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function CirclePackingChart( props: CirclePackingChartProps ) {
+  return (
+    <TooltipProvider>
+      <CirclePackingChartInner { ...props } />
+    </TooltipProvider>
   );
 }

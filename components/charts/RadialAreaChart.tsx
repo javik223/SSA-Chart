@@ -6,7 +6,7 @@ import { getColorPalette } from '@/lib/colorPalettes';
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { TooltipContent } from './TooltipContent';
 import { createScale } from '@/utils/chartScales';
 
@@ -22,7 +22,10 @@ interface RadialAreaChartProps {
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'natural';
 }
 
-export function RadialAreaChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function RadialAreaChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -34,7 +37,7 @@ export function RadialAreaChart( {
   curve = 'linear',
 }: RadialAreaChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Get chart specific settings from store
   const {
@@ -507,12 +510,15 @@ export function RadialAreaChart( {
         viewBox={ `0 0 ${ propWidth } ${ propHeight }` }
         style={ { maxWidth: '100%', maxHeight: '100%' } }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function RadialAreaChart( props: RadialAreaChartProps ) {
+  return (
+    <TooltipProvider>
+      <RadialAreaChartInner { ...props } />
+    </TooltipProvider>
   );
 }

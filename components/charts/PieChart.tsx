@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { TooltipContent } from './TooltipContent';
 
 interface PieChartProps {
@@ -46,7 +46,10 @@ const DEFAULT_COLORS = [
   '#fb923c',
 ];
 
-export function PieChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function PieChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -73,7 +76,7 @@ export function PieChart( {
   legendPaddingLeft = 0,
 }: PieChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   useEffect( () => {
     if ( !svgRef.current || data.length === 0 ) return;
@@ -403,12 +406,15 @@ export function PieChart( {
   return (
     <div className='relative w-full h-full'>
       <svg ref={ svgRef } className='w-full h-full' />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </div>
+  );
+}
+
+export function PieChart( props: PieChartProps ) {
+  return (
+    <TooltipProvider>
+      <PieChartInner { ...props } />
+    </TooltipProvider>
   );
 }

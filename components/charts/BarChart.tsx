@@ -10,7 +10,7 @@ import { ChartZoomControls } from './ChartZoomControls';
 import { calculateChartMargins } from '@/utils/chartHelpers';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { TooltipContent } from './TooltipContent';
 
 interface BarChartProps {
@@ -195,7 +195,10 @@ const BarChartContent = memo( ( {
   return <g ref={ gRef } className="bar-chart-content" />;
 } );
 
-export function BarChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function BarChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -248,7 +251,7 @@ export function BarChart( {
 
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Chart dimensions
   const margin = useMemo( () => calculateChartMargins( {
@@ -374,13 +377,15 @@ export function BarChart( {
         hideTooltip={ hideTooltip }
         moveTooltip={ moveTooltip }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </BaseChart>
   );
 }
 
+export function BarChart( props: BarChartProps ) {
+  return (
+    <TooltipProvider>
+      <BarChartInner { ...props } />
+    </TooltipProvider>
+  );
+}

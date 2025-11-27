@@ -14,7 +14,7 @@ import {
 import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { TooltipContent } from './TooltipContent';
 
 interface AreaChartProps {
@@ -271,7 +271,10 @@ const AreaChartContent = memo( ( {
   return <g ref={ gRef } className="area-chart-content" />;
 } );
 
-export function AreaChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function AreaChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -324,7 +327,7 @@ export function AreaChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Visual settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -504,14 +507,17 @@ export function AreaChart( {
         showTooltip={ showTooltip }
         hideTooltip={ hideTooltip }
         moveTooltip={ moveTooltip }
-        tooltipState={ tooltipState }
+        tooltipState={ null } // Deprecated
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </BaseChart>
+  );
+}
+
+export function AreaChart( props: AreaChartProps ) {
+  return (
+    <TooltipProvider>
+      <AreaChartInner { ...props } />
+    </TooltipProvider>
   );
 }

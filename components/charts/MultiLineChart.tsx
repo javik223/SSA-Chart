@@ -9,7 +9,7 @@ import { createScale } from '@/utils/chartScales';
 import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
 import { ChartTooltip } from './ChartTooltip';
-import { useChartTooltip } from '@/hooks/useChartTooltip';
+
 import { TooltipContent } from './TooltipContent';
 import {
   calculateChartMargins,
@@ -354,7 +354,10 @@ const MultiLineChartContent = memo( ( {
   );
 } );
 
-export function MultiLineChart( {
+import { TooltipProvider } from '@/components/providers/TooltipProvider';
+import { useTooltipActions } from '@/hooks/useTooltip';
+
+function MultiLineChartInner( {
   data,
   labelKey,
   valueKeys,
@@ -409,7 +412,7 @@ export function MultiLineChart( {
   // Zoom
   zoomEnabled = true,
 }: MultiLineChartProps ) {
-  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
+  const { showTooltip, hideTooltip, moveTooltip } = useTooltipActions();
 
   // Store hooks
   const {
@@ -620,12 +623,15 @@ export function MultiLineChart( {
         moveTooltip={ moveTooltip }
         margin={ chartMargin }
       />
-      <ChartTooltip
-        visible={ tooltipState.visible }
-        x={ tooltipState.x }
-        y={ tooltipState.y }
-        content={ tooltipState.content }
-      />
+      <ChartTooltip />
     </BaseChart>
+  );
+}
+
+export function MultiLineChart( props: MultiLineChartProps ) {
+  return (
+    <TooltipProvider>
+      <MultiLineChartInner { ...props } />
+    </TooltipProvider>
   );
 }
