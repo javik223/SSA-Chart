@@ -11,7 +11,7 @@ import { useAlertDialog } from '@/components/ui/alert-dialog-simple';
 import { CreateChartHeader } from '@/components/create-chart-header';
 
 function CreateChartContent() {
-  const [ activeTab, setActiveTab ] = useState( 'data' );
+  const [ activeTab, setActiveTab ] = useState( 'preview' );
   const { showAlert } = useAlertDialog();
   const searchParams = useSearchParams();
   const loadChartState = useChartStore( ( state ) => state.loadChartState );
