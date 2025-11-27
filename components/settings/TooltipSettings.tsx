@@ -32,6 +32,36 @@ export function TooltipSettings() {
     setTooltipTitleMode,
     tooltipCustomTitle,
     setTooltipCustomTitle,
+    // Header
+    tooltipHeaderTextColor,
+    setTooltipHeaderTextColor,
+    tooltipHeaderBackgroundColor,
+    setTooltipHeaderBackgroundColor,
+    tooltipHeaderFontSize,
+    setTooltipHeaderFontSize,
+    tooltipHeaderFontWeight,
+    setTooltipHeaderFontWeight,
+    tooltipHeaderPadding,
+    setTooltipHeaderPadding,
+    tooltipHeaderAlignment,
+    setTooltipHeaderAlignment,
+    tooltipHeaderFontFamily,
+    setTooltipHeaderFontFamily,
+    // Content
+    tooltipContentTextColor,
+    setTooltipContentTextColor,
+    tooltipContentBackgroundColor,
+    setTooltipContentBackgroundColor,
+    tooltipContentFontSize,
+    setTooltipContentFontSize,
+    tooltipContentFontWeight,
+    setTooltipContentFontWeight,
+    tooltipContentPadding,
+    setTooltipContentPadding,
+    tooltipContentAlignment,
+    setTooltipContentAlignment,
+    tooltipContentFontFamily,
+    setTooltipContentFontFamily,
   } = useChartStore(
     useShallow( ( state ) => ( {
       tooltipShow: state.tooltipShow,
@@ -53,6 +83,36 @@ export function TooltipSettings() {
       setTooltipTitleMode: state.setTooltipTitleMode,
       tooltipCustomTitle: state.tooltipCustomTitle,
       setTooltipCustomTitle: state.setTooltipCustomTitle,
+      // Header
+      tooltipHeaderTextColor: state.tooltipHeaderTextColor,
+      setTooltipHeaderTextColor: state.setTooltipHeaderTextColor,
+      tooltipHeaderBackgroundColor: state.tooltipHeaderBackgroundColor,
+      setTooltipHeaderBackgroundColor: state.setTooltipHeaderBackgroundColor,
+      tooltipHeaderFontSize: state.tooltipHeaderFontSize,
+      setTooltipHeaderFontSize: state.setTooltipHeaderFontSize,
+      tooltipHeaderFontWeight: state.tooltipHeaderFontWeight,
+      setTooltipHeaderFontWeight: state.setTooltipHeaderFontWeight,
+      tooltipHeaderPadding: state.tooltipHeaderPadding,
+      setTooltipHeaderPadding: state.setTooltipHeaderPadding,
+      tooltipHeaderAlignment: state.tooltipHeaderAlignment,
+      setTooltipHeaderAlignment: state.setTooltipHeaderAlignment,
+      tooltipHeaderFontFamily: state.tooltipHeaderFontFamily,
+      setTooltipHeaderFontFamily: state.setTooltipHeaderFontFamily,
+      // Content
+      tooltipContentTextColor: state.tooltipContentTextColor,
+      setTooltipContentTextColor: state.setTooltipContentTextColor,
+      tooltipContentBackgroundColor: state.tooltipContentBackgroundColor,
+      setTooltipContentBackgroundColor: state.setTooltipContentBackgroundColor,
+      tooltipContentFontSize: state.tooltipContentFontSize,
+      setTooltipContentFontSize: state.setTooltipContentFontSize,
+      tooltipContentFontWeight: state.tooltipContentFontWeight,
+      setTooltipContentFontWeight: state.setTooltipContentFontWeight,
+      tooltipContentPadding: state.tooltipContentPadding,
+      setTooltipContentPadding: state.setTooltipContentPadding,
+      tooltipContentAlignment: state.tooltipContentAlignment,
+      setTooltipContentAlignment: state.setTooltipContentAlignment,
+      tooltipContentFontFamily: state.tooltipContentFontFamily,
+      setTooltipContentFontFamily: state.setTooltipContentFontFamily,
     } ) )
   );
 
@@ -114,7 +174,127 @@ export function TooltipSettings() {
 
           <Separator />
 
-          <FormSection title='Appearance'>
+          <Separator />
+
+          <FormSection title='Header Styling'>
+            <FormGrid columns={ 2 }>
+              <FormField
+                label='Text Color'
+                type='color'
+                value={ tooltipHeaderTextColor }
+                onChange={ setTooltipHeaderTextColor }
+              />
+              <FormField
+                label='Background'
+                type='color'
+                value={ tooltipHeaderBackgroundColor }
+                onChange={ setTooltipHeaderBackgroundColor }
+              />
+              <FormField
+                label='Font Size'
+                type='number'
+                value={ tooltipHeaderFontSize }
+                onChange={ ( v ) => setTooltipHeaderFontSize( v ?? 14 ) }
+                min={ 8 }
+                max={ 32 }
+              />
+              <FormField
+                label='Padding'
+                type='number'
+                value={ tooltipHeaderPadding }
+                onChange={ ( v ) => setTooltipHeaderPadding( v ?? 0 ) }
+                min={ 0 }
+                max={ 32 }
+              />
+              <FormField
+                label='Font Weight'
+                type='select'
+                value={ tooltipHeaderFontWeight }
+                onChange={ setTooltipHeaderFontWeight }
+                options={ [
+                  { label: 'Normal', value: 'normal' },
+                  { label: 'Bold', value: 'bold' },
+                  { label: 'Light', value: '300' },
+                  { label: 'Medium', value: '500' },
+                  { label: 'Heavy', value: '900' },
+                ] }
+              />
+              <FormField
+                label='Alignment'
+                type='select'
+                value={ tooltipHeaderAlignment }
+                onChange={ setTooltipHeaderAlignment }
+                options={ [
+                  { label: 'Start', value: 'start' },
+                  { label: 'Center', value: 'center' },
+                  { label: 'End', value: 'end' },
+                ] }
+              />
+            </FormGrid>
+          </FormSection>
+
+          <Separator />
+
+          <FormSection title='Content Styling'>
+            <FormGrid columns={ 2 }>
+              <FormField
+                label='Text Color'
+                type='color'
+                value={ tooltipContentTextColor }
+                onChange={ setTooltipContentTextColor }
+              />
+              <FormField
+                label='Background'
+                type='color'
+                value={ tooltipContentBackgroundColor }
+                onChange={ setTooltipContentBackgroundColor }
+              />
+              <FormField
+                label='Font Size'
+                type='number'
+                value={ tooltipContentFontSize }
+                onChange={ ( v ) => setTooltipContentFontSize( v ?? 12 ) }
+                min={ 8 }
+                max={ 32 }
+              />
+              <FormField
+                label='Padding'
+                type='number'
+                value={ tooltipContentPadding }
+                onChange={ ( v ) => setTooltipContentPadding( v ?? 0 ) }
+                min={ 0 }
+                max={ 32 }
+              />
+              <FormField
+                label='Font Weight'
+                type='select'
+                value={ tooltipContentFontWeight }
+                onChange={ setTooltipContentFontWeight }
+                options={ [
+                  { label: 'Normal', value: 'normal' },
+                  { label: 'Bold', value: 'bold' },
+                  { label: 'Light', value: '300' },
+                  { label: 'Medium', value: '500' },
+                  { label: 'Heavy', value: '900' },
+                ] }
+              />
+              <FormField
+                label='Alignment'
+                type='select'
+                value={ tooltipContentAlignment }
+                onChange={ setTooltipContentAlignment }
+                options={ [
+                  { label: 'Start', value: 'start' },
+                  { label: 'Center', value: 'center' },
+                  { label: 'End', value: 'end' },
+                ] }
+              />
+            </FormGrid>
+          </FormSection>
+
+          <Separator />
+
+          <FormSection title='General Appearance'>
             <FormField
               label='Show Arrow'
               type='switch'
@@ -124,24 +304,17 @@ export function TooltipSettings() {
 
             <FormGrid columns={ 2 }>
               <FormField
-                label='Background'
+                label='Container Background'
                 type='color'
                 value={ tooltipBackgroundColor }
                 onChange={ setTooltipBackgroundColor }
               />
               <FormField
-                label='Text Color'
+                label='Default Text Color'
                 type='color'
                 value={ tooltipTextColor }
                 onChange={ setTooltipTextColor }
               />
-            </FormGrid>
-          </FormSection>
-
-          <Separator />
-
-          <FormSection title='Spacing (px)'>
-            <FormGrid columns={ 2 }>
               <FormField
                 label='Border Radius'
                 type='number'
@@ -151,7 +324,7 @@ export function TooltipSettings() {
                 max={ 50 }
               />
               <FormField
-                label='Padding'
+                label='Container Padding'
                 type='number'
                 value={ tooltipPadding }
                 onChange={ ( v ) => setTooltipPadding( v ?? 0 ) }

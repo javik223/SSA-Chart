@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
@@ -11,6 +11,7 @@ import { calculateChartMargins } from '@/utils/chartHelpers';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 interface BarChartProps {
   data: Array<Record<string, string | number>>;
@@ -79,15 +80,12 @@ interface BarChartContentProps {
   colors: string[];
   colorMode: 'by-column' | 'by-row';
   innerHeight: number;
-  margin: { top: number; right: number; bottom: number; left: number; };
   showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
   hideTooltip: () => void;
-  tooltipState: any;
-  columnMapping: any;
-  availableColumns: string[];
+  moveTooltip: ( x: number, y: number ) => void;
 }
 
-const BarChartContent = ( {
+const BarChartContent = memo( ( {
   data,
   labelKey,
   valueKeys,
@@ -96,12 +94,9 @@ const BarChartContent = ( {
   colors,
   colorMode,
   innerHeight,
-  margin,
   showTooltip,
   hideTooltip,
-  tooltipState,
-  columnMapping,
-  availableColumns
+  moveTooltip
 }: BarChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -146,6 +141,7 @@ const BarChartContent = ( {
 
       const rectsMerge = rectsEnter.merge( rects );
 
+      // Set initial attributes
       rectsMerge
         .attr( 'fill', ( key, i ) => colorMode === 'by-column'
           ? ( colors?.[ i ] || '#8884d8' )
@@ -155,59 +151,38 @@ const BarChartContent = ( {
         .attr( 'rx', 4 ) // Rounded corners
         .attr( 'ry', 4 );
 
-      // Apply event listeners
+      // Apply event listeners (before transition to avoid interference)
       rectsMerge
         .on( 'mouseenter', ( event, key ) => {
           d3.select( event.currentTarget as Element ).style( 'opacity', 0.8 );
-          const [ x, y ] = d3.pointer( event, g.node() );
+
+          const colorScale = ( k: string ) => {
+            const idx = valueKeys.indexOf( k );
+            return colorMode === 'by-column'
+              ? ( colors?.[ idx ] || '#8884d8' )
+              : ( colors?.[ data.indexOf( d ) % colors.length ] || '#8884d8' );
+          };
 
           showTooltip(
-            <div className="flex flex-col gap-1">
-              <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
-              <div className="flex items-center gap-2 text-xs">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={ {
-                    backgroundColor: colorMode === 'by-column'
-                      ? ( colors?.[ valueKeys.indexOf( String( key ) ) ] || '#8884d8' )
-                      : ( colors?.[ data.indexOf( d ) % colors.length ] || '#8884d8' )
-                  } }
-                />
-                <span className="text-muted-foreground">{ key }:</span>
-                <span className="font-medium">
-                  { Number( d[ key ] ).toLocaleString() }
-                </span>
-              </div>
-
-              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                  { columnMapping.customPopups.map( ( colIndex: number ) => {
-                    const colName = availableColumns[ colIndex ];
-                    const val = d[ colName ];
-                    return (
-                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                        <span className="text-muted-foreground">{ colName }:</span>
-                        <span className="font-medium">{ String( val ) }</span>
-                      </div>
-                    );
-                  } ) }
-                </div>
-              ) }
-            </div >,
-            x + margin.left, // Adjust for margin
-            y + margin.top
+            <TooltipContent
+              data={ d }
+              labelKey={ labelKey }
+              valueKeys={ [ String( key ) ] }
+              colorScale={ colorScale }
+            />,
+            event.pageX,
+            event.pageY
           );
         } )
         .on( 'mousemove', ( event ) => {
-          const [ x, y ] = d3.pointer( event, g.node() );
-          showTooltip( tooltipState.content, x + margin.left, y + margin.top );
+          moveTooltip( event.pageX, event.pageY );
         } )
         .on( 'mouseleave', ( event ) => {
           d3.select( event.currentTarget as Element ).style( 'opacity', 1 );
           hideTooltip();
         } );
 
-      // Animate bars
+      // Animate bars (separate from event handlers)
       rectsMerge.transition()
         .duration( 500 )
         .attr( 'x', ( key ) => xSubScale( key ) || 0 )
@@ -215,10 +190,10 @@ const BarChartContent = ( {
         .attr( 'height', ( key ) => innerHeight - yScale( Number( d[ key ] ) || 0 ) );
     } );
 
-  }, [ data, labelKey, valueKeys, xScale, yScale, colors, colorMode, innerHeight, showTooltip, hideTooltip, tooltipState.content ] );
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, colorMode, innerHeight, showTooltip, hideTooltip, moveTooltip ] );
 
   return <g ref={ gRef } className="bar-chart-content" />;
-};
+} );
 
 export function BarChart( {
   data,
@@ -273,9 +248,7 @@ export function BarChart( {
 
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
-  const columnMapping = useChartStore( ( state ) => state.columnMapping );
-  const availableColumns = useChartStore( ( state ) => state.availableColumns );
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // Chart dimensions
   const margin = useMemo( () => calculateChartMargins( {
@@ -397,13 +370,9 @@ export function BarChart( {
         colors={ effectiveColors }
         colorMode={ colorMode }
         innerHeight={ innerHeight }
-        margin={ margin.margin }
         showTooltip={ showTooltip }
         hideTooltip={ hideTooltip }
-
-        tooltipState={ tooltipState }
-        columnMapping={ columnMapping }
-        availableColumns={ availableColumns }
+        moveTooltip={ moveTooltip }
       />
       <ChartTooltip
         visible={ tooltipState.visible }

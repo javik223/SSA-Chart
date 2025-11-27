@@ -107,27 +107,30 @@ export function BaseChart( {
     const g = d3.select( gRef.current );
 
     // Setup Brush Zoom
-    setupBrushZoom( {
-      g,
-      innerWidth,
-      innerHeight,
-      data,
-      labelKey,
-      valueKeys,
-      setZoomDomain
-    } );
-
-    // Setup Pan
-    if ( zoomDomain ) {
-      setupPan( {
-        g,
+    if ( showZoomControls && brushRef.current ) {
+      const brushGroup = d3.select( brushRef.current );
+      setupBrushZoom( {
+        g: brushGroup,
         innerWidth,
         innerHeight,
         data,
-        zoomDomain: zoomDomain as any,
-        setZoomDomain,
-        valueKeys
+        labelKey,
+        valueKeys,
+        setZoomDomain
       } );
+
+      // Setup Pan
+      if ( zoomDomain ) {
+        setupPan( {
+          g: brushGroup,
+          innerWidth,
+          innerHeight,
+          data,
+          zoomDomain: zoomDomain as any,
+          setZoomDomain,
+          valueKeys
+        } );
+      }
     }
 
     // Cleanup not strictly necessary as D3 handles event replacement, 
@@ -565,16 +568,6 @@ export function BaseChart( {
           </clipPath>
         </defs>
 
-        {/* Main group with transform */ }
-        <g ref={ gRef } transform={ `translate(${ chartMargin.left },${ chartMargin.top })` }>
-          {/* Chart content with clipping - only the data lines/areas are clipped */ }
-          <g clipPath={ `url(#${ clipId })` }>
-            { children }
-          </g>
-
-          {/* Axes group is rendered here by D3 in useEffect - NOT clipped */ }
-        </g>
-
         {/* Brush overlay for zoom (only when enabled) */ }
         { showZoomControls && (
           <g
@@ -584,6 +577,16 @@ export function BaseChart( {
             style={ { pointerEvents: 'all' } }
           />
         ) }
+
+        {/* Main group with transform */ }
+        <g ref={ gRef } transform={ `translate(${ chartMargin.left },${ chartMargin.top })` }>
+          {/* Chart content with clipping - only the data lines/areas are clipped */ }
+          <g clipPath={ `url(#${ clipId })` }>
+            { children }
+          </g>
+
+          {/* Axes group is rendered here by D3 in useEffect - NOT clipped */ }
+        </g>
       </svg>
     </div>
   );

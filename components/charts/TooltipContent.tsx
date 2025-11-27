@@ -13,16 +13,53 @@ interface TooltipContentProps {
 }
 
 export function TooltipContent( { data, labelKey, valueKeys, colorScale }: TooltipContentProps ) {
+  // Safety check
+  if ( !data || !labelKey || !valueKeys || valueKeys.length === 0 ) {
+    return <div className="text-xs">No data available</div>;
+  }
+
   const {
     tooltipTitleMode,
     tooltipCustomTitle,
     columnMapping,
     availableColumns,
+    // Header
+    tooltipHeaderTextColor,
+    tooltipHeaderBackgroundColor,
+    tooltipHeaderFontSize,
+    tooltipHeaderFontWeight,
+    tooltipHeaderPadding,
+    tooltipHeaderAlignment,
+    tooltipHeaderFontFamily,
+    // Content
+    tooltipContentTextColor,
+    tooltipContentBackgroundColor,
+    tooltipContentFontSize,
+    tooltipContentFontWeight,
+    tooltipContentPadding,
+    tooltipContentAlignment,
+    tooltipContentFontFamily,
   } = useChartStore( useShallow( ( state ) => ( {
     tooltipTitleMode: state.tooltipTitleMode,
     tooltipCustomTitle: state.tooltipCustomTitle,
     columnMapping: state.columnMapping,
     availableColumns: state.availableColumns,
+    // Header
+    tooltipHeaderTextColor: state.tooltipHeaderTextColor,
+    tooltipHeaderBackgroundColor: state.tooltipHeaderBackgroundColor,
+    tooltipHeaderFontSize: state.tooltipHeaderFontSize,
+    tooltipHeaderFontWeight: state.tooltipHeaderFontWeight,
+    tooltipHeaderPadding: state.tooltipHeaderPadding,
+    tooltipHeaderAlignment: state.tooltipHeaderAlignment,
+    tooltipHeaderFontFamily: state.tooltipHeaderFontFamily,
+    // Content
+    tooltipContentTextColor: state.tooltipContentTextColor,
+    tooltipContentBackgroundColor: state.tooltipContentBackgroundColor,
+    tooltipContentFontSize: state.tooltipContentFontSize,
+    tooltipContentFontWeight: state.tooltipContentFontWeight,
+    tooltipContentPadding: state.tooltipContentPadding,
+    tooltipContentAlignment: state.tooltipContentAlignment,
+    tooltipContentFontFamily: state.tooltipContentFontFamily,
   } ) ) );
 
   // Determine Title
@@ -34,7 +71,7 @@ export function TooltipContent( { data, labelKey, valueKeys, colorScale }: Toolt
     if ( val instanceof Date ) {
       title = d3.utcFormat( "%B %Y" )( val );
     } else if ( typeof val === 'string' && !isNaN( Date.parse( val ) ) ) {
-      // Try to parse string date if labelKey implies date? 
+      // Try to parse string date if labelKey implies date?
       // For now, just display as is or try formatting if it looks like a date
       // But safer to just display string
       title = val;
@@ -46,7 +83,7 @@ export function TooltipContent( { data, labelKey, valueKeys, colorScale }: Toolt
         title = d3.utcFormat( "%B %Y" )( d );
       }
     } else {
-      title = String( val );
+      title = String( val || '' );
     }
   }
 
@@ -84,26 +121,49 @@ export function TooltipContent( { data, labelKey, valueKeys, colorScale }: Toolt
   }
 
   return (
-    <div className="flex flex-col gap-1 min-w-[120px]">
+    <div className="flex flex-col min-w-[180px]">
       { title && (
-        <div className="font-semibold border-b pb-1 mb-1 border-border/50">
+        <div
+          className="border-b border-border/50 mb-1"
+          style={ {
+            color: tooltipHeaderTextColor || 'inherit',
+            backgroundColor: tooltipHeaderBackgroundColor || 'transparent',
+            fontSize: `${ tooltipHeaderFontSize }px`,
+            fontWeight: tooltipHeaderFontWeight,
+            padding: `${ tooltipHeaderPadding > 0 ? tooltipHeaderPadding / 2 : 0 }px ${ tooltipHeaderPadding }px`,
+            textAlign: tooltipHeaderAlignment,
+            fontFamily: tooltipHeaderFontFamily,
+          } }
+        >
           { title }
         </div>
       ) }
-      { items.map( ( item, i ) => (
-        <div key={ i } className="flex items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-1.5">
-            { item.color && (
-              <div
-                className="w-2.5 h-2.5 rounded-full"
-                style={ { backgroundColor: item.color } }
-              />
-            ) }
-            <span className="opacity-80 capitalize">{ item.label }</span>
+      <div
+        style={ {
+          color: tooltipContentTextColor || 'inherit',
+          backgroundColor: tooltipContentBackgroundColor || 'transparent',
+          fontSize: `${ tooltipContentFontSize }px`,
+          fontWeight: tooltipContentFontWeight,
+          padding: `${ tooltipContentPadding > 0 ? tooltipContentPadding / 2 : 0 }px ${ tooltipContentPadding }px`,
+          textAlign: tooltipContentAlignment,
+          fontFamily: tooltipContentFontFamily,
+        } }
+      >
+        { items.map( ( item, i ) => (
+          <div key={ i } className="flex items-center justify-between gap-3 mb-1 last:mb-0">
+            <div className="flex items-center gap-1.5">
+              { item.color && (
+                <div
+                  className="w-2.5 h-2.5 rounded-full shrink-0"
+                  style={ { backgroundColor: item.color } }
+                />
+              ) }
+              <span className="opacity-80 capitalize">{ item.label }</span>
+            </div>
+            <span className="font-medium">{ item.value }</span>
           </div>
-          <span className="font-mono font-medium">{ item.value }</span>
-        </div>
-      ) ) }
+        ) ) }
+      </div>
     </div>
   );
 }

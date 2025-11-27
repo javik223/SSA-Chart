@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
@@ -15,6 +15,7 @@ import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { ChartTooltip } from './ChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 interface LineChartProps {
   data: Array<Record<string, string | number>>;
@@ -96,12 +97,12 @@ interface LineChartContentProps {
   innerHeight: number;
   showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
   hideTooltip: () => void;
-  tooltipState: any;
+  moveTooltip: ( x: number, y: number ) => void;
   columnMapping: any;
   availableColumns: string[];
 }
 
-const LineChartContent = ( {
+const LineChartContent = memo( ( {
   data,
   labelKey,
   valueKeys,
@@ -123,7 +124,7 @@ const LineChartContent = ( {
   innerHeight,
   showTooltip,
   hideTooltip,
-  tooltipState,
+  moveTooltip,
   columnMapping,
   availableColumns
 }: LineChartContentProps ) => {
@@ -201,95 +202,87 @@ const LineChartContent = ( {
         .attr( 'd', line( data ) );
 
       // Dots
-      if ( showPoints ) {
-        const dots = g.selectAll( `.dot-${ index }` )
-          .data( data );
+      // Always render dots for interaction, but hide them if showPoints is false
+      const dots = g.selectAll( `.dot-${ index }` )
+        .data( data );
 
-        // Exit old dots
-        dots.exit()
-          .transition()
-          .duration( 100 )
-          .style( 'opacity', 0 )
-          .remove();
+      // Exit old dots
+      dots.exit()
+        .transition()
+        .duration( 100 )
+        .style( 'opacity', 0 )
+        .remove();
 
-        // Enter new dots
-        const dotsEnter = dots.enter()
-          .append( 'path' )
-          .attr( 'class', `dot-${ index }` )
-          .attr( 'fill', pointColor || color )
-          .attr( 'stroke', pointOutlineColor )
-          .attr( 'stroke-width', pointOutlineWidth )
-          .style( 'opacity', 0 );
+      // Enter new dots
+      const dotsEnter = dots.enter()
+        .append( 'path' )
+        .attr( 'class', `dot-${ index }` )
+        .attr( 'fill', pointColor || color )
+        .attr( 'stroke', pointOutlineColor )
+        .attr( 'stroke-width', pointOutlineWidth )
+        .style( 'opacity', 0 );
 
-        const fullSize = Math.PI * Math.pow( pointSize, 2 );
-        const symbolGenerator = d3.symbol().type(
-          pointShape === 'square' ? d3.symbolSquare :
-            pointShape === 'diamond' ? d3.symbolDiamond :
-              pointShape === 'triangle' ? d3.symbolTriangle :
-                d3.symbolCircle
-        );
+      // Calculate size: if hidden, use a minimum size for easier hovering
+      const effectivePointSize = showPoints ? pointSize : Math.max( pointSize, 6 );
+      const fullSize = Math.PI * Math.pow( effectivePointSize, 2 );
 
-        // Update all dots (existing + new)
-        ( ( dots as any ).merge( dotsEnter ) )
-          .transition()
-          .duration( 500 )
-          .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .style( 'opacity', 1 )
-          .attrTween( 'd', () => {
-            const i = d3.interpolate( 0, fullSize );
-            return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
-          } )
-          .on( 'mouseenter', ( event: any, d: any ) => {
-            d3.select( event.currentTarget ).attr( 'fill', pointOutlineColor || color ).attr( 'stroke', pointColor || color );
+      const symbolGenerator = d3.symbol().type(
+        pointShape === 'square' ? d3.symbolSquare :
+          pointShape === 'diamond' ? d3.symbolDiamond :
+            pointShape === 'triangle' ? d3.symbolTriangle :
+              d3.symbolCircle
+      );
 
-            showTooltip(
-              <div className="flex flex-col gap-1">
-                <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
-                <div className="flex items-center gap-2 text-xs">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={ { backgroundColor: color } }
-                  />
-                  <span className="text-muted-foreground">{ key }:</span>
-                  <span className="font-medium">
-                    { Number( d[ key ] ).toLocaleString() }
-                  </span>
-                </div>
-                { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                  <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                    { columnMapping.customPopups.map( ( colIndex: number ) => {
-                      const colName = availableColumns[ colIndex ];
-                      const val = d[ colName ];
-                      return (
-                        <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                          <span className="text-muted-foreground">{ colName }:</span>
-                          <span className="font-medium">{ String( val ) }</span>
-                        </div>
-                      );
-                    } ) }
-                  </div>
-                ) }
-              </div>,
-              event.pageX,
-              event.pageY
-            );
-          } )
-          .on( 'mousemove', ( event: any ) => {
-            showTooltip( tooltipState.content, event.pageX, event.pageY );
-          } )
-          .on( 'mouseleave', ( event: any ) => {
-            d3.select( event.currentTarget ).attr( 'fill', pointColor || color ).attr( 'stroke', pointOutlineColor );
-            hideTooltip();
-          } );
-      } else {
-        g.selectAll( `.dot-${ index }` ).remove();
-      }
+      // Update all dots (existing + new)
+      const dotsMerge = ( dots as any ).merge( dotsEnter );
+
+      dotsMerge
+        .transition()
+        .duration( 500 )
+        .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+        .style( 'opacity', showPoints ? 1 : 0 ) // Hide if showPoints is false
+        .attrTween( 'd', () => {
+          const i = d3.interpolate( 0, fullSize );
+          return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
+        } );
+
+      dotsMerge
+        .on( 'mouseenter', ( event: any, d: any ) => {
+          // Only highlight if showPoints is true, or maybe always highlight on hover?
+          // Usually if points are hidden, hovering reveals them.
+          d3.select( event.currentTarget )
+            .style( 'opacity', 1 )
+            .attr( 'fill', pointOutlineColor || color )
+            .attr( 'stroke', pointColor || color );
+
+          const colorScale = ( k: string ) => colors[ valueKeys.indexOf( k ) % colors.length ];
+          showTooltip(
+            <TooltipContent
+              data={ d }
+              labelKey={ labelKey }
+              valueKeys={ [ key ] }
+              colorScale={ colorScale }
+            />,
+            event.pageX,
+            event.pageY
+          );
+        } )
+        .on( 'mousemove', ( event: any ) => {
+          moveTooltip( event.pageX, event.pageY );
+        } )
+        .on( 'mouseleave', ( event: any ) => {
+          d3.select( event.currentTarget )
+            .style( 'opacity', showPoints ? 1 : 0 )
+            .attr( 'fill', pointColor || color )
+            .attr( 'stroke', pointOutlineColor );
+          hideTooltip();
+        } );
     } );
 
-  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, showArea, areaOpacity, xAxisScaleType, innerHeight ] );
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, showArea, areaOpacity, xAxisScaleType, innerHeight, showTooltip, hideTooltip, moveTooltip ] );
 
   return <g ref={ gRef } className="line-chart-content" />;
-};
+} );
 
 export function LineChart( {
   data,
@@ -343,7 +336,7 @@ export function LineChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -524,7 +517,7 @@ export function LineChart( {
         innerHeight={ innerHeight }
         showTooltip={ showTooltip }
         hideTooltip={ hideTooltip }
-        tooltipState={ tooltipState }
+        moveTooltip={ moveTooltip }
         columnMapping={ columnMapping }
         availableColumns={ availableColumns }
       />

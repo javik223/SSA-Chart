@@ -7,6 +7,7 @@ import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 interface RadialStackedBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -30,7 +31,7 @@ export function RadialStackedBarChart( {
   legendShow = true,
 }: RadialStackedBarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // Get chart specific settings from store
   const {
@@ -134,7 +135,10 @@ export function RadialStackedBarChart( {
       .join( 'g' )
       .attr( 'fill', d => color( d.key ) )
       .selectAll( 'path' )
-      .data( d => d )
+      .data( series => series.map( ( point: any ) => {
+        point.key = series.key;
+        return point;
+      } ) )
       .join( 'path' )
       .attr( 'd', arc as any )
       .on( 'mouseenter', ( event, d: any ) => {
@@ -145,26 +149,19 @@ export function RadialStackedBarChart( {
         const value = d[ 1 ] - d[ 0 ];
 
         showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ d.data[ labelKey ] }</div>
-            <div className="flex items-center gap-2 text-xs">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={ { backgroundColor: color( d.key ) } }
-              />
-              <span className="text-muted-foreground">{ d.key }:</span>
-              <span className="font-medium">
-                { value.toLocaleString() }
-              </span>
-            </div>
-          </div>,
+          <TooltipContent
+            data={ d.data }
+            labelKey={ labelKey }
+            valueKeys={ [ d.key ] }
+            colorScale={ () => color( d.key ) }
+          />,
           x + width / 2, // Adjust for centered coordinate system
           y + height / 2
         );
       } )
       .on( 'mousemove', ( event ) => {
         const [ x, y ] = d3.pointer( event, svg.node() );
-        showTooltip( tooltipState.content, x + width / 2, y + height / 2 );
+        moveTooltip( x + width / 2, y + height / 2 );
       } )
       .on( 'mouseleave', ( event ) => {
         d3.select( event.currentTarget ).style( 'opacity', 1 );
@@ -292,7 +289,7 @@ export function RadialStackedBarChart( {
     showLegend, labelShow, labelFontSize, labelColor, labelFontWeight,
     radialInnerRadius, radialStartAngle, radialEndAngle, radialPadAngle, radialCornerRadius,
     legendPosition, legendFontSize, legendGap, radialDomainColor, radialTickColor,
-    showTooltip, hideTooltip, tooltipState.content
+    showTooltip, hideTooltip, moveTooltip
   ] );
 
   return (

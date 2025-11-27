@@ -6,6 +6,7 @@ import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
+import { TooltipContent } from './TooltipContent';
 
 interface CircularBarPlotChartProps {
   data: Array<Record<string, string | number>>;
@@ -39,7 +40,7 @@ export function CircularBarPlotChart( {
   labelFontWeight = 'normal',
 }: CircularBarPlotChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -119,40 +120,20 @@ export function CircularBarPlotChart( {
         .on( 'mouseenter', function ( event, d ) {
           d3.select( this ).style( 'opacity', 1 );
 
+          const colorScale = () => d.color;
           showTooltip(
-            <div className="flex flex-col gap-1">
-              <div className="font-semibold text-xs">{ d.label }</div>
-              <div className="flex items-center gap-2 text-xs">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={ { backgroundColor: d.color } }
-                />
-                <span className="text-muted-foreground">{ valueKey }:</span>
-                <span className="font-medium">
-                  { d.value.toLocaleString() }
-                </span>
-              </div>
-              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                  { columnMapping.customPopups.map( ( colIndex: number ) => {
-                    const colName = availableColumns[ colIndex ];
-                    const val = d.originalData[ colName ];
-                    return (
-                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                        <span className="text-muted-foreground">{ colName }:</span>
-                        <span className="font-medium">{ String( val ) }</span>
-                      </div>
-                    );
-                  } ) }
-                </div>
-              ) }
-            </div>,
+            <TooltipContent
+              data={ d.originalData }
+              labelKey={ labelKey }
+              valueKeys={ [ valueKey ] }
+              colorScale={ colorScale }
+            />,
             event.pageX,
             event.pageY
           );
         } )
         .on( 'mousemove', ( event ) => {
-          showTooltip( tooltipState.content, event.pageX, event.pageY );
+          moveTooltip( event.pageX, event.pageY );
         } )
         .on( 'mouseleave', function () {
           d3.select( this ).style( 'opacity', 0.8 );
@@ -191,7 +172,7 @@ export function CircularBarPlotChart( {
         .attr( 'alignment-baseline', 'middle' );
     }
 
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, colorMode, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content, columnMapping, availableColumns ] );
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, colorMode, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, moveTooltip, columnMapping, availableColumns ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">

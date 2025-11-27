@@ -235,6 +235,38 @@ export interface StyleSlice {
 
   tooltipCustomTitle: string;
   setTooltipCustomTitle: (title: string) => void;
+
+  // Tooltip Header Settings
+  tooltipHeaderTextColor: string;
+  setTooltipHeaderTextColor: (color: string) => void;
+  tooltipHeaderBackgroundColor: string;
+  setTooltipHeaderBackgroundColor: (color: string) => void;
+  tooltipHeaderFontSize: number;
+  setTooltipHeaderFontSize: (size: number) => void;
+  tooltipHeaderFontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+  setTooltipHeaderFontWeight: (weight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900') => void;
+  tooltipHeaderPadding: number;
+  setTooltipHeaderPadding: (padding: number) => void;
+  tooltipHeaderAlignment: 'start' | 'center' | 'end';
+  setTooltipHeaderAlignment: (alignment: 'start' | 'center' | 'end') => void;
+  tooltipHeaderFontFamily: string;
+  setTooltipHeaderFontFamily: (font: string) => void;
+
+  // Tooltip Content Settings
+  tooltipContentTextColor: string;
+  setTooltipContentTextColor: (color: string) => void;
+  tooltipContentBackgroundColor: string;
+  setTooltipContentBackgroundColor: (color: string) => void;
+  tooltipContentFontSize: number;
+  setTooltipContentFontSize: (size: number) => void;
+  tooltipContentFontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
+  setTooltipContentFontWeight: (weight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900') => void;
+  tooltipContentPadding: number;
+  setTooltipContentPadding: (padding: number) => void;
+  tooltipContentAlignment: 'start' | 'center' | 'end';
+  setTooltipContentAlignment: (alignment: 'start' | 'center' | 'end') => void;
+  tooltipContentFontFamily: string;
+  setTooltipContentFontFamily: (font: string) => void;
 }
 
 export const createStyleSlice: StateCreator<StyleSlice, [], [], StyleSlice> = (set) => ({
@@ -463,4 +495,36 @@ export const createStyleSlice: StateCreator<StyleSlice, [], [], StyleSlice> = (s
 
   tooltipCustomTitle: '',
   setTooltipCustomTitle: (title) => set({ tooltipCustomTitle: title }),
+
+  // Tooltip Header Settings
+  tooltipHeaderTextColor: '', // Empty means inherit or default
+  setTooltipHeaderTextColor: (color) => set({ tooltipHeaderTextColor: color }),
+  tooltipHeaderBackgroundColor: '', // Empty means transparent/inherit
+  setTooltipHeaderBackgroundColor: (color) => set({ tooltipHeaderBackgroundColor: color }),
+  tooltipHeaderFontSize: 14,
+  setTooltipHeaderFontSize: (size) => set({ tooltipHeaderFontSize: size }),
+  tooltipHeaderFontWeight: 'bold',
+  setTooltipHeaderFontWeight: (weight) => set({ tooltipHeaderFontWeight: weight }),
+  tooltipHeaderPadding: 8,
+  setTooltipHeaderPadding: (padding) => set({ tooltipHeaderPadding: padding }),
+  tooltipHeaderAlignment: 'start',
+  setTooltipHeaderAlignment: (alignment) => set({ tooltipHeaderAlignment: alignment }),
+  tooltipHeaderFontFamily: 'Inter',
+  setTooltipHeaderFontFamily: (font) => set({ tooltipHeaderFontFamily: font }),
+
+  // Tooltip Content Settings
+  tooltipContentTextColor: '', // Empty means inherit or default
+  setTooltipContentTextColor: (color) => set({ tooltipContentTextColor: color }),
+  tooltipContentBackgroundColor: '', // Empty means transparent/inherit
+  setTooltipContentBackgroundColor: (color) => set({ tooltipContentBackgroundColor: color }),
+  tooltipContentFontSize: 12,
+  setTooltipContentFontSize: (size) => set({ tooltipContentFontSize: size }),
+  tooltipContentFontWeight: 'normal',
+  setTooltipContentFontWeight: (weight) => set({ tooltipContentFontWeight: weight }),
+  tooltipContentPadding: 8,
+  setTooltipContentPadding: (padding) => set({ tooltipContentPadding: padding }),
+  tooltipContentAlignment: 'start',
+  setTooltipContentAlignment: (alignment) => set({ tooltipContentAlignment: alignment }),
+  tooltipContentFontFamily: 'Inter',
+  setTooltipContentFontFamily: (font) => set({ tooltipContentFontFamily: font }),
 });

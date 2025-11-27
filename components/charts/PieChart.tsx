@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 interface PieChartProps {
   data: Array<Record<string, string | number>>;
@@ -72,7 +73,7 @@ export function PieChart( {
   legendPaddingLeft = 0,
 }: PieChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   useEffect( () => {
     if ( !svgRef.current || data.length === 0 ) return;
@@ -124,6 +125,7 @@ export function PieChart( {
     const pieData = data.map( ( d ) => ( {
       label: String( d[ labelKey ] ),
       value: Number( d[ valueKey ] ) || 0,
+      originalData: d,
     } ) );
 
     // Calculate total for percentages
@@ -135,7 +137,7 @@ export function PieChart( {
 
     // Create pie generator
     const pie = d3
-      .pie<{ label: string; value: number; }>()
+      .pie<{ label: string; value: number; originalData: any; }>()
       .value( ( d ) => d.value )
       .sort( null )
       .startAngle( startAngleRad )
@@ -144,14 +146,14 @@ export function PieChart( {
 
     // Create arc generator
     const arc = d3
-      .arc<d3.PieArcDatum<{ label: string; value: number; }>>()
+      .arc<d3.PieArcDatum<{ label: string; value: number; originalData: any; }>>()
       .innerRadius( actualInnerRadius )
       .outerRadius( outerRadius )
       .cornerRadius( cornerRadius );
 
     // Create hover arc (slightly larger)
     const hoverArc = d3
-      .arc<d3.PieArcDatum<{ label: string; value: number; }>>()
+      .arc<d3.PieArcDatum<{ label: string; value: number; originalData: any; }>>()
       .innerRadius( actualInnerRadius )
       .outerRadius( outerRadius + 10 )
       .cornerRadius( cornerRadius );
@@ -180,31 +182,20 @@ export function PieChart( {
           .attr( 'd', hoverArc as any );
 
         // Show tooltip
-        const percentage = ( ( d.data.value / total ) * 100 ).toFixed( 1 );
-
+        const colorScale = () => colors[ d.index % colors.length ];
         showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ d.data.label }</div>
-            <div className="flex items-center gap-2 text-xs">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={ { backgroundColor: colors[ d.index % colors.length ] } }
-              />
-              <span className="text-muted-foreground">Value:</span>
-              <span className="font-medium">
-                { d.data.value.toLocaleString() }
-              </span>
-              <span className="text-muted-foreground text-[10px]">
-                ({ percentage }%)
-              </span>
-            </div>
-          </div>,
+          <TooltipContent
+            data={ d.data.originalData }
+            labelKey={ labelKey }
+            valueKeys={ [ valueKey ] }
+            colorScale={ colorScale }
+          />,
           event.pageX,
           event.pageY
         );
       } )
       .on( 'mousemove', function ( event ) {
-        showTooltip( tooltipState.content, event.pageX, event.pageY );
+        moveTooltip( event.pageX, event.pageY );
       } )
       .on( 'mouseleave', function () {
         // Reset slice
@@ -407,7 +398,7 @@ export function PieChart( {
         .style( 'fill', '#666' )
         .text( centerLabel );
     }
-  }, [ data, labelKey, valueKeys, innerRadius, padAngle, cornerRadius, startAngle, endAngle, showTotal, centerLabel, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, showTooltip, hideTooltip, tooltipState.content ] );
+  }, [ data, labelKey, valueKeys, innerRadius, padAngle, cornerRadius, startAngle, endAngle, showTotal, centerLabel, propWidth, propHeight, colors, colorMode, legendShow, legendPosition, legendAlignment, legendFontSize, legendShowValues, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, showTooltip, hideTooltip, moveTooltip ] );
 
   return (
     <div className='relative w-full h-full'>

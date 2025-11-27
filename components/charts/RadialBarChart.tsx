@@ -6,6 +6,7 @@ import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
+import { TooltipContent } from './TooltipContent';
 
 interface RadialBarChartProps {
   data: Array<Record<string, string | number>>;
@@ -35,7 +36,7 @@ export function RadialBarChart( {
   labelFontWeight = 'normal',
 }: RadialBarChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -112,43 +113,22 @@ export function RadialBarChart( {
           d3.select( event.currentTarget ).style( 'opacity', 1 );
           const [ x, y ] = d3.pointer( event, svg.node() );
 
+          const originalData = data.find( item => String( item[ labelKey ] ) === d.label );
+          const colorScaleFn = () => colorScale( valueKey );
           showTooltip(
-            <div className="flex flex-col gap-1">
-              <div className="font-semibold text-xs">{ d.label }</div>
-              <div className="flex items-center gap-2 text-xs">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={ { backgroundColor: colorScale( valueKey ) } }
-                />
-                <span className="text-muted-foreground">{ valueKey }:</span>
-                <span className="font-medium">
-                  { d.value.toLocaleString() }
-                </span>
-              </div>
-              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                  { columnMapping.customPopups.map( ( colIndex: number ) => {
-                    const colName = availableColumns[ colIndex ];
-                    // Find the original data object
-                    const originalData = data.find( item => String( item[ labelKey ] ) === d.label );
-                    const val = originalData ? originalData[ colName ] : '';
-                    return (
-                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                        <span className="text-muted-foreground">{ colName }:</span>
-                        <span className="font-medium">{ String( val ) }</span>
-                      </div>
-                    );
-                  } ) }
-                </div>
-              ) }
-            </div>,
+            <TooltipContent
+              data={ originalData || {} }
+              labelKey={ labelKey }
+              valueKeys={ [ valueKey ] }
+              colorScale={ colorScaleFn }
+            />,
             x + width / 2, // Adjust for centered coordinate system
             y + height / 2
           );
         } )
         .on( 'mousemove', ( event ) => {
           const [ x, y ] = d3.pointer( event, svg.node() );
-          showTooltip( tooltipState.content, x + width / 2, y + height / 2 );
+          moveTooltip( x + width / 2, y + height / 2 );
         } )
         .on( 'mouseleave', ( event ) => {
           d3.select( event.currentTarget ).style( 'opacity', 0.8 );
@@ -181,7 +161,7 @@ export function RadialBarChart( {
         .attr( 'alignment-baseline', 'middle' );
     }
 
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content ] );
+  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, moveTooltip ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">

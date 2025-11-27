@@ -8,6 +8,7 @@ import { ChartComponentProps } from '@/lib/chartRegistry';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 export function TreemapChart( {
   data,
@@ -29,7 +30,7 @@ export function TreemapChart( {
 }: ChartComponentProps ) {
   const containerRef = useRef<HTMLDivElement>( null );
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // Zoom state - track current zoom node
   const [ currentZoomNode, setCurrentZoomNode ] = useState<any>( null );
@@ -85,19 +86,25 @@ export function TreemapChart( {
       const effectiveLevel = Math.max( 0, treemapCategoryLevel );
       const activeCategoryKeys = categoryKeys.slice( effectiveLevel );
 
-      // d3.group can take multiple keys for nested grouping
-      const grouped = d3.group( data, ...activeCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
+      if ( activeCategoryKeys.length === 0 ) {
+        // No grouping keys active, treat as flat list
+        const rootData = { name: 'root', children: data };
+        hierarchy = d3.hierarchy( rootData );
+      } else {
+        // d3.group can take multiple keys for nested grouping
+        const grouped = d3.group( data, ...activeCategoryKeys.map( ( key: string ) => ( d: any ) => d[ key ] ) );
 
-      // Helper to convert Map to hierarchy object
-      const mapToNode = ( name: string, value: any ): any => {
-        if ( value instanceof Map ) {
-          return { name, children: Array.from( value, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
-        }
-        return { name, children: value };
-      };
+        // Helper to convert Map to hierarchy object
+        const mapToNode = ( name: string, value: any ): any => {
+          if ( value instanceof Map ) {
+            return { name, children: Array.from( value, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+          }
+          return { name, children: value };
+        };
 
-      const rootData = { name: 'root', children: Array.from( grouped, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
-      hierarchy = d3.hierarchy( rootData );
+        const rootData = { name: 'root', children: Array.from( grouped, ( [ k, v ] ) => mapToNode( String( k ), v ) ) };
+        hierarchy = d3.hierarchy( rootData );
+      }
     } else if ( pathKey ) {
       try {
         // Transform path-based data into flat data with synthetic columns
@@ -483,49 +490,28 @@ export function TreemapChart( {
               colorScale( String( ( d.data as any )[ labelKey ] ) as any )
         );
 
+        const tooltipData = {
+          ...data,
+          [ labelKey ]: label,
+          [ valueKeys[ 0 ] ]: value
+        };
+
+        const colorScaleFn = () => color;
+
         showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ label }</div>
-            <div className="flex flex-col gap-1 text-xs">
-              { extraFields.map( ( field: any, i: number ) => (
-                <div key={ i } className="flex justify-between gap-4">
-                  <span className="text-zinc-500 capitalize">{ field.key.replace( /([A-Z])/g, ' $1' ).trim() }</span>
-                  <span className="font-medium">{ field.value }</span>
-                </div>
-              ) ) }
-              <div className="flex items-center gap-2 pt-1 border-t border-zinc-100 dark:border-zinc-800 mt-1">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={ { backgroundColor: color } }
-                />
-                <span className="text-muted-foreground">Value:</span>
-                <span className="font-medium">
-                  { value.toLocaleString() }
-                </span>
-              </div>
-              { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                  { columnMapping.customPopups.map( ( colIndex: number ) => {
-                    const colName = availableColumns[ colIndex ];
-                    const val = ( d.data as any )[ colName ];
-                    return (
-                      <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                        <span className="text-muted-foreground">{ colName }:</span>
-                        <span className="font-medium">{ String( val ) }</span>
-                      </div>
-                    );
-                  } ) }
-                </div>
-              ) }
-            </div>
-          </div>,
+          <TooltipContent
+            data={ tooltipData }
+            labelKey={ labelKey }
+            valueKeys={ valueKeys }
+            colorScale={ colorScaleFn }
+          />,
           event.pageX,
           event.pageY
         );
         d3.select( event.currentTarget ).attr( 'opacity', 0.9 );
       } )
       .on( 'mousemove', ( event: any ) => {
-        showTooltip( tooltipState.content, event.pageX, event.pageY );
+        moveTooltip( event.pageX, event.pageY );
       } )
       .on( 'mouseleave', ( event: any ) => {
         hideTooltip();
@@ -602,7 +588,7 @@ export function TreemapChart( {
         return node.depth === 1 ? 'uppercase' : 'none';
       } );
 
-  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor, showTooltip, hideTooltip, tooltipState.content, currentZoomNode ] );
+  }, [ treemapRoot, innerWidth, innerHeight, colorScale, treemapColorMode, labelKey, theme, margin.left, margin.top, valueKeys, labelColor, labelFontSize, labelFontWeight, labelPadding, treemapGradientSteepness, treemapCategoryLabelColor, treemapStrokeWidth, treemapStrokeColor, showTooltip, hideTooltip, moveTooltip, currentZoomNode ] );
 
   // Build breadcrumb path
   const breadcrumbPath = useMemo( () => {

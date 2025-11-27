@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
@@ -10,19 +10,13 @@ import { inferScaleType } from '@/utils/inferScaleType';
 import { ChartZoomControls } from './ChartZoomControls';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 import {
   calculateChartMargins,
-  createClipPath,
   getXPosition as getXPositionHelper,
-  renderXAxis,
-  renderYAxis,
-  renderXGrid,
-  renderYGrid,
-  renderLegend,
-  setupBrushZoom,
-  setupPan
 } from '@/utils/chartHelpers';
 import { BaseChartProps } from '@/types/chart-props';
+import { BaseChart } from './BaseChart';
 
 interface MultiLineChartProps extends BaseChartProps {
   zoomEnabled?: boolean;
@@ -30,6 +24,335 @@ interface MultiLineChartProps extends BaseChartProps {
 }
 
 const DEFAULT_COLORS = [ '#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f' ];
+
+interface MultiLineChartContentProps {
+  data: Array<Record<string, string | number>>;
+  labelKey: string;
+  valueKeys: string[];
+  xScale: any;
+  yScale: any;
+  colors: string[];
+  curveType: 'monotone' | 'step' | 'linear';
+  lineWidth: number;
+  lineStyle: 'solid' | 'dashed' | 'dotted';
+  showPoints: boolean;
+  pointSize: number;
+  pointShape: 'circle' | 'square' | 'diamond' | 'triangle';
+  pointColor: string;
+  pointOutlineWidth: number;
+  pointOutlineColor: string;
+  showArea: boolean;
+  areaOpacity: number;
+  xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
+  innerHeight: number;
+  innerWidth: number;
+  showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
+  hideTooltip: () => void;
+  moveTooltip: ( x: number, y: number ) => void;
+  margin: { top: number; right: number; bottom: number; left: number; };
+}
+
+const MultiLineChartContent = memo( ( {
+  data,
+  labelKey,
+  valueKeys,
+  xScale,
+  yScale,
+  colors,
+  curveType,
+  lineWidth,
+  lineStyle,
+  showPoints,
+  pointSize,
+  pointShape,
+  pointColor,
+  pointOutlineWidth,
+  pointOutlineColor,
+  showArea,
+  areaOpacity,
+  xAxisScaleType,
+  innerHeight,
+  innerWidth,
+  showTooltip,
+  hideTooltip,
+  moveTooltip,
+  margin
+}: MultiLineChartContentProps ) => {
+  const gRef = useRef<SVGGElement>( null );
+  const dotRef = useRef<SVGCircleElement>( null );
+
+  // Helper for X position
+  const getXPosition = ( d: any ) => {
+    return getXPositionHelper( d, labelKey, xScale, xAxisScaleType as any );
+  };
+
+  useEffect( () => {
+    if ( !gRef.current || !data ) return;
+
+    const g = d3.select( gRef.current );
+
+    // Draw Lines and Areas
+    const lines: any[] = [];
+    valueKeys.forEach( ( key, index ) => {
+      const color = colors.length > 1 ? colors[ index % colors.length ] : 'steelblue';
+
+      // Area generator (if showArea is true)
+      if ( showArea ) {
+        const area = d3.area<any>()
+          .x( d => getXPosition( d ) )
+          .y0( innerHeight )
+          .y1( d => yScale( Number( d[ key ] ) ) );
+
+        // Apply curve type
+        if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
+        else if ( curveType === 'step' ) area.curve( d3.curveStep );
+        else if ( curveType === 'linear' ) area.curve( d3.curveLinear );
+        else area.curve( d3.curveBasis );
+
+        let areaPath = g.select<SVGPathElement>( `.area-${ index }` );
+        if ( areaPath.empty() ) {
+          areaPath = g.append( 'path' ).attr( 'class', `area-series area-${ index }` );
+        }
+
+        areaPath
+          .datum( data )
+          .attr( 'fill', color )
+          .attr( 'fill-opacity', areaOpacity )
+          .attr( 'd', area );
+      } else {
+        g.select( `.area-${ index }` ).remove();
+      }
+
+      // Line generator
+      const line = d3.line<any>()
+        .x( d => getXPosition( d ) )
+        .y( d => yScale( Number( d[ key ] ) ) );
+
+      // Apply curve type
+      if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
+      else if ( curveType === 'step' ) line.curve( d3.curveStep );
+      else if ( curveType === 'linear' ) line.curve( d3.curveLinear );
+      else line.curve( d3.curveBasis );
+
+      // Apply line style
+      const strokeDasharray = lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0';
+
+      let linePath = g.select<SVGPathElement>( `.line-${ index }` );
+      if ( linePath.empty() ) {
+        linePath = g.append( 'path' ).attr( 'class', `line-series line-${ index }` );
+      }
+
+      linePath
+        .datum( data )
+        .attr( 'fill', 'none' )
+        .attr( 'stroke', color )
+        .attr( 'stroke-width', lineWidth )
+        .attr( 'stroke-dasharray', strokeDasharray )
+        .attr( 'stroke-linejoin', 'round' )
+        .attr( 'stroke-linecap', 'round' )
+        .attr( 'stroke-opacity', 1 )
+        .attr( 'd', line );
+
+      // Draw points (if showPoints is true)
+      if ( showPoints ) {
+        const symbolGenerator = d3.symbol().type(
+          pointShape === 'square' ? d3.symbolSquare :
+            pointShape === 'diamond' ? d3.symbolDiamond :
+              pointShape === 'triangle' ? d3.symbolTriangle :
+                d3.symbolCircle
+        ).size( Math.PI * Math.pow( pointSize, 2 ) );
+
+        const points = g.selectAll( `.point-${ index }` )
+          .data( data );
+
+        points.exit().remove();
+
+        points.enter()
+          .append( 'path' )
+          .attr( 'class', `point-series point-${ index }` )
+          .merge( points as any )
+          .attr( 'transform', d => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+          .attr( 'fill', pointColor || color )
+          .attr( 'stroke', pointOutlineColor )
+          .attr( 'stroke-width', pointOutlineWidth )
+          .attr( 'd', symbolGenerator );
+      } else {
+        g.selectAll( `.point-${ index }` ).remove();
+      }
+
+      lines.push( { path: linePath, key, color, index } );
+    } );
+
+    // --- Interaction Layer ---
+
+    // Dot for current point
+    let dot = d3.select( dotRef.current );
+    if ( dot.empty() ) {
+      // Should be rendered via JSX but we can manipulate it here
+    }
+
+    // Track last hovered state to avoid unnecessary updates
+    let lastIndex = -1;
+    let lastClosestKey: string | null = null;
+
+    const handleHover = ( event: any ) => {
+      const [ mx, my ] = d3.pointer( event, gRef.current );
+
+      // Find nearest X index
+      let index = 0;
+      if ( xAxisScaleType === 'point' || xAxisScaleType === 'band' ) {
+        const eachBand = ( xScale as any ).step();
+        index = Math.floor( ( mx + ( eachBand / 2 ) ) / eachBand );
+        index = Math.max( 0, Math.min( index, data.length - 1 ) );
+      } else {
+        const xVal = ( xScale as any ).invert( mx );
+        const bisect = d3.bisector( ( d: any ) => {
+          return xAxisScaleType === 'time' ? new Date( d[ labelKey ] ) : Number( d[ labelKey ] );
+        } ).center;
+        index = bisect( data, xVal );
+      }
+
+      const d = data[ index ];
+      if ( !d ) return;
+
+      // Find closest series by Y distance
+      let minDist = Infinity;
+      let closestSeries: any = null;
+
+      lines.forEach( series => {
+        const val = Number( d[ series.key ] );
+        if ( isNaN( val ) ) return;
+        const py = yScale( val );
+        const dist = Math.abs( py - my );
+        if ( dist < minDist ) {
+          minDist = dist;
+          closestSeries = { ...series, val, py };
+        }
+      } );
+
+      if ( closestSeries ) {
+        // Highlight logic
+        lines.forEach( l => {
+          if ( l.key === closestSeries.key ) {
+            l.path
+              .attr( 'stroke', l.color )
+              .attr( 'stroke-opacity', 1 )
+              .attr( 'stroke-width', lineWidth + 1.5 )
+              .raise();
+          } else {
+            l.path
+              .attr( 'stroke', '#ddd' )
+              .attr( 'stroke-opacity', 0.8 )
+              .attr( 'stroke-width', 1.5 );
+          }
+        } );
+
+        const px = getXPosition( d );
+        dot
+          .style( 'opacity', 1 )
+          .attr( 'cx', px )
+          .attr( 'cy', closestSeries.py );
+
+        // Only update tooltip if point changed
+        if ( index !== lastIndex || closestSeries.key !== lastClosestKey ) {
+          // Show Tooltip
+          // Calculate screen coordinates relative to the page (for Portal tooltip)
+          // We need to use the svgRef from parent or calculate based on gRef
+          const svgNode = gRef.current?.ownerSVGElement;
+          const svgRect = svgNode?.getBoundingClientRect();
+
+          if ( svgRect ) {
+            const pageX = svgRect.left + window.scrollX + px + margin.left;
+            const pageY = svgRect.top + window.scrollY + closestSeries.py + margin.top;
+
+            const colorScale = ( k: string ) => {
+              const series = lines.find( l => l.key === k );
+              return series?.color || '#8884d8';
+            };
+
+            showTooltip(
+              <TooltipContent
+                data={ d }
+                labelKey={ labelKey }
+                valueKeys={ [ closestSeries.key ] }
+                colorScale={ colorScale }
+              />,
+              pageX,
+              pageY
+            );
+
+            lastIndex = index;
+            lastClosestKey = closestSeries.key;
+          }
+        }
+      }
+    };
+
+    const handleLeave = () => {
+      dot.style( 'opacity', 0 );
+      hideTooltip();
+      lastIndex = -1;
+      lastClosestKey = null;
+      lines.forEach( l => {
+        l.path
+          .attr( 'stroke', l.color )
+          .attr( 'stroke-opacity', 1 )
+          .attr( 'stroke-width', lineWidth );
+      } );
+    };
+
+    const handleEnter = () => {
+      dot.style( 'opacity', 1 );
+    };
+
+    // Attach listeners to overlay
+    // We try to find the brush overlay from BaseChart first
+    const svg = d3.select( gRef.current?.ownerSVGElement );
+    let overlay: d3.Selection<any, any, any, any> = svg.select( '.brush-overlay .overlay' );
+
+    if ( overlay.empty() ) {
+      // Create our own overlay if brush doesn't exist
+      let myOverlay = g.select<SVGRectElement>( '.hover-overlay' );
+      if ( myOverlay.empty() ) {
+        myOverlay = g.append( 'rect' )
+          .attr( 'class', 'hover-overlay' )
+          .attr( 'width', innerWidth )
+          .attr( 'height', innerHeight )
+          .attr( 'fill', 'transparent' )
+          .style( 'pointer-events', 'all' );
+      }
+      overlay = myOverlay;
+    } else {
+      // Ensure we don't have our own overlay blocking
+      g.select( '.hover-overlay' ).remove();
+    }
+
+    overlay
+      .on( 'pointerenter', handleEnter )
+      .on( 'pointerleave', handleLeave )
+      .on( 'pointermove', handleHover );
+
+    // Cleanup
+    return () => {
+      overlay.on( 'pointerenter', null )
+        .on( 'pointerleave', null )
+        .on( 'pointermove', null );
+    };
+
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, showArea, areaOpacity, xAxisScaleType, innerHeight, innerWidth, showTooltip, hideTooltip, moveTooltip, margin ] );
+
+  return (
+    <g ref={ gRef } className="multi-line-chart-content">
+      <circle
+        ref={ dotRef }
+        r={ 3 }
+        fill="black"
+        stroke="none"
+        style={ { opacity: 0, pointerEvents: 'none' } }
+      />
+    </g>
+  );
+} );
 
 export function MultiLineChart( {
   data,
@@ -86,9 +409,7 @@ export function MultiLineChart( {
   // Zoom
   zoomEnabled = true,
 }: MultiLineChartProps ) {
-  const svgRef = useRef<SVGSVGElement>( null );
-  const previousZoomDomainRef = useRef<any>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // Store hooks
   const {
@@ -108,6 +429,7 @@ export function MultiLineChart( {
     setZoomDomain,
     columnMapping,
     availableColumns,
+    setShowZoomControls,
   } = useChartStore( useShallow( ( state ) => ( {
     setXAxisScaleType: state.setXAxisScaleType,
     curveType: state.curveType,
@@ -125,7 +447,13 @@ export function MultiLineChart( {
     setZoomDomain: state.setZoomDomain,
     columnMapping: state.columnMapping,
     availableColumns: state.availableColumns,
+    setShowZoomControls: state.setShowZoomControls,
   } ) ) );
+
+  // Sync zoomEnabled prop with store
+  useEffect( () => {
+    setShowZoomControls( zoomEnabled );
+  }, [ zoomEnabled, setShowZoomControls ] );
 
   // Automatically infer and set X-axis scale type
   useEffect( () => {
@@ -136,19 +464,17 @@ export function MultiLineChart( {
   }, [ data, labelKey, setXAxisScaleType ] );
 
   // 1. Calculate Dimensions
-  const { innerWidth, innerHeight, margin: chartMargin } = useMemo( () => {
-    return calculateChartMargins( {
-      width: propWidth,
-      height: propHeight,
-      legendShow,
-      legendPosition,
-      xAxisShow,
-      xAxisPosition,
-      xAxisTitlePadding,
-      xAxisLabelSpacing,
-      yAxis
-    } );
-  }, [ propWidth, propHeight, legendShow, legendPosition, xAxisShow, xAxisPosition, xAxisTitlePadding, xAxisLabelSpacing, yAxis ] );
+  const { margin: chartMargin, innerWidth, innerHeight } = useMemo( () => calculateChartMargins( {
+    width: propWidth,
+    height: propHeight,
+    legendShow,
+    legendPosition,
+    xAxisShow,
+    xAxisPosition,
+    xAxisTitlePadding,
+    xAxisLabelSpacing,
+    yAxis
+  } ), [ propWidth, propHeight, legendShow, legendPosition, xAxisShow, xAxisPosition, xAxisTitlePadding, xAxisLabelSpacing, yAxis ] );
 
   // 2. Filter Data
   const filteredData = useMemo( () => {
@@ -219,406 +545,87 @@ export function MultiLineChart( {
     return scale;
   }, [ filteredData, valueKeys, yAxis, innerHeight, zoomDomain?.y ] );
 
-  // Helper for X position
-  const getXPosition = ( d: any ) => {
-    return getXPositionHelper( d, labelKey, xScale, xAxisScaleType as any );
-  };
-
-  // Render Chart
-  useEffect( () => {
-    if ( !svgRef.current || !data ) return;
-
-    // Check if this is a zoom update (smooth transition) vs full redraw
-    const isZoomUpdate = previousZoomDomainRef.current !== null &&
-      JSON.stringify( previousZoomDomainRef.current ) !== JSON.stringify( zoomDomain );
-
-    // Update the ref for next render
-    previousZoomDomainRef.current = zoomDomain;
-
-    // Transition duration
-    const transitionDuration = isZoomUpdate ? 500 : 0;
-
-    // Only clear if not a zoom update
-    if ( !isZoomUpdate ) {
-      d3.select( svgRef.current ).selectAll( '*' ).remove();
-    }
-
-    const svg = d3.select( svgRef.current )
-      .attr( 'viewBox', `0 0 ${ propWidth } ${ propHeight }` )
-      .attr( 'preserveAspectRatio', 'xMidYMid meet' );
-
-    // If it's a zoom update, just update the existing elements
-    if ( isZoomUpdate ) {
-      const g = svg.select( 'g.main-group' );
-
-      if ( g.empty() ) {
-        d3.select( svgRef.current ).selectAll( '*' ).remove();
-        previousZoomDomainRef.current = null;
-      } else {
-        const contentGroup = g.select( 'g.content-group' );
-
-        // Update lines with transition
-        valueKeys.forEach( ( key, index ) => {
-          const line = d3.line<any>()
-            .x( d => getXPosition( d ) )
-            .y( d => yScale( Number( d[ key ] ) ) )
-            .curve( d3.curveBasis );
-
-          contentGroup.select( `path.line-${ index }` )
-            .datum( filteredData )
-            .transition()
-            .duration( transitionDuration )
-            .ease( d3.easeCubicInOut )
-            .attr( 'd', line( filteredData ) );
-        } );
-
-        // Re-render Y Grid
-        renderYGrid( g as any, { yScale, innerWidth, innerHeight, yAxis } );
-        // Re-render Y Axis
-        renderYAxis( g as any, { yScale, innerWidth, innerHeight, yAxis, xAxisPosition } );
-
-        // Re-render X axis
-        if ( xAxisShow && xAxisPosition !== 'hidden' ) {
-          renderXAxis( g as any, {
-            xScale, innerWidth, innerHeight, xAxisShow, xAxisPosition,
-            xAxisTickSize, xAxisTickPadding, xAxisTickCount, xAxisTickFormat,
-            xAxisScaleType, xAxisLabelSize, xAxisLabelWeight,
-            xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing,
-            xAxisTitle, xAxisTitleSize, xAxisTitleWeight,
-            xAxisTitleColor, xAxisTitlePadding, xAxisTitleAlignment, xAxisTitleArrow,
-            xAxisName, yAxisPosition: yAxis.position, xAxisShowDomain
-          } );
-          renderXGrid( g as any, {
-            xScale, innerWidth, innerHeight, xAxisShowGrid,
-            xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, xAxisTickCount
-          } );
-        }
-
-        // Re-initialize brush zoom
-        if ( zoomEnabled ) {
-          setupBrushZoom( {
-            g: g as any,
-            innerWidth,
-            innerHeight,
-            data,
-            labelKey,
-            valueKeys,
-            setZoomDomain
-          } );
-
-          setupPan( {
-            g: g as any,
-            innerWidth,
-            innerHeight,
-            data,
-            zoomDomain: zoomDomain as any,
-            setZoomDomain,
-            valueKeys
-          } );
-        }
-
-        return;
-      }
-    }
-
-    // --- Full Render ---
-
-    const g = svg
-      .append( 'g' )
-      .attr( 'class', 'main-group' )
-      .attr( 'transform', `translate(${ chartMargin.left },${ chartMargin.top })` );
-
-    // Grid
-    renderYGrid( g, { yScale, innerWidth, innerHeight, yAxis } );
-    if ( xAxisShow && xAxisPosition !== 'hidden' ) {
-      renderXGrid( g, {
-        xScale, innerWidth, innerHeight, xAxisShowGrid,
-        xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, xAxisTickCount
-      } );
-    }
-
-    // Axes
-    renderYAxis( g, { yScale, innerWidth, innerHeight, yAxis, xAxisPosition } );
-    if ( xAxisShow && xAxisPosition !== 'hidden' ) {
-      renderXAxis( g, {
-        xScale, innerWidth, innerHeight, xAxisShow, xAxisPosition,
-        xAxisTickSize, xAxisTickPadding, xAxisTickCount, xAxisTickFormat,
-        xAxisScaleType, xAxisLabelSize, xAxisLabelWeight,
-        xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing,
-        xAxisTitle, xAxisTitleSize, xAxisTitleWeight,
-        xAxisTitleColor, xAxisTitlePadding, xAxisTitleAlignment, xAxisTitleArrow,
-        xAxisName, yAxisPosition: yAxis.position, xAxisShowDomain
-      } );
-    }
-
-    // Clip Path
-    const clipId = createClipPath( svg, innerWidth, innerHeight );
-
-    // Content Group
-    const contentGroup = g.append( 'g' )
-      .attr( 'class', 'content-group' )
-      .attr( 'clip-path', `url(#${ clipId })` );
-
-    // Draw Lines and Areas
-    const lines: any[] = [];
-    valueKeys.forEach( ( key, index ) => {
-      const color = colors.length > 1 ? colors[ index % colors.length ] : 'steelblue';
-
-      // Area generator (if showArea is true)
-      if ( showArea ) {
-        const area = d3.area<any>()
-          .x( d => getXPosition( d ) )
-          .y0( innerHeight )
-          .y1( d => yScale( Number( d[ key ] ) ) );
-
-        // Apply curve type
-        if ( curveType === 'monotone' ) area.curve( d3.curveMonotoneX );
-        else if ( curveType === 'step' ) area.curve( d3.curveStep );
-        else if ( curveType === 'linear' ) area.curve( d3.curveLinear );
-        else area.curve( d3.curveBasis );
-
-        contentGroup.append( 'path' )
-          .datum( filteredData )
-          .attr( 'class', `area-series area-${ index }` )
-          .attr( 'fill', color )
-          .attr( 'fill-opacity', areaOpacity )
-          .attr( 'd', area );
-      }
-
-      // Line generator
-      const line = d3.line<any>()
-        .x( d => getXPosition( d ) )
-        .y( d => yScale( Number( d[ key ] ) ) );
-
-      // Apply curve type
-      if ( curveType === 'monotone' ) line.curve( d3.curveMonotoneX );
-      else if ( curveType === 'step' ) line.curve( d3.curveStep );
-      else if ( curveType === 'linear' ) line.curve( d3.curveLinear );
-      else line.curve( d3.curveBasis );
-
-      // Apply line style
-      const strokeDasharray = lineStyle === 'dashed' ? '5,5' : lineStyle === 'dotted' ? '1,5' : '0';
-
-      const path = contentGroup.append( 'path' )
-        .datum( filteredData )
-        .attr( 'class', `line-series line-${ index }` )
-        .attr( 'fill', 'none' )
-        .attr( 'stroke', color )
-        .attr( 'stroke-width', lineWidth )
-        .attr( 'stroke-dasharray', strokeDasharray )
-        .attr( 'stroke-linejoin', 'round' )
-        .attr( 'stroke-linecap', 'round' )
-        .attr( 'stroke-opacity', 1 )
-        .attr( 'd', line );
-
-      // Draw points (if showPoints is true)
-      if ( showPoints ) {
-        const symbolGenerator = d3.symbol().type(
-          pointShape === 'square' ? d3.symbolSquare :
-            pointShape === 'diamond' ? d3.symbolDiamond :
-              pointShape === 'triangle' ? d3.symbolTriangle :
-                d3.symbolCircle
-        ).size( Math.PI * Math.pow( pointSize, 2 ) );
-
-        contentGroup.selectAll( `.point-${ index }` )
-          .data( filteredData )
-          .enter()
-          .append( 'path' )
-          .attr( 'class', `point-series point-${ index }` )
-          .attr( 'transform', d => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .attr( 'fill', pointColor || color )
-          .attr( 'stroke', pointOutlineColor )
-          .attr( 'stroke-width', pointOutlineWidth )
-          .attr( 'd', symbolGenerator );
-      }
-
-      lines.push( { path, key, color, index } );
-    } );
-
-    // Legend
-    renderLegend( {
-      svg, width: propWidth, height: propHeight, chartMargin, innerWidth,
-      valueKeys, colors, legendShow, legendPosition, legendAlignment,
-      legendFontSize, legendGap, legendPaddingTop,
-      legendPaddingRight, legendPaddingBottom, legendPaddingLeft
-    } );
-
-    // --- Interaction Layer ---
-
-    // Dot for current point
-    const dot = contentGroup.append( 'circle' )
-      .attr( 'r', 3 )
-      .attr( 'fill', 'black' )
-      .attr( 'stroke', 'none' )
-      .style( 'opacity', 0 )
-      .style( 'pointer-events', 'none' );
-
-    // Hover Event Handler
-    const handleHover = ( event: any ) => {
-      const [ mx, my ] = d3.pointer( event );
-
-      // Find nearest X index
-      let index = 0;
-      if ( xAxisScaleType === 'point' || xAxisScaleType === 'band' ) {
-        const eachBand = ( xScale as any ).step();
-        index = Math.floor( ( mx + ( eachBand / 2 ) ) / eachBand );
-        index = Math.max( 0, Math.min( index, filteredData.length - 1 ) );
-      } else {
-        const xVal = ( xScale as any ).invert( mx );
-        const bisect = d3.bisector( ( d: any ) => {
-          return xAxisScaleType === 'time' ? new Date( d[ labelKey ] ) : Number( d[ labelKey ] );
-        } ).center;
-        index = bisect( filteredData, xVal );
-      }
-
-      const d = filteredData[ index ];
-      if ( !d ) return;
-
-      // Find closest series by Y distance
-      let minDist = Infinity;
-      let closestSeries: any = null;
-
-      lines.forEach( series => {
-        const val = Number( d[ series.key ] );
-        if ( isNaN( val ) ) return;
-        const py = yScale( val );
-        const dist = Math.abs( py - my );
-        if ( dist < minDist ) {
-          minDist = dist;
-          closestSeries = { ...series, val, py };
-        }
-      } );
-
-      if ( closestSeries ) {
-        lines.forEach( l => {
-          if ( l.key === closestSeries.key ) {
-            l.path
-              .attr( 'stroke', l.color )
-              .attr( 'stroke-opacity', 1 )
-              .attr( 'stroke-width', 2.5 )
-              .raise();
-          } else {
-            l.path
-              .attr( 'stroke', '#ddd' )
-              .attr( 'stroke-opacity', 0.8 )
-              .attr( 'stroke-width', 1.5 );
-          }
-        } );
-
-        const px = getXPosition( d );
-        dot
-          .attr( 'cx', px )
-          .attr( 'cy', closestSeries.py );
-
-        // Show Tooltip
-        // Calculate screen coordinates relative to the container
-        // We need to account for margins
-        const tooltipX = px + chartMargin.left;
-        const tooltipY = closestSeries.py + chartMargin.top;
-
-        showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
-            <div className="flex items-center gap-2 text-xs">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={ { backgroundColor: closestSeries.color } }
-              />
-              <span className="text-muted-foreground">{ closestSeries.key }:</span>
-              <span className="font-medium">
-                { Number( closestSeries.val ).toLocaleString() }
-              </span>
-            </div>
-            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                { columnMapping.customPopups.map( ( colIndex ) => {
-                  const colName = availableColumns[ colIndex ];
-                  const val = d[ colName ];
-                  return (
-                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                      <span className="text-muted-foreground">{ colName }:</span>
-                      <span className="font-medium">{ String( val ) }</span>
-                    </div>
-                  );
-                } ) }
-              </div>
-            ) }
-          </div>,
-          tooltipX,
-          tooltipY
-        );
-      }
-    };
-
-    const handleLeave = () => {
-      dot.style( 'opacity', 0 );
-      hideTooltip();
-      lines.forEach( l => {
-        l.path
-          .attr( 'stroke', l.color )
-          .attr( 'stroke-opacity', 1 )
-          .attr( 'stroke-width', 1.5 );
-      } );
-    };
-
-    const handleEnter = () => {
-      dot.style( 'opacity', 1 );
-    };
-
-    // Overlay for events (separate from brush/zoom)
-    const hoverRect = g.append( 'rect' )
-      .attr( 'width', innerWidth )
-      .attr( 'height', innerHeight )
-      .attr( 'fill', 'transparent' )
-      .style( 'pointer-events', 'all' ) // Capture events
-      .on( 'pointerenter', handleEnter )
-      .on( 'pointerleave', handleLeave )
-      .on( 'pointermove', handleHover );
-
-    // Setup Zoom and Pan
-    if ( zoomEnabled ) {
-      setupBrushZoom( {
-        g,
-        innerWidth,
-        innerHeight,
-        data,
-        labelKey,
-        valueKeys,
-        setZoomDomain
-      } );
-
-      setupPan( {
-        g,
-        innerWidth,
-        innerHeight,
-        data,
-        zoomDomain: zoomDomain as any,
-        setZoomDomain,
-        valueKeys
-      } );
-
-      // Attach hover listeners to brush overlay so it doesn't block interactions
-      const brushOverlay = g.select( '.brush .overlay' );
-      if ( !brushOverlay.empty() ) {
-        brushOverlay
-          .on( 'pointerenter', handleEnter )
-          .on( 'pointerleave', handleLeave )
-          .on( 'pointermove', handleHover );
-      }
-    }
-
-  }, [ data, labelKey, valueKeys, propWidth, propHeight, colors, legendShow, legendPosition, legendAlignment, legendFontSize, legendGap, legendPaddingTop, legendPaddingRight, legendPaddingBottom, legendPaddingLeft, xAxisShow, xAxisPosition, xAxisScaleType, xAxisTitle, xAxisTitleSize, xAxisTitleWeight, xAxisTitleColor, xAxisTitlePadding, xAxisLabelSize, xAxisLabelWeight, xAxisLabelColor, xAxisLabelRotation, xAxisLabelSpacing, xAxisTickCount, xAxisTickSize, xAxisTickPadding, xAxisTickFormat, xAxisShowGrid, xAxisGridColor, xAxisGridWidth, xAxisGridOpacity, xAxisGridDashArray, xAxisShowDomain, yAxis, curveType, lineWidth, lineStyle, innerWidth, innerHeight, chartMargin, xScale, yScale, zoomEnabled, zoomDomain, setZoomDomain, showTooltip, hideTooltip ] );
-
   return (
-    <div className="relative w-full h-full">
-      <svg ref={ svgRef } className="w-full h-full overflow-visible" />
+    <BaseChart
+      data={ data }
+      labelKey={ labelKey }
+      valueKeys={ valueKeys }
+      width={ propWidth }
+      height={ propHeight }
+      colors={ colors }
+      legendShow={ legendShow }
+      legendPosition={ legendPosition }
+      legendAlignment={ legendAlignment }
+      legendFontSize={ legendFontSize }
+      legendGap={ legendGap }
+      legendPaddingTop={ legendPaddingTop }
+      legendPaddingRight={ legendPaddingRight }
+      legendPaddingBottom={ legendPaddingBottom }
+      legendPaddingLeft={ legendPaddingLeft }
+      xAxisShow={ xAxisShow }
+      xAxisTitle={ xAxisTitle }
+      xAxisName={ xAxisName }
+      xAxisShowGrid={ xAxisShowGrid }
+      xAxisShowDomain={ xAxisShowDomain }
+      xAxisTickCount={ xAxisTickCount }
+      xAxisTickSize={ xAxisTickSize }
+      xAxisTickPadding={ xAxisTickPadding }
+      xAxisLabelRotation={ xAxisLabelRotation }
+      xAxisTickFormat={ xAxisTickFormat }
+      xAxisPosition={ xAxisPosition }
+      xAxisScaleType={ xAxisScaleType }
+      xAxisMin={ xAxisMin }
+      xAxisMax={ xAxisMax }
+      xAxisTitleType={ xAxisTitleType }
+      xAxisTitleWeight={ xAxisTitleWeight }
+      xAxisTitleColor={ xAxisTitleColor }
+      xAxisTitleSize={ xAxisTitleSize }
+      xAxisTitlePadding={ xAxisTitlePadding }
+      xAxisTickPosition={ xAxisTickPosition }
+      xAxisLabelWeight={ xAxisLabelWeight }
+      xAxisLabelColor={ xAxisLabelColor }
+      xAxisLabelSize={ xAxisLabelSize }
+      xAxisLabelSpacing={ xAxisLabelSpacing }
+      xAxisGridColor={ xAxisGridColor }
+      xAxisGridWidth={ xAxisGridWidth }
+      xAxisGridOpacity={ xAxisGridOpacity }
+      xAxisGridDashArray={ xAxisGridDashArray }
+      yAxis={ yAxis }
+      xScale={ xScale }
+      yScale={ yScale }
+    >
+      <MultiLineChartContent
+        data={ filteredData }
+        labelKey={ labelKey }
+        valueKeys={ valueKeys }
+        xScale={ xScale }
+        yScale={ yScale }
+        colors={ colors }
+        curveType={ curveType }
+        lineWidth={ lineWidth }
+        lineStyle={ lineStyle }
+        showPoints={ showPoints }
+        pointSize={ pointSize }
+        pointShape={ pointShape }
+        pointColor={ pointColor }
+        pointOutlineWidth={ pointOutlineWidth }
+        pointOutlineColor={ pointOutlineColor }
+        showArea={ showArea }
+        areaOpacity={ areaOpacity }
+        xAxisScaleType={ xAxisScaleType }
+        innerHeight={ innerHeight }
+        innerWidth={ innerWidth }
+        showTooltip={ showTooltip }
+        hideTooltip={ hideTooltip }
+        moveTooltip={ moveTooltip }
+        margin={ chartMargin }
+      />
       <ChartTooltip
         visible={ tooltipState.visible }
         x={ tooltipState.x }
         y={ tooltipState.y }
         content={ tooltipState.content }
       />
-      <ChartZoomControls xScale={ xScale } yScale={ yScale } dataLength={ data.length } />
-    </div>
+    </BaseChart>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, memo } from 'react';
 import * as d3 from 'd3';
 import { YAxisConfig, DEFAULT_Y_AXIS_CONFIG } from '@/types/chart-types';
 import { useChartStore } from '@/store/useChartStore';
@@ -15,6 +15,7 @@ import { BaseChart } from './BaseChart';
 import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
+import { TooltipContent } from './TooltipContent';
 
 interface AreaChartProps {
   data: Array<Record<string, string | number>>;
@@ -93,15 +94,13 @@ interface AreaChartContentProps {
   fillOpacity: number;
   xAxisScaleType: 'linear' | 'log' | 'time' | 'band' | 'point';
   innerHeight: number;
-  margin: { top: number; right: number; bottom: number; left: number; };
   showTooltip: ( content: React.ReactNode, x: number, y: number ) => void;
   hideTooltip: () => void;
+  moveTooltip: ( x: number, y: number ) => void;
   tooltipState: any;
-  columnMapping: any;
-  availableColumns: string[];
 }
 
-const AreaChartContent = ( {
+const AreaChartContent = memo( ( {
   data,
   labelKey,
   valueKeys,
@@ -120,12 +119,10 @@ const AreaChartContent = ( {
   fillOpacity,
   xAxisScaleType,
   innerHeight,
-  margin,
   showTooltip,
   hideTooltip,
-  tooltipState,
-  columnMapping,
-  availableColumns
+  moveTooltip,
+  tooltipState
 }: AreaChartContentProps ) => {
   const gRef = useRef<SVGGElement>( null );
 
@@ -197,102 +194,82 @@ const AreaChartContent = ( {
         .attr( 'd', line( data ) );
 
       // Dots
-      if ( showPoints ) {
-        const dots = g.selectAll( `.dot-${ index }` )
-          .data( data );
+      // Always render dots for interaction, but hide them if showPoints is false
+      const dots = g.selectAll( `.dot-${ index }` )
+        .data( data );
 
-        // Exit old dots
-        dots.exit()
-          .transition()
-          .duration( 100 )
-          .style( 'opacity', 0 )
-          .remove();
+      // Exit old dots
+      dots.exit()
+        .transition()
+        .duration( 100 )
+        .style( 'opacity', 0 )
+        .remove();
 
-        // Enter new dots
-        const dotsEnter = dots.enter()
-          .append( 'path' )
-          .attr( 'class', `dot-${ index }` )
-          .attr( 'fill', pointColor || color )
-          .attr( 'stroke', pointOutlineColor )
-          .attr( 'stroke-width', pointOutlineWidth )
-          .style( 'opacity', 0 );
+      // Enter new dots
+      const dotsEnter = dots.enter()
+        .append( 'path' )
+        .attr( 'class', `dot-${ index }` )
+        .attr( 'fill', pointColor || color )
+        .attr( 'stroke', pointOutlineColor )
+        .attr( 'stroke-width', pointOutlineWidth )
+        .style( 'opacity', 0 );
 
-        const fullSize = Math.PI * Math.pow( pointSize, 2 );
-        const symbolGenerator = d3.symbol().type(
-          pointShape === 'square' ? d3.symbolSquare :
-            pointShape === 'diamond' ? d3.symbolDiamond :
-              pointShape === 'triangle' ? d3.symbolTriangle :
-                d3.symbolCircle
-        );
+      // Calculate size: if hidden, use a minimum size for easier hovering
+      const effectivePointSize = showPoints ? pointSize : Math.max( pointSize, 6 );
+      const fullSize = Math.PI * Math.pow( effectivePointSize, 2 );
 
-        // Update all dots (existing + new)
-        ( ( dots as any ).merge( dotsEnter ) )
-          .transition()
-          .duration( 500 )
-          .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
-          .style( 'opacity', 1 )
-          .attrTween( 'd', () => {
-            const i = d3.interpolate( 0, fullSize );
-            return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
-          } );
+      const symbolGenerator = d3.symbol().type(
+        pointShape === 'square' ? d3.symbolSquare :
+          pointShape === 'diamond' ? d3.symbolDiamond :
+            pointShape === 'triangle' ? d3.symbolTriangle :
+              d3.symbolCircle
+      );
 
-        // Add interaction to dots
-        ( ( dots as any ).merge( dotsEnter ) )
-          .on( 'mouseenter', ( event: any, d: any ) => {
-            d3.select( event.currentTarget ).attr( 'r', pointSize * 1.5 );
+      // Update all dots (existing + new)
+      ( ( dots as any ).merge( dotsEnter ) )
+        .transition()
+        .duration( 500 )
+        .attr( 'transform', ( d: any ) => `translate(${ getXPosition( d ) },${ yScale( Number( d[ key ] ) ) })` )
+        .style( 'opacity', showPoints ? 1 : 0 ) // Hide if showPoints is false
+        .attrTween( 'd', () => {
+          const i = d3.interpolate( 0, fullSize );
+          return ( t: number ) => symbolGenerator.size( i( t ) )() || '';
+        } );
 
-            const [ x, y ] = d3.pointer( event, g.node() );
+      // Add interaction to dots
+      ( ( dots as any ).merge( dotsEnter ) )
+        .on( 'mouseenter', ( event: any, d: any ) => {
+          d3.select( event.currentTarget )
+            .style( 'opacity', 1 )
+            .attr( 'r', effectivePointSize * 1.5 ); // Use effective size
 
-            showTooltip(
-              <div className="flex flex-col gap-1">
-                <div className="font-semibold text-xs">{ d[ labelKey ] }</div>
-                <div className="flex items-center gap-2 text-xs">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={ { backgroundColor: color } }
-                  />
-                  <span className="text-muted-foreground">{ key }:</span>
-                  <span className="font-medium">
-                    { Number( d[ key ] ).toLocaleString() }
-                  </span>
-                </div>
-                { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-                  <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                    { columnMapping.customPopups.map( ( colIndex: number ) => {
-                      const colName = availableColumns[ colIndex ];
-                      const val = d[ colName ];
-                      return (
-                        <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                          <span className="text-muted-foreground">{ colName }:</span>
-                          <span className="font-medium">{ String( val ) }</span>
-                        </div>
-                      );
-                    } ) }
-                  </div>
-                ) }
-              </div>,
-              x + margin.left,
-              y + margin.top
-            );
-          } )
-          .on( 'mousemove', ( event: any ) => {
-            const [ x, y ] = d3.pointer( event, g.node() );
-            showTooltip( tooltipState.content, x + margin.left, y + margin.top );
-          } )
-          .on( 'mouseleave', ( event: any ) => {
-            d3.select( event.currentTarget ).attr( 'r', pointSize );
-            hideTooltip();
-          } );
-
-      } else {
-        g.selectAll( `.dot-${ index }` ).remove();
-      }
+          const colorScale = ( k: string ) => colors[ valueKeys.indexOf( k ) % colors.length ];
+          showTooltip(
+            <TooltipContent
+              data={ d }
+              labelKey={ labelKey }
+              valueKeys={ [ key ] }
+              colorScale={ colorScale }
+            />,
+            event.pageX,
+            event.pageY
+          );
+        } )
+        .on( 'mousemove', ( event: any ) => {
+          moveTooltip( event.pageX, event.pageY );
+        } )
+        .on( 'mouseleave', ( event: any ) => {
+          d3.select( event.currentTarget )
+            .style( 'opacity', showPoints ? 1 : 0 )
+            .attr( 'r', effectivePointSize );
+          hideTooltip();
+        } );
     } );
 
-  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, fillOpacity, xAxisScaleType, innerHeight, showTooltip, hideTooltip, tooltipState.content ] );
+  }, [ data, labelKey, valueKeys, xScale, yScale, colors, curveType, lineWidth, lineStyle, showPoints, pointSize, pointShape, pointColor, pointOutlineWidth, pointOutlineColor, fillOpacity, xAxisScaleType, innerHeight, showTooltip, hideTooltip, moveTooltip ] );
 
   return <g ref={ gRef } className="area-chart-content" />;
-};
+} );
 
 export function AreaChart( {
   data,
@@ -347,9 +324,7 @@ export function AreaChart( {
   // Store hooks
   const zoomDomain = useChartStore( ( state ) => state.zoomDomain );
   const setXAxisScaleType = useChartStore( ( state ) => state.setXAxisScaleType );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
-  const columnMapping = useChartStore( ( state ) => state.columnMapping );
-  const availableColumns = useChartStore( ( state ) => state.availableColumns );
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // Visual settings
   const curveType = useChartStore( ( state ) => state.curveType );
@@ -526,12 +501,10 @@ export function AreaChart( {
         fillOpacity={ effectiveFillOpacity }
         xAxisScaleType={ xAxisScaleType }
         innerHeight={ innerHeight }
-        margin={ margin.margin }
         showTooltip={ showTooltip }
         hideTooltip={ hideTooltip }
+        moveTooltip={ moveTooltip }
         tooltipState={ tooltipState }
-        columnMapping={ columnMapping }
-        availableColumns={ availableColumns }
       />
       <ChartTooltip
         visible={ tooltipState.visible }

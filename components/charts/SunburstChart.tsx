@@ -6,6 +6,7 @@ import { getColorPalette } from '@/lib/colorPalettes';
 import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
+import { TooltipContent } from './TooltipContent';
 
 interface SunburstChartProps {
   data: Array<Record<string, string | number>>;
@@ -44,7 +45,7 @@ export function SunburstChart( {
   labelFontWeight = 'normal',
 }: SunburstChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
   const columnMapping = useChartStore( ( state ) => state.columnMapping );
   const availableColumns = useChartStore( ( state ) => state.availableColumns );
 
@@ -150,45 +151,30 @@ export function SunburstChart( {
         const value = d.value || 0;
         const color = colorScale( d.depth > 1 ? d.parent!.data.name : d.data.name ) as string;
 
+        // Find original data for custom columns (best effort)
+        const originalData = data.find( item => String( item[ labelKey ] ).includes( d.data.name ) ) || {};
+
+        const tooltipData = {
+          ...originalData,
+          [ labelKey ]: label,
+          [ valueKeys[ 0 ] ]: value
+        };
+
+        const colorScaleFn = () => color;
+
         showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ label }</div>
-            <div className="flex items-center gap-2 text-xs">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={ { backgroundColor: color } }
-              />
-              <span className="text-muted-foreground">Value:</span>
-              <span className="font-medium">
-                { value.toLocaleString() }
-              </span>
-            </div>
-            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                { columnMapping.customPopups.map( ( colIndex: number ) => {
-                  const colName = availableColumns[ colIndex ];
-                  // Try to find matching data in original data
-                  // This is tricky for hierarchical data, we might need to rely on leaf nodes or name matching
-                  // For Sunburst, d.data.name is the segment name.
-                  // If it's a leaf, we might find it.
-                  const originalData = data.find( item => String( item[ labelKey ] ).endsWith( d.data.name ) );
-                  const val = originalData ? originalData[ colName ] : '';
-                  return (
-                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                      <span className="text-muted-foreground">{ colName }:</span>
-                      <span className="font-medium">{ String( val ) }</span>
-                    </div>
-                  );
-                } ) }
-              </div>
-            ) }
-          </div>,
+          <TooltipContent
+            data={ tooltipData }
+            labelKey={ labelKey }
+            valueKeys={ valueKeys }
+            colorScale={ colorScaleFn }
+          />,
           event.pageX,
           event.pageY
         );
       } )
       .on( 'mousemove', ( event ) => {
-        showTooltip( tooltipState.content, event.pageX, event.pageY );
+        moveTooltip( event.pageX, event.pageY );
       } )
       .on( 'mouseleave', ( event ) => {
         d3.select( event.currentTarget ).attr( 'fill-opacity', ( d: any ) => d.children ? 0.6 : 1.0 );
@@ -261,7 +247,7 @@ export function SunburstChart( {
       return `rotate(${ x - 90 }) translate(${ y },0) rotate(${ x < 180 ? 0 : 180 })`;
     }
 
-  }, [ hierarchyData, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, tooltipState.content, columnMapping, availableColumns ] );
+  }, [ hierarchyData, propWidth, propHeight, colors, colorPalette, labelShow, labelFontSize, labelColor, labelFontWeight, showTooltip, hideTooltip, moveTooltip, columnMapping, availableColumns ] );
 
   return (
     <div className="relative w-full h-full flex items-center justify-center">

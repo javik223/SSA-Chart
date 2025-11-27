@@ -7,6 +7,7 @@ import { ChartTooltip } from './ChartTooltip';
 import { useChartTooltip } from '@/hooks/useChartTooltip';
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
+import { TooltipContent } from './TooltipContent';
 
 interface CirclePackingChartProps {
   data: Array<Record<string, string | number>>;
@@ -54,7 +55,7 @@ export function CirclePackingChart( {
 }: CirclePackingChartProps ) {
   const svgRef = useRef<SVGSVGElement>( null );
   const containerRef = useRef<HTMLDivElement>( null );
-  const { tooltipState, showTooltip, hideTooltip } = useChartTooltip();
+  const { tooltipState, showTooltip, hideTooltip, moveTooltip } = useChartTooltip();
 
   // View state - tracks current zoom focus [x, y, radius]
   const [ view, setView ] = useState<[ number, number, number ]>( [ propWidth / 2, propHeight / 2, propWidth / 2 ] );
@@ -246,40 +247,28 @@ export function CirclePackingChart( {
         const label = String( data.name || data[ labelKey ] || '' );
         const value = d.value || 0;
 
+        const tooltipData = {
+          ...data,
+          [ labelKey ]: label,
+          [ valueKeys[ 0 ] ]: value
+        };
+
+        const color = d.children ? String( colorScale( d.depth ) ) : '#ffffff';
+        const colorScaleFn = () => color;
+
         showTooltip(
-          <div className="flex flex-col gap-1">
-            <div className="font-semibold text-xs">{ label }</div>
-            <div className="flex items-center gap-2 text-xs">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={ { backgroundColor: d.children ? String( colorScale( d.depth ) ) : '#ffffff' } }
-              />
-              <span className="text-muted-foreground">Value:</span>
-              <span className="font-medium">
-                { Number( value ).toLocaleString() }
-              </span>
-            </div>
-            { columnMapping?.customPopups && columnMapping.customPopups.length > 0 && (
-              <div className="mt-1 pt-1 border-t border-border/50 flex flex-col gap-0.5">
-                { columnMapping.customPopups.map( ( colIndex: number ) => {
-                  const colName = availableColumns[ colIndex ];
-                  const val = data[ colName ];
-                  return (
-                    <div key={ colIndex } className="flex items-center justify-between gap-4 text-xs">
-                      <span className="text-muted-foreground">{ colName }:</span>
-                      <span className="font-medium">{ String( val ) }</span>
-                    </div>
-                  );
-                } ) }
-              </div>
-            ) }
-          </div>,
+          <TooltipContent
+            data={ tooltipData }
+            labelKey={ labelKey }
+            valueKeys={ valueKeys }
+            colorScale={ colorScaleFn }
+          />,
           event.pageX,
           event.pageY
         );
       } )
       .on( 'mousemove', ( event: any ) => {
-        showTooltip( tooltipState.content, event.pageX, event.pageY );
+        moveTooltip( event.pageX, event.pageY );
       } )
       .on( 'mouseleave', ( event: any ) => {
         d3.select( event.currentTarget ).select( 'circle' )
@@ -309,7 +298,7 @@ export function CirclePackingChart( {
     // Apply initial zoom
     zoomTo( view );
 
-  }, [ data, packRoot, width, height, focus, labelShow, labelFontSize, labelColor, labelFontWeight, strokeColor, strokeWidth, theme, colorScale ] );
+  }, [ data, packRoot, width, height, focus, labelShow, labelFontSize, labelColor, labelFontWeight, strokeColor, strokeWidth, theme, colorScale, showTooltip, hideTooltip, moveTooltip ] );
 
   return (
     <div ref={ containerRef } className="relative w-full h-full flex items-center justify-center">

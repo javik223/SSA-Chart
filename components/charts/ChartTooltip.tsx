@@ -12,6 +12,10 @@ interface ChartTooltipProps {
 import { useChartStore } from '@/store/useChartStore';
 import { useShallow } from 'zustand/react/shallow';
 
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
+
 export function ChartTooltip( { x, y, content, visible, className }: ChartTooltipProps ) {
   const {
     tooltipShow,
@@ -31,24 +35,37 @@ export function ChartTooltip( { x, y, content, visible, className }: ChartToolti
     } ) )
   );
 
-  if ( !visible || !tooltipShow ) return null;
+  const [ mounted, setMounted ] = useState( false );
 
-  return (
-    <div
+  useEffect( () => {
+    setMounted( true );
+  }, [] );
+
+  if ( !tooltipShow || !mounted ) return null;
+
+  return createPortal(
+    <motion.div
       className={ cn(
-        'absolute pointer-events-none z-50 shadow-md animate-in fade-in-0 zoom-in-95',
+        'absolute pointer-events-none z-50 shadow-md',
         className
       ) }
       style={ {
-        left: x,
-        top: y,
-        transform: 'translate(-50%, -100%)', // Center horizontally, position above cursor
-        marginTop: tooltipShowArrow ? '-10px' : '-5px', // Add some spacing
         backgroundColor: tooltipBackgroundColor,
         color: tooltipTextColor,
         borderRadius: `${ tooltipBorderRadius }px`,
         padding: `${ tooltipPadding }px`,
         border: '1px solid rgba(0,0,0,0.1)',
+        // transform: 'translate(-50%, -100%)',
+        marginTop: tooltipShowArrow ? '-20px' : '-20px',
+      } }
+      animate={ {
+        opacity: visible ? 1 : 0,
+        left: x,
+        top: y,
+      } }
+      transition={ {
+        duration: 0.2,
+        ease: 'easeOut',
       } }
     >
       { content }
@@ -58,6 +75,7 @@ export function ChartTooltip( { x, y, content, visible, className }: ChartToolti
           style={ { backgroundColor: tooltipBackgroundColor } }
         />
       ) }
-    </div>
+    </motion.div>,
+    document.body
   );
 }
