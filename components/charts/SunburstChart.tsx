@@ -151,9 +151,9 @@ function SunburstChartInner( {
         while ( ancestor.depth > 1 ) ancestor = ancestor.parent!;
         return colorScale( ancestor.data.name ) as string;
       } )
-      .attr( 'fill-opacity', ( d ) => arcVisible( d.current ) ? ( d.children ? 0.6 : 1.0 ) : 0 )
-      .attr( 'pointer-events', ( d ) => arcVisible( d.current ) ? 'auto' : 'none' )
-      .attr( 'd', ( d: any ) => arc( d.current ) );
+      .attr( 'fill-opacity', ( d ) => arcVisible( ( d as unknown as { current: d3.HierarchyRectangularNode<any>; } ).current ) ? ( d.children ? 0.6 : 1.0 ) : 0 )
+      .attr( 'pointer-events', ( d ) => arcVisible( ( d as unknown as { current: d3.HierarchyRectangularNode<any>; } ).current ) ? 'auto' : 'none' )
+      .attr( 'd', ( d: any ) => arc( ( d as unknown as { current: d3.HierarchyRectangularNode<any>; } ).current ) );
 
 
     path.style( 'cursor', ( d: any ) => d.children ? 'pointer' : 'default' )
@@ -161,7 +161,7 @@ function SunburstChartInner( {
         if ( d.children ) clicked( event, d );
       } )
       .on( 'mouseenter', ( event, d ) => {
-        if ( !arcVisible( d.current ) ) return;
+        if ( !arcVisible( ( d as unknown as { current: d3.HierarchyRectangularNode<any>; } ).current ) ) return;
 
         d3.select( event.currentTarget ).attr( 'fill-opacity', 0.8 );
 

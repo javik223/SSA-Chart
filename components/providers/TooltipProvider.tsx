@@ -55,7 +55,7 @@ export const createTooltipStore = () => {
 const TooltipContext = createContext<StoreApi<TooltipStore> | null>( null );
 
 export const TooltipProvider = ( { children }: { children: React.ReactNode; } ) => {
-  const storeRef = useRef<StoreApi<TooltipStore>>();
+  const storeRef = useRef<StoreApi<TooltipStore>>( null );
   if ( !storeRef.current ) {
     storeRef.current = createTooltipStore();
   }
